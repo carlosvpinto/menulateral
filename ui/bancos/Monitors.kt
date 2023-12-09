@@ -1,5 +1,9 @@
 package com.carlosv.dolaraldia.ui.bancos
 
+import com.carlosv.dolaraldia.model.monedas.Airtm
+import com.carlosv.dolaraldia.model.monedas.AmazonGiftCard
+import com.google.gson.annotations.SerializedName
+
 data class Monitors(
     var airtm: Airtm,
     var amazon_gift_card: AmazonGiftCard,
@@ -10,10 +14,10 @@ data class Monitors(
     var bcv: Bcv,
     var binance: Binance,
     var bnc: Bnc,
-    var cambios_ra: CambiosRa,
+    @SerializedName("cambios_r&a")  var cambios_ra: CambiosRa,
     var dolar_em: DolarEm,
     var dolartoday: Dolartoday,
-    var dolartoday_btc: DolartodayBtc,
+    @SerializedName("dolartoday_(btc)") var dolartoday_btc: DolartodayBtc,
     var el_dorado: ElDorado,
     var enparalelovzla: Enparalelovzla,
     var italcambio: Italcambio,

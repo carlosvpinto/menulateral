@@ -22,13 +22,10 @@ import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.widget.Button
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
-import com.carlosv.dolaraldia.DolarBCVResponse
-import com.carlosv.dolaraldia.DolarParaleloResponse
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
@@ -36,15 +33,16 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.text.DecimalFormat
+import javax.inject.Singleton
 
 
 class HomeFragment : Fragment() {
@@ -58,6 +56,8 @@ class HomeFragment : Fragment() {
     private var valorActualParalelo: Double? = 0.0
     private var valorActualBcv: Double? = 0.0
     var numeroNoturno = 0
+
+
     lateinit var navigation : BottomNavigationView
 
     override fun onCreateView(
@@ -123,7 +123,21 @@ class HomeFragment : Fragment() {
             copiarBs()
         }
 
+
         return root
+    }
+
+    //INTERFACE PARA COMUNICAR CON EL ACTIVITY
+    object ApiResponseHolder {
+        private var response: BancosModel? = null
+
+        fun getResponse(): BancosModel? {
+            return response
+        }
+
+        fun setResponse(newResponse: BancosModel) {
+            response = newResponse
+        }
     }
 
     //recupera el valor del nuemero Nocturno
@@ -180,7 +194,7 @@ class HomeFragment : Fragment() {
         val savedResponseBCV = getResponseFromSharedPreferences(requireContext())
 
         if (savedResponseBCV != null) {
-            Log.d("RESPUESTA", " RESPUESTA DEL GERPREFERENCE EN LLAMARBCV $savedResponseBCV valor de ${savedResponseBCV.monitors.bcv.price}  ")
+            ApiResponseHolder.setResponse(savedResponseBCV)
             valorActualBcv = savedResponseBCV.monitors.bcv.price.toDouble()
             valorActualParalelo = savedResponseBCV.monitors.enparalelovzla.price.toDouble()
             llenarCampoBCV(savedResponseBCV)
@@ -210,6 +224,7 @@ class HomeFragment : Fragment() {
             val response = apiService.getBancos(url)
             Log.d("RESPUESTA", " VALOR DEL RESPONSE en BCV VIEJO $response ")
             if (response != null) {
+                ApiResponseHolder.setResponse(response)
                 valorActualBcv = response.monitors.bcv.price.toString().toDouble()
                 valorActualParalelo = savedResponseBCV?.monitors?.enparalelovzla?.price?.toDouble()
                 guardarResponse(requireContext(), response)
@@ -294,14 +309,14 @@ class HomeFragment : Fragment() {
         binding.btnParalelo.textOn = response.monitors.enparalelovzla.price
         binding.txtFechaActualizacion.text = response.monitors.enparalelovzla.last_update
 
-        if (response.monitors.bcv.color == "red"){
+        if (response.monitors.enparalelovzla.color == "red"){
             binding.imgFlechaParalelo.setImageResource(R.drawable.ic_flecha_roja)
         }
-        if (response.monitors.bcv.color == "green"){
+        if (response.monitors.enparalelovzla.color == "green"){
             binding.imgFlechaParalelo.setImageResource(R.drawable.ic_flechaverde)
         }
 
-        if (response.monitors.bcv.color == "neutral"){
+        if (response.monitors.enparalelovzla.color == "neutral"){
             binding.imgFlechaParalelo.setImageResource(R.drawable.ic_flecha_igual)
         }
         binding.txtVariacionParalelo.text = response.monitors.enparalelovzla.percent

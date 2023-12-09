@@ -7,28 +7,39 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.carlosv.dolaraldia.ApiService
+import com.carlosv.dolaraldia.adapter.BancosAdapter
 import com.carlosv.dolaraldia.adapter.OtrasPaginasAdapter
 //import com.carlosv.dolaraldia.databinding.FragmentGalleryBinding
 import com.carlosv.dolaraldia.model.monedas.OtrasPaginas
+import com.carlosv.dolaraldia.ui.bancos.BancoModelAdap
+import com.carlosv.dolaraldia.ui.home.HomeFragment
 import com.carlosv.menulateral.databinding.FragmentPaginasBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
-import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
-import org.json.JSONObject
-import java.io.IOException
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class OtrasPaginasFragment : Fragment() {
 
     private var _binding: FragmentPaginasBinding? = null
-    private  var adapter: OtrasPaginasAdapter? = null
+
     private var otrasPaginas = ArrayList<OtrasPaginas>()
+    private var valorActualBcv: Double? = 0.0
+    private  var adapter: OtrasPaginasAdapter? = null
+    val bancosList = mutableListOf<BancoModelAdap>()
+    private var bancos = ArrayList<BancoModelAdap>()
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -44,174 +55,241 @@ class OtrasPaginasFragment : Fragment() {
 
         _binding = FragmentPaginasBinding.inflate(inflater, container, false)
         val root: View = binding.root
-        getDollarRates()
+        //getDollarRates()
+       // llamarApi()
+        llamarPaginasdelfragmen()
         val linearLayoutManager = LinearLayoutManager(requireContext())
         binding.recyclerOtrasPaginas.layoutManager = linearLayoutManager
 
-//        val textView: TextView = binding.txtInicio
-//        galleryViewModel.text.observe(viewLifecycleOwner) {
-//            textView.text = it
-//        }
+        binding.editTexFiltroC.addTextChangedListener { userfilter ->
+            val bancosFiltrados = bancosList.filter { banco->
+                banco.nombre?.lowercase()?.contains(userfilter.toString().lowercase())== true}
+            adapter?.updatePrecioBancos(bancosFiltrados)
+        }
         return root
     }
 
-    private fun getDollarRates() {
+    //USA LA INTERFACE PARA TRAER EL VALOR DEL RESPONSE
 
-        val client = OkHttpClient()
+    fun llamarPaginasdelfragmen() {
 
-        val request = Request.Builder()
-            .url("https://pydolarvenezuela-api.vercel.app/api/v1/dollar/")
-            .build()
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                // Manejar error
-                Log.d("RESPUESTA", " RESPUESTA FALLIDA ")
+        try {
+            val response = HomeFragment.ApiResponseHolder.getResponse()
+            Log.d("RESPUESTA", " VALOR DEL RESPONSE $response ")
+            if (response != null) {
+                valorActualBcv = response.monitors.banesco.price.toDouble()
+
+
+                // Agregar más Paginas según sea necesario
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "amazon_gift_card",
+                        response.monitors.amazon_gift_card.price.toDouble(),
+                        response.monitors.amazon_gift_card.percent,
+                        response.monitors.amazon_gift_card.color,
+                        response.monitors.amazon_gift_card.last_update,
+                        response.monitors.amazon_gift_card.percent,
+                        response.monitors.amazon_gift_card.symbol,
+                        response.monitors.amazon_gift_card.title,
+                    )
+                )
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "binance",
+                        response.monitors.binance.price.toDouble(),
+                        response.monitors.binance.percent,
+                        response.monitors.binance.color,
+                        response.monitors.binance.last_update,
+                        response.monitors.binance.percent,
+                        response.monitors.binance.symbol,
+                        response.monitors.binance.title,
+                    )
+                )
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "cambios_r&a",
+                        response.monitors.cambios_ra.price.toDouble(),
+                        response.monitors.cambios_ra.percent,
+                        response.monitors.cambios_ra.color,
+                        response.monitors.cambios_ra.last_update,
+                        response.monitors.cambios_ra.percent,
+                        response.monitors.cambios_ra.symbol,
+                        response.monitors.cambios_ra.title,
+                    )
+                )
+
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "dolartoday",
+                        response.monitors.dolartoday.price.toDouble(),
+                        response.monitors.dolartoday.percent,
+                        response.monitors.dolartoday.color,
+                        response.monitors.dolartoday.last_update,
+                        response.monitors.dolartoday.percent,
+                        response.monitors.dolartoday.symbol,
+                        response.monitors.dolartoday.title,
+                    )
+                )
+
+
+
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "el_dorado",
+                        response.monitors.el_dorado.price.toDouble(),
+                        response.monitors.el_dorado.percent,
+                        response.monitors.el_dorado.color,
+                        response.monitors.el_dorado.last_update,
+                        response.monitors.el_dorado.percent,
+                        response.monitors.el_dorado.symbol,
+                        response.monitors.el_dorado.title,
+                    )
+                )
+                bancosList.add(
+                    BancoModelAdap(
+                        "zinli",
+                        response.monitors.el_dorado.price.toDouble(),
+                        response.monitors.el_dorado.percent,
+                        response.monitors.el_dorado.color,
+                        response.monitors.el_dorado.last_update,
+                        response.monitors.el_dorado.percent,
+                        response.monitors.el_dorado.symbol,
+                        response.monitors.el_dorado.title,
+                    )
+                )
+
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "mkambio",
+                        response.monitors.mkambio.price.toDouble(),
+                        response.monitors.mkambio.percent,
+                        response.monitors.mkambio.color,
+                        response.monitors.mkambio.last_update,
+                        response.monitors.mkambio.percent,
+                        response.monitors.mkambio.symbol,
+                        response.monitors.mkambio.title,
+                    )
+                )
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "paypal",
+                        response.monitors.paypal.price.toDouble(),
+                        response.monitors.paypal.percent,
+                        response.monitors.paypal.color,
+                        response.monitors.paypal.last_update,
+                        response.monitors.paypal.percent,
+                        response.monitors.paypal.symbol,
+                        response.monitors.paypal.title,
+                    )
+                )
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "monitor_dolar_venezuela",
+                        response.monitors.monitor_dolar_venezuela.price.toDouble(),
+                        response.monitors.monitor_dolar_venezuela.percent,
+                        response.monitors.monitor_dolar_venezuela.color,
+                        response.monitors.monitor_dolar_venezuela.last_update,
+                        response.monitors.monitor_dolar_venezuela.percent,
+                        response.monitors.monitor_dolar_venezuela.symbol,
+                        response.monitors.monitor_dolar_venezuela.title,
+                    )
+                )
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "petro",
+                        response.monitors.petro.price.toDouble(),
+                        response.monitors.petro.percent,
+                        response.monitors.petro.color,
+                        response.monitors.petro.last_update,
+                        response.monitors.petro.percent,
+                        response.monitors.petro.symbol,
+                        response.monitors.petro.title,
+                    )
+                )
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "skrill",
+                        response.monitors.skrill.price.toDouble(),
+                        response.monitors.skrill.percent,
+                        response.monitors.skrill.color,
+                        response.monitors.skrill.last_update,
+                        response.monitors.skrill.percent,
+                        response.monitors.skrill.symbol,
+                        response.monitors.skrill.title,
+                    )
+                )
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "yadio",
+                        response.monitors.yadio.price.toDouble(),
+                        response.monitors.yadio.percent,
+                        response.monitors.yadio.color,
+                        response.monitors.yadio.last_update,
+                        response.monitors.yadio.percent,
+                        response.monitors.yadio.symbol,
+                        response.monitors.yadio.title,
+                    )
+                )
+
+                bancosList.add(
+                    BancoModelAdap(
+                        "syklo",
+                        response.monitors.syklo.price.toDouble(),
+                        response.monitors.syklo.percent,
+                        response.monitors.syklo.color,
+                        response.monitors.syklo.last_update,
+                        response.monitors.syklo.percent,
+                        response.monitors.syklo.symbol,
+                        response.monitors.syklo.title,
+                    )
+                )
+
+
             }
+                runOnUiThread {
+                    // Inicializar el adaptador si aún no se ha hecho
+                    if (adapter == null) {
+                        adapter = OtrasPaginasAdapter(this@OtrasPaginasFragment, ArrayList())
+                        binding.recyclerOtrasPaginas.adapter = adapter
+                    }
 
-            override fun onResponse(call: Call, response: Response) {
-                val body = response.body?.string() ?: return
+                    // Actualizar los datos del adaptador
+                    adapter?.updatePrecioBancos(bancosList)
+                }
 
-                println(body)
-                listarResponseOtrasPag(body)
-                showListaPaginas(body)
-                Log.d("RESPUESTA", " RESPUESTA body $body")
-                // Aquí ya tienes la respuesta JSON
-                // Puedes pasarla a processPagoMovilResponse()
-                // para convertirla a objetos Kotlin
-            }
-        })
-
-    }
-
-    private fun listarResponseOtrasPag(jsonResponse: String): List<OtrasPaginas> {
-        val listaOtrasPaginas = ArrayList<OtrasPaginas>()
-
-        val json = JSONObject(jsonResponse)
-        val monitors = json.getJSONObject("monitors")
-
-        val amazonGiftCard = monitors.getJSONObject("amazon_gift_card")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                amazonGiftCard.getString("last_update"),
-                amazonGiftCard.getDouble("price"),
-                amazonGiftCard.getDouble("price_old"),
-                amazonGiftCard.getString("title"),
-                amazonGiftCard.getString("type")
-            )
-        )
-
-        val bcv = monitors.getJSONObject("bcv")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                bcv.getString("last_update"),
-                bcv.getDouble("price"),
-                bcv.getDouble("price_old"),
-                bcv.getString("title"),
-                bcv.getString("type")
-            )
-        )
+                // Actualizar los datos del adaptador
+                adapter?.updatePrecioBancos(bancosList)
 
 
-        // Y así sucesivamente para cada objeto JSON en monitors
-        val binance = monitors.getJSONObject("binance")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                binance.getString("last_update"),
-                binance.getDouble("price"),
-                binance.getDouble("price_old"),
-                binance.getString("title"),
-                binance.getString("type")
-            )
-        )
-        val cripto_dolar = monitors.getJSONObject("cripto_dolar")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                cripto_dolar.getString("last_update"),
-                cripto_dolar.getDouble("price"),
-                cripto_dolar.getDouble("price_old"),
-                cripto_dolar.getString("title"),
-                cripto_dolar.getString("type")
-            )
-        )
-
-        val dolar_today = monitors.getJSONObject("dolar_today")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                dolar_today.getString("last_update"),
-                dolar_today.getDouble("price"),
-                dolar_today.getDouble("price_old"),
-                dolar_today.getString("title"),
-                dolar_today.getString("type")
-            )
-        )
-
-        val enparalelovzla = monitors.getJSONObject("enparalelovzla")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                enparalelovzla.getString("last_update"),
-                enparalelovzla.getDouble("price"),
-                enparalelovzla.getDouble("price_old"),
-                enparalelovzla.getString("title"),
-                enparalelovzla.getString("type")
-            )
-        )
-
-        val paypal = monitors.getJSONObject("paypal")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                paypal.getString("last_update"),
-                paypal.getDouble("price"),
-                paypal.getDouble("price_old"),
-                paypal.getString("title"),
-                paypal.getString("type")
-            )
-        )
-
-        val skrill = monitors.getJSONObject("skrill")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                skrill.getString("last_update"),
-                skrill.getDouble("price"),
-                skrill.getDouble("price_old"),
-                skrill.getString("title"),
-                skrill.getString("type")
-            )
-        )
-
-        val uphold = monitors.getJSONObject("uphold")
-        listaOtrasPaginas.add(
-            OtrasPaginas(
-                uphold.getString("last_update"),
-                uphold.getDouble("price"),
-                uphold.getDouble("price_old"),
-                uphold.getString("title"),
-                uphold.getString("type")
-            )
-        )
-      //  Log.d("RESPUESTA", " pagos PAGOSSS $pagos")
-
-        return listaOtrasPaginas
-    }
+        } catch (e: Exception) {
+            Log.d("RESPUESTA", " ERROR DE RESPONSE $e ")
+            Toast.makeText(
+                requireContext(),
+                "No Actualizo dolar BCV Revise Conexion $e",
+                Toast.LENGTH_LONG
+            ).show()
 
 
-    private fun showListaPaginas(jsonResponse: String) {
-        val listapaginas = listarResponseOtrasPag(jsonResponse)
-
-        runOnUiThread {
-            adapter?.updatePrecioPaginas(listapaginas)
-            Log.d("RESPUESTA", " DENTRO DEL updatePrecioPaginas $listapaginas ")
-            adapter = OtrasPaginasAdapter(this@OtrasPaginasFragment, ArrayList(listapaginas))
-            binding.recyclerOtrasPaginas.adapter = adapter
+            println("Error: ${e.message}")
         }
 
-        val listapaginasString = listapaginas.joinToString("\n") {
-            "${it.title}: ${it.price} (Actualizado: ${it.last_update})"
-        }
 
-        Log.d("RESPUESTA", " Arreglo $listapaginasString ")
-        //binding.txtRespuesta.text = pagosString.toString()
+
     }
+
+
 
     private fun runOnUiThread(action: () -> Unit) {
         Handler(Looper.getMainLooper()).post(action)

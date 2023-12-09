@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.carlosv.dolaraldia.model.monedas.OtrasPaginas
@@ -46,31 +47,79 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
         holder.textViewMontoBs.text = otroBanco.precio.toString()
         holder.textViewNombreBanco.text = otroBanco.nombre
         holder.textViewVariacion.text = otroBanco.diferencia.toString()
-        holder.imgflecha.setImageResource(R.drawable.ic_flechaverde)
+       // holder.imgflecha.setImageResource(R.drawable.ic_flechaverde)
+        Log.d("ADAPTER", " otroBanco.nombre ${otroBanco.nombre} ")
 
-
-        if (otroBanco.nombre == "bancamiga"){
+        if (otroBanco.nombre == "Bancamiga"){
             holder.imgLogo.setImageResource(R.drawable.banco_bancamiga_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
         }
         if (otroBanco.nombre == "BCV"){
             holder.imgLogo.setImageResource(R.drawable.bcv240x240)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
         }
 
-        if (otroBanco.nombre == "banesco"){
+        if (otroBanco.nombre == "Banesco"){
             holder.imgLogo.setImageResource(R.drawable.banco_banesco_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "bbva_provincial"){
+        if (otroBanco.nombre == "Banco Provincial"){
             holder.imgLogo.setImageResource(R.drawable.banco_provincial_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "bnc"){
+        if (otroBanco.nombre == "BNC"){
             holder.imgLogo.setImageResource(R.drawable.banco_bnc_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "mercantil"){
+        if (otroBanco.nombre == "Mercantil"){
             holder.imgLogo.setImageResource(R.drawable.banco_mercantil_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
+        }
+
+        if (otroBanco.nombre == "banco_de_venezuela" ||otroBanco.nombre == "Banco de Venezuela"){
+            holder.imgLogo.setImageResource(R.drawable.banco_venezuela_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
+        }
+        if (otroBanco.nombre == "zinli"){
+            holder.imgLogo.setImageResource(R.drawable.banco_zinli_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
+        }
+        if (otroBanco.nombre == "italcambio"){
+            holder.imgLogo.setImageResource(R.drawable.banco_italcambio_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
+        }
+        if (otroBanco.nombre == "remesas_zoom"){
+            holder.imgLogo.setImageResource(R.drawable.banco_remesas_zoom)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
         }
 
 
         // holder.itemView.setOnClickListener { goToDetail(pagoMovil?.id!!) } //para no llamar al activity al gacer click
+    }
+    fun mostrarFlecha(color:String,holder: OtrosBancosAdapterViewHolder){
+        val contexto = holder.itemView.context
+        if (color== "green"){
+            holder.imgflecha.setImageResource(R.drawable.ic_flechaverde)
+            holder.textViewVariacion.setTextColor(ContextCompat.getColor(contexto,R.color.green))
+        }
+        if (color== "red"){
+            holder.imgflecha.setImageResource(R.drawable.ic_flecha_roja)
+            holder.textViewVariacion.setTextColor(ContextCompat.getColor(contexto,R.color.red))
+        }
+        if (color== "neutral"){
+            holder.imgflecha.setImageResource(R.drawable.ic_flecha_igual)
+            holder.textViewVariacion.setTextColor(ContextCompat.getColor(contexto,R.color.black))
+        }
     }
 
 
@@ -79,7 +128,7 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
         return otrosBancos.size
     }
     fun updatePrecioBancos(precionBancosList: List<BancoModelAdap> ){
-        Log.d("RESPUESTA", " DENTRO updatePrecioBancos precionBancosList $precionBancosList ")
+        Log.d("ADAPTER", " DENTRO updatePrecioBancos precionBancosList $precionBancosList ")
         this.otrosBancos = precionBancosList as ArrayList<BancoModelAdap>
         notifyDataSetChanged()
     }

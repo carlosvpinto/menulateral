@@ -24,6 +24,9 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.carlosv.dolaraldia.ui.bancos.BancoModelAdap
+import com.carlosv.dolaraldia.ui.bancos.BancosModel
+import com.carlosv.dolaraldia.ui.home.HomeFragment
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.ActivityMainBinding
 
@@ -35,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +54,7 @@ class MainActivity : AppCompatActivity() {
 //                .setAction("Action", null).show()
         }
 
+
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_content_main)
@@ -64,7 +69,10 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+
     }
+
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflar el menú; esto agrega elementos a la barra de acciones si está presente.
@@ -201,4 +209,5 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
 }
