@@ -1,18 +1,16 @@
 package com.carlosv.dolaraldia
 
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.net.Uri
+
+import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.view.Menu
 import android.view.MenuItem
-import android.view.ViewGroup
-import android.widget.Button
+
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.navigation.NavigationView
@@ -23,22 +21,38 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import com.carlosv.dolaraldia.ui.bancos.BancoModelAdap
-import com.carlosv.dolaraldia.ui.bancos.BancosModel
-import com.carlosv.dolaraldia.ui.home.HomeFragment
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.ActivityMainBinding
-
-
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.*
+
+import android.Manifest
+import android.content.res.Resources
+import android.net.Uri
+import android.os.Environment
+import android.util.Log
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ToggleButton
+
+import androidx.annotation.RequiresApi
+
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
-
+    private val PERMISSION_REQUEST_CODE = 123
+    var filePath = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,14 +60,26 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
+
         setSupportActionBar(binding.appBarMain.toolbar)
 
         binding.appBarMain.botonFloating.setOnClickListener { view ->
-            takeScreenshot()
-//            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                .setAction("Action", null).show()
+
+            // Verificar si se tienen los permisos antes de capturar la pantalla
+            if (checkPermission()) {
+                captureScreen()
+                binding.appBarMain.botonFloating.isEnabled= false
+               binding.appBarMain.botonFloating.isEnabled = true
+
+            } else {
+                // Si no se tienen los permisos, solicitarlos
+                requestPermissionsIfNecessary()
+            }
+
         }
 
+        binding.navView
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
@@ -62,17 +88,15 @@ class MainActivity : AppCompatActivity() {
         // el menú debe considerarse como destino de nivel superior.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home,R.id.nav_monedas, R.id.nav_bancos
+                R.id.nav_home,R.id.nav_monedas, R.id.nav_bancos, R.id.nav_acerca
             ), drawerLayout
         )
+
 
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-
     }
-
-
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflar el menú; esto agrega elementos a la barra de acciones si está presente.
@@ -88,8 +112,10 @@ class MainActivity : AppCompatActivity() {
 
         when(item.itemId){
             R.id.action_compartir->{
-                takeScreenshot()
-                Toast.makeText(this, "Compartir", Toast.LENGTH_SHORT).show()
+                compartirEnlacePlayStore(this)
+                Toast.makeText(this, "Compartir link Playstore", Toast.LENGTH_SHORT).show()
+                compartirLinkconFoto(this,"https://play.google.com/store/apps/details?id=$packageName")
+
             }
             R.id.action_salir->{
                 salirdelApp()
@@ -99,6 +125,36 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+
+
+    fun compartirEnlacePlayStore(context: Context) {
+        val packageName = context.packageName
+
+        try {
+            // Crear la URL de la Play Store con el paquete de la aplicación
+            val playStoreLink = "https://play.google.com/store/apps/details?id=$packageName"
+
+            // Crear un Intent para compartir
+            val compartirIntent = Intent(Intent.ACTION_SEND)
+            compartirIntent.type = "text/plain"
+            compartirIntent.putExtra(Intent.EXTRA_TEXT, playStoreLink)
+
+            // Mostrar el diálogo de compartir
+            context.startActivity(Intent.createChooser(compartirIntent, "Compartir enlace de la Play Store"))
+
+        } catch (e: Exception) {
+            // Manejar excepciones, por ejemplo, si la aplicación de la Play Store no está instalada
+            Toast.makeText(context, "No se puede abrir la Play Store", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+    }
+
+
+
+
+
+
+
 
     private fun salirdelApp(){
 
@@ -111,103 +167,233 @@ class MainActivity : AppCompatActivity() {
         builder.setNegativeButton("Cancelar",null )
         builder.show()
     }
+    private fun requestPermissionsIfNecessary() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!checkPermission()) {
+                requestPermissions(
+                    arrayOf(
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                    ),
+                    PERMISSION_REQUEST_CODE
+                )
+            }
+        }
+    }
 
-    // Solicitar permiso de almacenamiento
-    private val STORAGE_REQUEST_CODE = 100
-    private fun requestStoragePermission() {
-
-        ActivityCompat.requestPermissions(
+    private fun checkPermission(): Boolean {
+        val writeExternalStoragePermission = ContextCompat.checkSelfPermission(
             this,
-            arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            STORAGE_REQUEST_CODE
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        val readExternalStoragePermission = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
         )
 
-    }
-    // Capturar y compartir imagen
-    private var imageUri: Uri? = null
-
-    private fun takeScreenshot() {
-
-        requestStoragePermission()
-
-        val bitmap = screenshot()
-
-        imageUri = saveImage(bitmap)
-
-        shareImage(imageUri!!)
-
+        return writeExternalStoragePermission == PackageManager.PERMISSION_GRANTED &&
+                readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun screenshot(): Bitmap {
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun  captureScreen() {
+        // Tomar la captura de pantalla y guardarla en el archivo
+        try {
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "screenshot_$timestamp.png"
+            filePath = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)}/$fileName"
 
-        // Obtener referencia a la vista raíz
-        val rootView = window.decorView.rootView
+            // Crear un File para la captura de pantalla
+            val file = File(filePath)
 
-        // Obtener dimensiones para crear Bitmap
-        val width = rootView.width
-        val height = rootView.height
+            // Tomar la captura de pantalla y guardarla en el archivo
+            val rootView = window.decorView.rootView
+            rootView.isDrawingCacheEnabled = true
+            val bitmap = Bitmap.createBitmap(rootView.drawingCache)
+            rootView.isDrawingCacheEnabled = false
 
-        // Crear Bitmap
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val stream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
+            stream.flush()
+            stream.close()
 
-        // Crear Canvas asociado al Bitmap
-        val canvas = Canvas(bitmap)
-
-        // Dibujar la vista raíz en el Canvas
-        rootView.draw(canvas)
-
-        return bitmap
-
-    }
-
-    private fun saveImage(image: Bitmap): Uri? {
-
-        val name = "MiCapture.jpg"
-        val imagesFolder = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        val imageFile = File(imagesFolder, name)
-
-        val stream = FileOutputStream(imageFile)
-        image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-
-        stream.flush()
-        stream.close()
-
-        return Uri.parse(
-            MediaStore.Images.Media.insertImage(
-                contentResolver,
-                imageFile.absolutePath,
-                name,
-                null
-            )
-        )
-
-    }
-
-    private fun shareImage(imageUri: Uri) {
-
-        val intent = Intent(Intent.ACTION_SEND)
-        intent.putExtra(Intent.EXTRA_STREAM, imageUri)
-        intent.type = "image/jpeg"
-        intent.putExtra(Intent.EXTRA_TITLE, "Compartir captura")
-        intent.putExtra(Intent.EXTRA_TEXT, "Descarla la aplicacion y disfruta de la comodidad")
-        startActivity(Intent.createChooser(intent, "Compartir captura"))
-
+            // Mostrar un mensaje indicando la ubicación del archivo
+            Toast.makeText(
+                this,
+                "Captura de pantalla guardada en: $filePath",
+                Toast.LENGTH_SHORT
+            ).show()
+            //llama a la funcion de compartir
+            shareImageWithText(filePath,crearTextoCapture())
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
     }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
-        permissions: Array<String>,
+        permissions: Array<out String>,
         grantResults: IntArray
     ) {
-
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if (requestCode == STORAGE_REQUEST_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            // Permiso otorgado
-        } else {
-            // Permiso denegado
-        }
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (checkPermission()) {
+                // Si se otorgan los permisos, realizar la captura de pantalla
+                captureScreen()
+            } else {
+                // Si se niegan los permisos, mostrar un mensaje al usuario
+                Toast.makeText(
+                    this,
+                    "Los permisos son necesarios para realizar la captura de pantalla",
+                    Toast.LENGTH_SHORT
+                ).show()
 
+
+            }
+        }
     }
 
+
+    private fun shareImageWithText(imagePath: String, shareText: String) {
+        val imageFile = File(imagePath)
+
+        if (imageFile.exists()) {
+            try {
+                // Crear un archivo temporal para compartir
+                val tempFile = createTempImageFile()
+
+                // Copiar la imagen original al archivo temporal
+                copyFile(imageFile, tempFile)
+
+                // Obtener la Uri segura utilizando FileProvider
+                val uri = FileProvider.getUriForFile(
+                    this,
+                    "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
+                    tempFile
+                )
+                Log.d("Capture", "shareImageWithText:uri $uri ")
+                // Crear un intent para compartir
+                val shareIntent = Intent(Intent.ACTION_SEND)
+                shareIntent.type = "multipart/*"
+                shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+                // Iniciar la actividad de compartir
+                startActivity(Intent.createChooser(shareIntent, "Compartir imagen"))
+
+            } catch (e: IOException) {
+                e.printStackTrace()
+                Toast.makeText(
+                    this,
+                    "Error al compartir la imagen",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+            }
+        } else {
+            Toast.makeText(
+                this,
+                "La imagen no existe en la ruta especificada",
+                Toast.LENGTH_SHORT
+            ).show()
+
+        }
+    }
+
+
+    @Throws(IOException::class)
+    private fun createTempImageFile(): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageFileName = "temp_image_$timeStamp"
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(imageFileName, ".jpg", storageDir)
+    }
+
+    @Throws(IOException::class)
+    private fun copyFile(sourceFile: File, destFile: File) {
+        val source = sourceFile.inputStream()
+        val destination = FileOutputStream(destFile)
+
+        source.use { input ->
+            destination.use { output ->
+                input.copyTo(output)
+            }
+        }
+    }
+    private fun crearTextoCapture():String{
+        var textoCapture=""
+        var inputTextoBs=""
+        var inputTextoDolla=""
+        var bcv= ""
+        var paralelo= ""
+
+        val fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
+        if (fragment != null && fragment.isAdded) {
+            val editTextInFragmentBs = fragment.view?.findViewById<EditText>(R.id.inputBolivares)
+            val editTextInFragmentDolar = fragment.view?.findViewById<EditText>(R.id.inputDolares)
+            inputTextoBs = editTextInFragmentBs?.text.toString()
+            inputTextoDolla= editTextInFragmentDolar?.text.toString()
+            if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
+
+               textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs"
+
+            }else{
+                val btnTextInFragmentBcv = fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
+                val btnTextInFragmentParalelo = fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
+                bcv = btnTextInFragmentBcv?.text.toString()
+                paralelo= btnTextInFragmentParalelo?.text.toString()
+                textoCapture="Precio del Dolar Bcv: $bcv Precio del Paralelo es: $paralelo"
+            }
+        }
+        Log.d("Capture", "crearTextoCapture: $textoCapture")
+        return textoCapture
+    }
+
+
+    //**********************************
+    fun compartirLinkconFoto(context: Context, text: String) {
+        try {
+                       // Crear un archivo temporal para compartir
+            val tempFile = createTempImageFile()
+
+
+            writeDrawableImageToFile(context, R.drawable.logodolar_al_dia, tempFile)
+            // Obtener la Uri segura utilizando FileProvider
+            val uri = FileProvider.getUriForFile(
+                this,
+                "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
+                tempFile
+            )
+            Log.d("Capture", "shareImageWithText:uri $uri ")
+
+            // Crear un intent para compartir
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                type = "image/*"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_TEXT, text)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            // Iniciar la actividad de compartir
+            context.startActivity(Intent.createChooser(shareIntent, "Compartir con"))
+        } catch (e: IOException) {
+            // Manejar cualquier excepción que pueda ocurrir durante la creación del archivo temporal
+            e.printStackTrace()
+        }
+    }
+
+
+    @Throws(IOException::class)
+    private fun writeDrawableImageToFile(context: Context, drawableId: Int, file: File) {
+        context.resources.openRawResource(drawableId).use { inputStream ->
+            file.outputStream().use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+    }
+
+    //***********************************
 }

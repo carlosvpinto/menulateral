@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.carlosv.dolaraldia.ApiService
 import com.carlosv.dolaraldia.adapter.BancosAdapter
 import com.carlosv.dolaraldia.ui.home.HomeFragment
+import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentBancosBinding
 
 //import com.carlosv.dolaraldia.databinding.FragmentSlideshowBinding
@@ -64,7 +66,11 @@ class BancosFragment : Fragment() {
                 adapter?.updatePrecioBancos(bancosFiltrados)
         }
 
+        // Aplicar la animación
+        val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
+        root.startAnimation(animation)
 
+        //***********************
 
 
         return root
@@ -204,7 +210,7 @@ class BancosFragment : Fragment() {
 
 
                 }
-                runOnUiThread {
+
                     // Inicializar el adaptador si aún no se ha hecho
                     if (adapter == null) {
                         adapter = BancosAdapter(this@BancosFragment, ArrayList())
@@ -213,15 +219,7 @@ class BancosFragment : Fragment() {
 
                     // Actualizar los datos del adaptador
                     adapter?.updatePrecioBancos(bancosList)
-                }
 
-//                runOnUiThread {
-//                    adapter?.updatePrecioBancos(bancosList)
-//
-//                    adapter = BancosAdapter(this@BancosFragment, ArrayList(bancosList))
-//
-//                    binding.recyclerOtrasBancos.adapter = adapter
-//                }
 
             } catch (e: Exception) {
                     Log.d("RESPUESTA", " ERROR DE RESPONSE $e ")
@@ -237,197 +235,6 @@ class BancosFragment : Fragment() {
 
 
 
-    }
-
-    fun llamarBancos() {
-
-
-
-        lifecycleScope.launch(Dispatchers.IO) {
-
-
-            val url =
-                "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/page?page=exchangemonitor"
-            val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
-
-            val client = OkHttpClient.Builder().build()
-            val request = Request.Builder()
-                .url(url)
-                .build()
-
-            val retrofit = Retrofit.Builder()
-                .baseUrl(baseUrl)  // Modifica la URL base para que termine con una barra diagonal
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build()
-
-
-            val apiService = retrofit.create(ApiService::class.java)
-
-            try {
-                val response = apiService.getBancos(url)
-                Log.d("RESPUESTA", " VALOR DEL RESPONSE $response ")
-                if (response != null) {
-                    valorActualBcv = response.monitors.banesco.price.toDouble()
-
-
-                    bancosList.add(
-                        BancoModelAdap(
-                            "Banesco",
-                            response.monitors.banesco.price.toDouble(),
-                            response.monitors.banesco.percent,
-                            response.monitors.banesco.color,
-                            response.monitors.banesco.last_update,
-                            response.monitors.banesco.percent,
-                            response.monitors.banesco.symbol,
-                            response.monitors.banesco.title,
-
-                            )
-                    )
-                    // Agregar más bancos según sea necesario
-
-                    bancosList.add(
-                        BancoModelAdap(
-                            "Mercantil",
-                            response.monitors.mercantil.price.toDouble(),
-                            response.monitors.mercantil.percent,
-                            response.monitors.mercantil.color,
-                            response.monitors.mercantil.last_update,
-                            response.monitors.mercantil.percent,
-                            response.monitors.mercantil.symbol,
-                            response.monitors.mercantil.title,
-                        )
-                    )
-
-                    bancosList.add(
-                        BancoModelAdap(
-                            "Bancamiga",
-                            response.monitors.bancamiga.price.toDouble(),
-                            response.monitors.bancamiga.percent,
-                            response.monitors.bancamiga.color,
-                            response.monitors.bancamiga.last_update,
-                            response.monitors.bancamiga.percent,
-                            response.monitors.bancamiga.symbol,
-                            response.monitors.bancamiga.title,
-                        )
-                    )
-
-                    bancosList.add(
-                        BancoModelAdap(
-                            "Banco de Venezuela",
-                            response.monitors.banco_de_venezuela.price.toDouble(),
-                            response.monitors.banco_de_venezuela.percent,
-                            response.monitors.banco_de_venezuela.color,
-                            response.monitors.banco_de_venezuela.last_update,
-                            response.monitors.banco_de_venezuela.percent,
-                            response.monitors.banco_de_venezuela.symbol,
-                            response.monitors.banco_de_venezuela.title,
-                        )
-                    )
-
-                    bancosList.add(
-                        BancoModelAdap(
-                            "Banco Provincial",
-                            response.monitors.bbva_provincial.price.toDouble(),
-                            response.monitors.bbva_provincial.percent,
-                            response.monitors.bbva_provincial.color,
-                            response.monitors.bbva_provincial.last_update,
-                            response.monitors.bbva_provincial.percent,
-                            response.monitors.bbva_provincial.symbol,
-                            response.monitors.bbva_provincial.title,
-                        )
-                    )
-
-                    bancosList.add(
-                        BancoModelAdap(
-                            "BNC",
-                            response.monitors.bnc.price.toDouble(),
-                            response.monitors.bnc.percent,
-                            response.monitors.bnc.color,
-                            response.monitors.bnc.last_update,
-                            response.monitors.bnc.percent,
-                            response.monitors.bnc.symbol,
-                            response.monitors.bnc.title,
-                        )
-                    )
-
-                    bancosList.add(
-                        BancoModelAdap(
-                            "remesas_zoom",
-                            response.monitors.remesas_zoom.price.toDouble(),
-                            response.monitors.remesas_zoom.percent,
-                            response.monitors.remesas_zoom.color,
-                            response.monitors.remesas_zoom.last_update,
-                            response.monitors.remesas_zoom.percent,
-                            response.monitors.remesas_zoom.symbol,
-                            response.monitors.remesas_zoom.title,
-                        )
-                    )
-                    bancosList.add(
-                        BancoModelAdap(
-                            "BCV",
-                            response.monitors.bcv.price.toDouble(),
-                            response.monitors.bcv.percent,
-                            response.monitors.bcv.color,
-                            response.monitors.bcv.last_update,
-                            response.monitors.bcv.percent,
-                            response.monitors.bcv.symbol,
-                            response.monitors.bcv.title,
-                        )
-                    )
-
-                    bancosList.add(
-                        BancoModelAdap(
-                            "italcambio",
-                            response.monitors.italcambio.price.toDouble(),
-                            response.monitors.italcambio.percent,
-                            response.monitors.italcambio.color,
-                            response.monitors.italcambio.last_update,
-                            response.monitors.italcambio.percent,
-                            response.monitors.italcambio.symbol,
-                            response.monitors.italcambio.title,
-                        )
-                    )
-
-
-                }
-                runOnUiThread {
-                    // Inicializar el adaptador si aún no se ha hecho
-                    if (adapter == null) {
-                        adapter = BancosAdapter(this@BancosFragment, ArrayList())
-                        binding.recyclerOtrasBancos.adapter = adapter
-                    }
-
-                    // Actualizar los datos del adaptador
-                    adapter?.updatePrecioBancos(bancosList)
-                }
-
-//                runOnUiThread {
-//                    adapter?.updatePrecioBancos(bancosList)
-//
-//                    adapter = BancosAdapter(this@BancosFragment, ArrayList(bancosList))
-//
-//                    binding.recyclerOtrasBancos.adapter = adapter
-//                }
-
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.d("RESPUESTA", " ERROR DE RESPONSE $e ")
-                    Toast.makeText(
-                        requireContext(),
-                        "No Actualizo dolar BCV Revise Conexion $e",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
-                println("Error: ${e.message}")
-            }
-        }
-
-
-    }
-    private fun runOnUiThread(action: () -> Unit) {
-        Handler(Looper.getMainLooper()).post(action)
     }
 
 

@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -20,6 +21,7 @@ import com.carlosv.dolaraldia.adapter.OtrasPaginasAdapter
 import com.carlosv.dolaraldia.model.monedas.OtrasPaginas
 import com.carlosv.dolaraldia.ui.bancos.BancoModelAdap
 import com.carlosv.dolaraldia.ui.home.HomeFragment
+import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentPaginasBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,8 +57,15 @@ class OtrasPaginasFragment : Fragment() {
 
         _binding = FragmentPaginasBinding.inflate(inflater, container, false)
         val root: View = binding.root
-        //getDollarRates()
-       // llamarApi()
+
+
+        // Aquí puedes añadir la animación de aparición hacia abajo lentamente
+        // Aplicar la animación
+        val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
+        root.startAnimation(animation)
+
+        //***********************
+
         llamarPaginasdelfragmen()
         val linearLayoutManager = LinearLayoutManager(requireContext())
         binding.recyclerOtrasPaginas.layoutManager = linearLayoutManager
@@ -258,7 +267,7 @@ class OtrasPaginasFragment : Fragment() {
 
 
             }
-                runOnUiThread {
+
                     // Inicializar el adaptador si aún no se ha hecho
                     if (adapter == null) {
                         adapter = OtrasPaginasAdapter(this@OtrasPaginasFragment, ArrayList())
@@ -267,7 +276,7 @@ class OtrasPaginasFragment : Fragment() {
 
                     // Actualizar los datos del adaptador
                     adapter?.updatePrecioBancos(bancosList)
-                }
+
 
                 // Actualizar los datos del adaptador
                 adapter?.updatePrecioBancos(bancosList)
@@ -287,12 +296,6 @@ class OtrasPaginasFragment : Fragment() {
 
 
 
-    }
-
-
-
-    private fun runOnUiThread(action: () -> Unit) {
-        Handler(Looper.getMainLooper()).post(action)
     }
 
 
