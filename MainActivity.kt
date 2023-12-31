@@ -329,23 +329,41 @@ class MainActivity : AppCompatActivity() {
         var bcv= ""
         var paralelo= ""
 
+        //**************************
+        val nombreFragmentAct = getCurrentFragmentTag()
+        Log.d("CAPTURA", "crearTextoCapture: currentFragmentTag $nombreFragmentAct")
+        if (nombreFragmentAct == "fragment_tag_que_quieres_comparar") {
+            // Realiza la lógica específica del fragmento actual
+        }
+        //***********************************************
         val fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
         if (fragment != null && fragment.isAdded) {
-            val editTextInFragmentBs = fragment.view?.findViewById<EditText>(R.id.inputBolivares)
-            val editTextInFragmentDolar = fragment.view?.findViewById<EditText>(R.id.inputDolares)
-            inputTextoBs = editTextInFragmentBs?.text.toString()
-            inputTextoDolla= editTextInFragmentDolar?.text.toString()
-            if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
+            if (nombreFragmentAct== "Dolar al Dia"){
+                val editTextInFragmentBs = fragment.view?.findViewById<EditText>(R.id.inputBolivares)
+                val editTextInFragmentDolar = fragment.view?.findViewById<EditText>(R.id.inputDolares)
+                inputTextoBs = editTextInFragmentBs?.text.toString()
+                inputTextoDolla= editTextInFragmentDolar?.text.toString()
+                if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
 
-               textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs"
-
+                    textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs"
             }else{
-                val btnTextInFragmentBcv = fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
-                val btnTextInFragmentParalelo = fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
-                bcv = btnTextInFragmentBcv?.text.toString()
-                paralelo= btnTextInFragmentParalelo?.text.toString()
-                textoCapture="Precio del Dolar Bcv: $bcv Precio del Paralelo es: $paralelo"
+                    val btnTextInFragmentBcv = fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
+                    val btnTextInFragmentParalelo = fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
+                    bcv = btnTextInFragmentBcv?.text.toString()
+                    paralelo= btnTextInFragmentParalelo?.text.toString()
+                    textoCapture="Precio del Dolar Bcv: $bcv Precio del Paralelo es: $paralelo"
+                }
+
             }
+        }
+        if (nombreFragmentAct== "Otras Paginas"){
+                textoCapture= "Precio del Dolar en Paginas Web"
+        }
+        if (nombreFragmentAct== "Precio en Bancos"){
+            textoCapture= "Precio de venta del dolar en Bancos Venezolanos"
+        }
+        if (nombreFragmentAct== "Acerca..."){
+            textoCapture= "Acerca de la Aplicacion"
         }
         Log.d("Capture", "crearTextoCapture: $textoCapture")
         return textoCapture
@@ -394,6 +412,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    fun getCurrentFragmentTag(): String? {
+        val navController = findNavController(R.id.nav_host_fragment_content_main)
+        val currentDestination = navController.currentDestination
+
+        return currentDestination?.label.toString()
+    }
+
+
 
     //***********************************
 }

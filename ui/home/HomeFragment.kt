@@ -53,7 +53,9 @@ class HomeFragment : Fragment() {
 
     // This property is only valid between onCreateView and
     // onDestroyView.
-    private val binding get() = _binding!!
+   // private val binding get() = _binding!!
+    private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
+
     private var bcvActivo: Boolean?= null
     private var valorActualParalelo: Double? = 0.0
     private var valorActualBcv: Double? = 0.0
