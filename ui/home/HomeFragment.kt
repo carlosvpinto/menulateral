@@ -33,32 +33,41 @@ import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.jsoup.Jsoup
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.security.KeyManagementException
 import java.text.DecimalFormat
-import javax.inject.Singleton
+import java.security.KeyStore
+import java.security.NoSuchAlgorithmException
+import java.security.SecureRandom
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import javax.net.ssl.*
 
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
-   // private val binding get() = _binding!!
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
 
     private var bcvActivo: Boolean?= null
     private var valorActualParalelo: Double? = 0.0
     private var valorActualBcv: Double? = 0.0
+    private var valorActualEuro: Float? = 0.0f
     var numeroNoturno = 0
 
 
@@ -75,12 +84,12 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        llamarPrecio()
+
         // Obtén una referencia a SharedPreferences
         val sharedPreferences = requireContext().getSharedPreferences("MiPreferencia", AppCompatActivity.MODE_PRIVATE  )
         // Obtener referencia a SharedPreferences
 
-// Recuperar el valor entero
+        // Recuperar el valor entero
         numeroNoturno = sharedPreferences.getInt("numero_noturno", 0)
 
         //VERIFICA SI QUE MEDO TIENE GUARDADO
@@ -88,14 +97,11 @@ class HomeFragment : Fragment() {
         binding.swipeRefreshLayout.setOnRefreshListener {
            binding.swipeRefreshLayout.isRefreshing = true
             llamarPrecio()
-           // llamarParalelo()
+            actualizarEuro()
         }
 
         binding.switchDolar.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
-                println("isChecked derecha: $isChecked valorActualParalelo $valorActualParalelo")
-                // El interruptor está derecha
-                Log.d("Multiplicacion", "CAMBIO SUICHE: ")
 
                 actualzarMultiplicacion(valorActualParalelo)
 
@@ -105,7 +111,6 @@ class HomeFragment : Fragment() {
 
             } else {
                 // El interruptor está izquierda
-                println("isChecked Izquierda: $isChecked valorActualBcv $valorActualBcv")
                 actualzarMultiplicacion(valorActualBcv)
                 bcvActivo = true
                 binding.btnBcv.isChecked = true
@@ -127,6 +132,13 @@ class HomeFragment : Fragment() {
             copiarBs()
         }
 
+        //PARA ACTUALIZAR EL PRECIO DEL DOLAR SOLO CUANDO CARGA POR PRIMERA VEZ
+        if(savedInstanceState== null){
+
+            disableSSLVerification()
+            llamarPrecio()
+            actualizarEuro()
+        }
 
         // Aplicar la animación
         val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
@@ -139,6 +151,10 @@ class HomeFragment : Fragment() {
     //INTERFACE PARA COMUNICAR CON EL ACTIVITY
     object ApiResponseHolder {
         private var response: BancosModel? = null
+        private var precioEuro: Double? = null
+        private const val VALOR_EURO = "ValorEuro"
+        private const val NUMERO_EURO = "euro"
+        private const val FECHA_EURO = "fecha"
 
         fun getResponse(): BancosModel? {
             return response
@@ -147,7 +163,134 @@ class HomeFragment : Fragment() {
         fun setResponse(newResponse: BancosModel) {
             response = newResponse
         }
+
+        fun guardarEuro(context: Context, numero: Float) {
+            val prefs: SharedPreferences = context.getSharedPreferences(VALOR_EURO, Context.MODE_PRIVATE)
+            val editor = prefs.edit()
+            editor.putFloat(NUMERO_EURO, numero)
+            editor.apply()
+        }
+
+
+        fun recuperarEuro(context: Context): Float {
+            val prefs: SharedPreferences = context.getSharedPreferences(VALOR_EURO, Context.MODE_PRIVATE)
+            return prefs.getFloat(NUMERO_EURO, 0.0f) // 0 es el valor predeterminado si no se encuentra el número
+        }
+        fun guardarEuroFecha(context: Context, fecha:String) {
+            val prefs: SharedPreferences = context.getSharedPreferences(VALOR_EURO, Context.MODE_PRIVATE)
+            val editor = prefs.edit()
+            editor.putString(FECHA_EURO, fecha)
+            editor.apply()
+        }
+        fun recuperarEuroFecha(context: Context): String? {
+            val prefs: SharedPreferences = context.getSharedPreferences(VALOR_EURO, Context.MODE_PRIVATE)
+            return prefs.getString(FECHA_EURO, null)
+        }
+
     }
+
+    //actualizar monto del euro
+    private fun actualizarEuro() {
+        try {
+            val savedEuro = HomeFragment.ApiResponseHolder.recuperarEuro(requireContext())
+
+            if (savedEuro != null) {
+                ApiResponseHolder.recuperarEuro(requireContext())
+                valorActualEuro = ApiResponseHolder.recuperarEuro(requireContext())
+                Log.d(
+                    "EUROACTU",
+                    "VALOR DE actualizarEuro:savedEuro $savedEuro ")
+            }
+        }catch (e: Exception){
+            Toast.makeText(requireContext(), "Problemas de Conexion $e", Toast.LENGTH_SHORT).show()
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            var intentos = 0
+            val maxIntentos = 3
+            var obtenido = false
+            Log.d(
+                "EUROACTU",
+                "VALOR DE:intentos $intentos maxIntentos $maxIntentos  obtenido $obtenido "
+            )
+            if (!obtenido) {
+                try {
+                    val document = Jsoup.connect("https://www.bcv.org.ve/").timeout(60000).get()
+                    val precioEuro = document.select("#euro strong").first()?.text()
+                    val valorEuro = precioEuro?.replace(",", ".")?.toFloatOrNull()
+
+                    // Extraer la fecha del elemento span con la clase date-display-single
+                    val fechaElement = document.select("span.date-display-single").firstOrNull()
+                    val fecha = fechaElement?.text()
+
+                    withContext(Dispatchers.Main) {
+                        if (isAdded) { // Verifica si el Fragment está adjunto
+                            if (valorEuro != null) {
+                                ApiResponseHolder.guardarEuro(requireContext(), valorEuro)
+                                ApiResponseHolder.guardarEuroFecha(
+                                    requireContext(),
+                                    fecha.toString()
+                                )
+
+//                            Toast.makeText(
+//                                requireContext(),
+//                                "Actualizo Precio Euro $valorEuro y fechas de actualizacion $fecha",
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+                                Log.d(
+                                    "EUROACTU",
+                                    "VALOR DE:Dispatchers ENTROO A GUARDARRRRRR "
+                                )
+
+                                // Marcar como obtenido y salir del bucle
+                                obtenido = true
+                            } else {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Problemas de Internet No se Actualizo el Euro",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    withContext(Dispatchers.Main) {
+
+                    }
+                }
+                // Incrementar el contador de intentos
+                intentos++
+
+                // Esperar un tiempo antes de realizar el próximo intento
+                delay(10000) // Esperar 10 segundos antes de volver a intentar obtener el precio del dólar
+            }
+        }
+    }
+    //PARA LA SEGURIDAD*****************
+    fun disableSSLVerification() {
+        try {
+            val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+
+                override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+
+                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+            })
+
+            val sslContext = SSLContext.getInstance("TLS")
+            sslContext.init(null, trustAllCerts, SecureRandom())
+
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+            HttpsURLConnection.setDefaultHostnameVerifier { _, _ -> true }
+        } catch (e: NoSuchAlgorithmException) {
+            e.printStackTrace()
+        } catch (e: KeyManagementException) {
+            e.printStackTrace()
+        }
+    }
+
+
 
     //recupera el valor del nuemero Nocturno
     private fun modoDark(): Int {
@@ -175,8 +318,6 @@ class HomeFragment : Fragment() {
                     val precioSincoma = inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
                     // val precioSincoma = precioTexto.toDoubleOrNull() ?: 0.0
                     valorDolares = precioSincoma.toDouble() * valorActualDolar.toDouble()
-                    // valorDolares = inputText.toDouble() * valorActualDolar!!.toDouble()
-                    println("ENTRO AL TRY Y EL VALOR DE  valorDolares $valorDolares inputText $inputText")
                 }
                 val formattedValorDolares = decimalFormat.format(valorDolares)
                 binding.inputBolivares.setText(formattedValorDolares)
@@ -384,7 +525,6 @@ class HomeFragment : Fragment() {
 
     private fun multiplicaDolares() {
         val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-        Log.d("RESPUESTA", "DENTRO DEL IF INPUTTEX: multiplicaDolares  valorActualParalelo $valorActualParalelo ")
         binding.inputDolares?.addTextChangedListener(object : TextWatcher {
 
             override fun afterTextChanged(s: Editable?) {
@@ -406,7 +546,6 @@ class HomeFragment : Fragment() {
                             val cleanedText =
                                 inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
                             val parsedValue = cleanedText.toDoubleOrNull() ?: 0.0
-                            Log.d("RESPUESTA", "DENTRO DEL IF INPUTTEX valorActualBcv $valorActualBcv ")
                             if (valorActualBcv != null) valorDolares =
                                 parsedValue * valorActualBcv!!.toDouble()
                         }
@@ -522,6 +661,7 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        lifecycleScope.coroutineContext.cancel()
         _binding = null
     }
 }

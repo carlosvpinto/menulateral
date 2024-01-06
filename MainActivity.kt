@@ -44,7 +44,7 @@ import androidx.annotation.RequiresApi
 
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-
+import com.google.android.material.textfield.TextInputEditText
 
 
 class MainActivity : AppCompatActivity() {
@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity() {
         // el menú debe considerarse como destino de nivel superior.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home,R.id.nav_monedas, R.id.nav_bancos, R.id.nav_acerca
+                R.id.nav_home,R.id.nav_monedas, R.id.nav_bancos, R.id.nav_acerca, R.id.nav_Euros
             ), drawerLayout
         )
 
@@ -364,6 +364,16 @@ class MainActivity : AppCompatActivity() {
         }
         if (nombreFragmentAct== "Acerca..."){
             textoCapture= "Acerca de la Aplicacion"
+        }
+
+        if (nombreFragmentAct== "Precio del Euro"){
+            val btnTextInFragmentEuro = fragment?.view?.findViewById<Button>(R.id.btnEuro)
+            val TextBsFragmentEuro = fragment?.view?.findViewById<TextInputEditText>(R.id.inputBolivares)
+            val TextEurosFragmentEuro = fragment?.view?.findViewById<TextInputEditText>(R.id.inputEuros)
+            val euro = btnTextInFragmentEuro?.text
+            val totalBs = TextBsFragmentEuro?.text
+            val totalEuro = TextEurosFragmentEuro?.text
+            textoCapture = "Precio del Euro: $euro total en Bs:$totalBs Total en Euro: $totalEuro "
         }
         Log.d("Capture", "crearTextoCapture: $textoCapture")
         return textoCapture
