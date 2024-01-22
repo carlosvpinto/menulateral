@@ -44,6 +44,7 @@ import androidx.annotation.RequiresApi
 
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.google.android.gms.ads.MobileAds
 import com.google.android.material.textfield.TextInputEditText
 
 
@@ -112,7 +113,7 @@ class MainActivity : AppCompatActivity() {
 
         when(item.itemId){
             R.id.action_compartir->{
-                compartirEnlacePlayStore(this)
+               // compartirEnlacePlayStore(this)
                 Toast.makeText(this, "Compartir link Playstore", Toast.LENGTH_SHORT).show()
                 compartirLinkconFoto(this,"https://play.google.com/store/apps/details?id=$packageName")
 

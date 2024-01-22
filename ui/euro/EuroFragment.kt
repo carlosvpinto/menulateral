@@ -4,10 +4,8 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
-import android.net.Uri
-import android.os.Build
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import android.os.Bundle
 import android.text.Editable
 import android.text.Html
@@ -32,6 +30,7 @@ import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentAcercaBinding
 import com.carlosv.menulateral.databinding.FragmentEuroBinding
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
+import com.google.android.gms.ads.MobileAds
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -68,6 +67,7 @@ class EuroFragment : Fragment() {
     private var valorActualParalelo: Double? = 0.0
     private var valorActualEuro: Float? = 0.0f
     var numeroNoturno = 0
+    lateinit var mAdView : AdView
 
 
     lateinit var navigation : BottomNavigationView
@@ -83,7 +83,11 @@ class EuroFragment : Fragment() {
         _binding = FragmentEuroBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-
+        //Para el Admon
+        MobileAds.initialize(requireContext()) {}
+        mAdView = root.findViewById(R.id.adView)
+        val adRequest = AdRequest.Builder().build()
+        mAdView.loadAd(adRequest)
 
         //VERIFICA SI QUE MEDO TIENE GUARDADO
         // setDayNight(modoDark())

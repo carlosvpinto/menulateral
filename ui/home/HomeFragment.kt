@@ -26,11 +26,15 @@ import android.view.animation.AnimationUtils
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -63,13 +67,14 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
 
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
+    private var isFragmentAttached: Boolean = false
 
     private var bcvActivo: Boolean?= null
     private var valorActualParalelo: Double? = 0.0
     private var valorActualBcv: Double? = 0.0
     private var valorActualEuro: Float? = 0.0f
     var numeroNoturno = 0
-
+    lateinit var mAdView : AdView
 
     lateinit var navigation : BottomNavigationView
 
@@ -84,6 +89,12 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+
+        MobileAds.initialize(requireContext()) {}
+        mAdView= binding.adView
+       // mAdView = findViewById(R.id.adView)
+        val adRequest = AdRequest.Builder().build()
+        mAdView.loadAd(adRequest)
 
         // Obtén una referencia a SharedPreferences
         val sharedPreferences = requireContext().getSharedPreferences("MiPreferencia", AppCompatActivity.MODE_PRIVATE  )
@@ -188,85 +199,84 @@ class HomeFragment : Fragment() {
         }
 
     }
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        isFragmentAttached = true
+    }
+    override fun onDetach() {
+        super.onDetach()
+        isFragmentAttached = false
+    }
 
-    //actualizar monto del euro
     private fun actualizarEuro() {
         try {
-            val savedEuro = HomeFragment.ApiResponseHolder.recuperarEuro(requireContext())
+            // Recuperar el valor del euro guardado
+            val savedEuro = ApiResponseHolder.recuperarEuro(requireContext())
+            Log.d("EUROACTU", "VALOR DE actualizarEuro: savedEuro $savedEuro")
 
-            if (savedEuro != null) {
-                ApiResponseHolder.recuperarEuro(requireContext())
-                valorActualEuro = ApiResponseHolder.recuperarEuro(requireContext())
+            // Actualizar el valor del euro desde la web
+            CoroutineScope(Dispatchers.IO).launch {
+                var intentos = 0
+                val maxIntentos = 3
+                var obtenido = false
+
                 Log.d(
                     "EUROACTU",
-                    "VALOR DE actualizarEuro:savedEuro $savedEuro ")
-            }
-        }catch (e: Exception){
-            Toast.makeText(requireContext(), "Problemas de Conexion $e", Toast.LENGTH_SHORT).show()
-        }
+                    "VALOR DE: intentos $intentos maxIntentos $maxIntentos obtenido $obtenido"
+                )
 
-        CoroutineScope(Dispatchers.IO).launch {
-            var intentos = 0
-            val maxIntentos = 3
-            var obtenido = false
-            Log.d(
-                "EUROACTU",
-                "VALOR DE:intentos $intentos maxIntentos $maxIntentos  obtenido $obtenido "
-            )
-            if (!obtenido) {
-                try {
-                    val document = Jsoup.connect("https://www.bcv.org.ve/").timeout(60000).get()
-                    val precioEuro = document.select("#euro strong").first()?.text()
-                    val valorEuro = precioEuro?.replace(",", ".")?.toFloatOrNull()
+                while (!obtenido && intentos < maxIntentos) {
+                    try {
+                        val document = Jsoup.connect("https://www.bcv.org.ve/").timeout(60000).get()
+                        val precioEuro = document.select("#euro strong").first()?.text()
+                        val valorEuro = precioEuro?.replace(",", ".")?.toFloatOrNull()
 
-                    // Extraer la fecha del elemento span con la clase date-display-single
-                    val fechaElement = document.select("span.date-display-single").firstOrNull()
-                    val fecha = fechaElement?.text()
+                        // Extraer la fecha del elemento span con la clase date-display-single
+                        val fechaElement = document.select("span.date-display-single").firstOrNull()
+                        val fecha = fechaElement?.text()
 
-                    withContext(Dispatchers.Main) {
-                        if (isAdded) { // Verifica si el Fragment está adjunto
-                            if (valorEuro != null) {
-                                ApiResponseHolder.guardarEuro(requireContext(), valorEuro)
-                                ApiResponseHolder.guardarEuroFecha(
-                                    requireContext(),
-                                    fecha.toString()
-                                )
+                        withContext(Dispatchers.Main) {
+                            if (isAdded) { // Verifica si el Fragment está adjunto
+                                if (valorEuro != null) {
+                                    // Guardar el nuevo valor del euro y la fecha de actualización
+                                    ApiResponseHolder.guardarEuro(requireContext(), valorEuro)
+                                    ApiResponseHolder.guardarEuroFecha(
+                                        requireContext(),
+                                        fecha.toString()
+                                    )
 
-//                            Toast.makeText(
-//                                requireContext(),
-//                                "Actualizo Precio Euro $valorEuro y fechas de actualizacion $fecha",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-                                Log.d(
-                                    "EUROACTU",
-                                    "VALOR DE:Dispatchers ENTROO A GUARDARRRRRR "
-                                )
+                                    Log.d(
+                                        "EUROACTU",
+                                        "VALOR DE: Dispatchers ENTROO A GUARDARRRRRR "
+                                    )
 
-                                // Marcar como obtenido y salir del bucle
-                                obtenido = true
-                            } else {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Problemas de Internet No se Actualizo el Euro",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                    // Marcar como obtenido y salir del bucle
+                                    obtenido = true
+                                } else {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        "Problemas de Internet. No se actualizó el Euro",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         }
+                    } catch (e: IOException) {
+                        e.printStackTrace()
                     }
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                    withContext(Dispatchers.Main) {
 
-                    }
+                    // Incrementar el contador de intentos
+                    intentos++
+
+                    // Esperar un tiempo antes de realizar el próximo intento
+                    delay(10000) // Esperar 10 segundos antes de volver a intentar obtener el precio del euro
                 }
-                // Incrementar el contador de intentos
-                intentos++
-
-                // Esperar un tiempo antes de realizar el próximo intento
-                delay(10000) // Esperar 10 segundos antes de volver a intentar obtener el precio del dólar
             }
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Problemas de Conexión $e", Toast.LENGTH_SHORT).show()
         }
     }
+
     //PARA LA SEGURIDAD*****************
     fun disableSSLVerification() {
         try {
@@ -387,8 +397,10 @@ class HomeFragment : Fragment() {
                 llenarCampoParalelo(savedResponseBCV)
                 multiplicaDolares()
                 dividirABolivares()
+                binding.swipeRefreshLayout.isRefreshing = false
             }
         }catch (e: Exception){
+            binding.swipeRefreshLayout.isRefreshing = false
             Toast.makeText(requireContext(), "Problemas de Conexion $e", Toast.LENGTH_SHORT).show()
         }
 
@@ -413,7 +425,7 @@ class HomeFragment : Fragment() {
             try {
                 val response = apiService.getBancos(url)
                 Log.d("RESPUESTA", " VALOR DEL RESPONSE en BCV VIEJO $response ")
-
+                binding.swipeRefreshLayout.isRefreshing = false
                 if (response != null) {
                     ApiResponseHolder.setResponse(response)
                     valorActualBcv = response.monitors.bcv.price.toDouble()
@@ -422,6 +434,8 @@ class HomeFragment : Fragment() {
 
                     withContext(Dispatchers.Main) {
                         binding.swipeRefreshLayout.isRefreshing = false
+                        binding.txtFechaActualizacion.setTextColor(ContextCompat.getColor(requireContext(),
+                            R.color.md_theme_light_surfaceTint))
                         llenarCampoBCV(response)
                         llenarCampoParalelo(response)
                     }
@@ -437,6 +451,7 @@ class HomeFragment : Fragment() {
                         "No se actualizó el dólar BCV. Revise la conexión: $e",
                         Toast.LENGTH_LONG
                     ).show()
+                    binding.txtFechaActualizacion.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
 
                     binding.swipeRefreshLayout.isRefreshing = false
                 }
