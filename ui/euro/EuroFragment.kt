@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
+import com.carlosv.dolaraldia.MainActivity
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
 import com.carlosv.dolaraldia.ui.home.HomeFragment
 import com.carlosv.dolaraldia.ui.home.HomeViewModel
@@ -82,6 +83,11 @@ class EuroFragment : Fragment() {
 
         _binding = FragmentEuroBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+        val fabBoton = (activity as MainActivity).fabBoton
+
+        // Ahora puedes trabajar con el FloatingActionButton
+        fabBoton.visibility= View.VISIBLE
 
         //Para el Admon
         MobileAds.initialize(requireContext()) {}

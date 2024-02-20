@@ -45,6 +45,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.google.android.gms.ads.MobileAds
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 
 
@@ -55,6 +56,11 @@ class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 123
     var filePath = ""
 
+    val fabBoton: FloatingActionButton by lazy {
+        binding.appBarMain.botonFloating
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -62,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-
+        MobileAds.initialize(this) {}
         setSupportActionBar(binding.appBarMain.toolbar)
 
         binding.appBarMain.botonFloating.setOnClickListener { view ->

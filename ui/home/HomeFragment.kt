@@ -29,6 +29,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
+import com.carlosv.dolaraldia.MainActivity
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
@@ -73,8 +74,11 @@ class HomeFragment : Fragment() {
     private var valorActualParalelo: Double? = 0.0
     private var valorActualBcv: Double? = 0.0
     private var valorActualEuro: Float? = 0.0f
+    private var ultimoTecleado: Int? = 2
     var numeroNoturno = 0
     lateinit var mAdView : AdView
+
+
 
     lateinit var navigation : BottomNavigationView
 
@@ -90,7 +94,12 @@ class HomeFragment : Fragment() {
         val root: View = binding.root
 
 
+
+        llamarPrecio()
+
         MobileAds.initialize(requireContext()) {}
+
+        //PARA CARGAR ADMOB
         mAdView= binding.adView
        // mAdView = findViewById(R.id.adView)
         val adRequest = AdRequest.Builder().build()
@@ -147,7 +156,7 @@ class HomeFragment : Fragment() {
         if(savedInstanceState== null){
 
             disableSSLVerification()
-            llamarPrecio()
+
             actualizarEuro()
         }
 
@@ -301,68 +310,56 @@ class HomeFragment : Fragment() {
     }
 
 
-
-    //recupera el valor del nuemero Nocturno
-    private fun modoDark(): Int {
-        val sharedPreferences = requireContext().getSharedPreferences("MiPreferencia",
-            AppCompatActivity.MODE_PRIVATE
-        )
-
-        val numeroRecuperado = sharedPreferences.getInt("numero_noturno", 0)
-        return numeroRecuperado
-    }
-    fun tieneFoco(textView: TextView): Boolean {
-        return textView.isFocused
-    }
-
-
     private fun actualzarMultiplicacion(valorActualDolar: Double?) {
-        val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-        var valorDolares = 0.0
-        val inputText = binding.inputDolares.text.toString()
+        if (ultimoTecleado== 0){
+            val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
+            var valorDolares = 0.0
+            val inputText = binding.inputDolares.text.toString()
 
-        if (inputText.isNotEmpty()) {
+            if (inputText.isNotEmpty()) {
 
-            try {
-                if (valorActualDolar != null) {
-                    val precioSincoma = inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
-                    // val precioSincoma = precioTexto.toDoubleOrNull() ?: 0.0
-                    valorDolares = precioSincoma.toDouble() * valorActualDolar.toDouble()
+                try {
+                    if (valorActualDolar != null) {
+                        val precioSincoma = inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
+                        // val precioSincoma = precioTexto.toDoubleOrNull() ?: 0.0
+                        valorDolares = precioSincoma.toDouble() * valorActualDolar.toDouble()
+                    }
+                    val formattedValorDolares = decimalFormat.format(valorDolares)
+                    binding.inputBolivares.setText(formattedValorDolares)
+                }catch (e: NumberFormatException){
+                    Log.d("Multiplicacion", "actualzarMultiplicacion: $e")
                 }
-                val formattedValorDolares = decimalFormat.format(valorDolares)
-                binding.inputBolivares.setText(formattedValorDolares)
-            }catch (e: NumberFormatException){
-                Log.d("Multiplicacion", "actualzarMultiplicacion: $e")
+
+            } else {
+                binding.inputBolivares.text?.clear()
+            }
+        }
+        if (ultimoTecleado==1){
+
+            val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
+            var valorDolares = 0.0
+            val inputText = binding.inputBolivares.text.toString()
+
+            if (inputText.isNotEmpty()) {
+
+                try {
+                    if (valorActualDolar != null) {
+                        val precioSincoma = inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
+                        // val precioSincoma = precioTexto.toDoubleOrNull() ?: 0.0
+                        valorDolares = precioSincoma.toDouble() / valorActualDolar.toDouble()
+                    }
+                    val formattedValorDolares = decimalFormat.format(valorDolares)
+                    binding.inputDolares.setText(formattedValorDolares)
+                }catch (e: NumberFormatException){
+                    Log.d("Multiplicacion", "actualzarMultiplicacion: $e")
+                }
+
+            } else {
+                binding.inputDolares.text?.clear()
             }
 
-        } else {
-            binding.inputBolivares.text?.clear()
         }
-    }
-    private fun actualzarDivision(valorActualDolar: Double?) {
-        val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-        var valorDolares = 0.0
-        val inputTextBs = binding.inputBolivares.text.toString()
-        println("Actualizar Multiplicacion: valorActualDolar $valorActualDolar inputText $inputTextBs")
-        if (inputTextBs.isNotEmpty()) {
 
-            try {
-                if (valorActualDolar != null) {
-                    val precioSincomaBs = inputTextBs.replace("[,]".toRegex(), "") // Elimina puntos y comas
-                    // val precioSincoma = precioTexto.toDoubleOrNull() ?: 0.0
-                    valorDolares = precioSincomaBs.toDouble() / valorActualDolar.toDouble()
-                    // valorDolares = inputText.toDouble() * valorActualDolar!!.toDouble()
-                    println("ENTRO AL TRY Y EL VALOR DE  valorDolares $valorDolares inputText $inputTextBs")
-                }
-                val formattedValorDolares = decimalFormat.format(valorDolares)
-                binding.inputDolares.setText(formattedValorDolares)
-            }catch (e: NumberFormatException){
-                Log.d("Multiplicacion", "actualzarMultiplicacion: $e")
-            }
-
-        } else {
-            binding.inputBolivares.text?.clear()
-        }
     }
 
     private fun activarBtnBcv() {
@@ -391,7 +388,7 @@ class HomeFragment : Fragment() {
 
             if (savedResponseBCV != null) {
                 ApiResponseHolder.setResponse(savedResponseBCV)
-                valorActualBcv = savedResponseBCV.monitors.bcv.price.toDouble()
+                valorActualBcv = savedResponseBCV.monitors.bcv?.price!!.toDouble()
                 valorActualParalelo = savedResponseBCV.monitors.enparalelovzla.price.toDouble()
                 llenarCampoBCV(savedResponseBCV)
                 llenarCampoParalelo(savedResponseBCV)
@@ -428,13 +425,13 @@ class HomeFragment : Fragment() {
                 binding.swipeRefreshLayout.isRefreshing = false
                 if (response != null) {
                     ApiResponseHolder.setResponse(response)
-                    valorActualBcv = response.monitors.bcv.price.toDouble()
+                    valorActualBcv = response.monitors.bcv?.price!!.toDouble()
                     valorActualParalelo = response.monitors.enparalelovzla.price.toDouble()
                     guardarResponse(requireContext(), response)
 
                     withContext(Dispatchers.Main) {
                         binding.swipeRefreshLayout.isRefreshing = false
-                        binding.txtFechaActualizacion.setTextColor(ContextCompat.getColor(requireContext(),
+                        binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),
                             R.color.md_theme_light_surfaceTint))
                         llenarCampoBCV(response)
                         llenarCampoParalelo(response)
@@ -451,7 +448,7 @@ class HomeFragment : Fragment() {
                         "No se actualizó el dólar BCV. Revise la conexión: $e",
                         Toast.LENGTH_LONG
                     ).show()
-                    binding.txtFechaActualizacion.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
+                    binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
 
                     binding.swipeRefreshLayout.isRefreshing = false
                 }
@@ -490,24 +487,24 @@ class HomeFragment : Fragment() {
 
 
     fun llenarCampoBCV(response: BancosModel) {
-        Log.d("RESPUESTA", " VALOR DEL response $response valor de ${response.monitors.bcv.price}  ")
-        if (!response.monitors.bcv.price.isNullOrEmpty()){
-            binding.btnBcv.text = response.monitors.bcv.price
-            binding.btnBcv.textOff =  response.monitors.bcv.price
-            binding.btnBcv.textOn =  response.monitors.bcv.price
-            //binding.txtFechaActualizacion.text= response.datetime.date
-            if (response.monitors.bcv.color == "red"){
+        Log.d("RESPUESTA", " VALOR DEL response $response valor de ${response.monitors.bcv?.price}  ")
+        if (!response.monitors.bcv?.price.isNullOrEmpty()){
+            binding.btnBcv.text = response.monitors.bcv?.price
+            binding.btnBcv.textOff =  response.monitors.bcv?.price
+            binding.btnBcv.textOn =  response.monitors.bcv?.price
+           // binding.txtFechaActualizacionBcv.text= response.datetime.date
+            if (response.monitors.bcv?.color == "red"){
                 binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_roja)
             }
-            if (response.monitors.bcv.color == "green"){
+            if (response.monitors.bcv?.color == "green"){
                 binding.imgflechaBcv.setImageResource(R.drawable.ic_flechaverde)
             }
 
-            if (response.monitors.bcv.color == "neutral"){
+            if (response.monitors.bcv?.color == "neutral"){
                 binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_igual)
             }
         }
-        binding.txtVariacionBcv.text= response.monitors.bcv.percent
+        binding.txtVariacionBcv.text= response.monitors.bcv?.percent
 
 
     }
@@ -518,8 +515,8 @@ class HomeFragment : Fragment() {
             binding.btnParalelo.text = response.monitors.enparalelovzla.price
             binding.btnParalelo.textOff = response.monitors.enparalelovzla.price
             binding.btnParalelo.textOn = response.monitors.enparalelovzla.price
-            binding.txtFechaActualizacion.text = response.monitors.enparalelovzla.last_update
-
+            binding.txtFechaActualizacionPara.text = response.monitors.enparalelovzla.last_update
+            binding.txtFechaActualizacionBcv.text = response.monitors.bcv?.last_update
             if (response.monitors.enparalelovzla.color == "red") {
                 binding.imgFlechaParalelo.setImageResource(R.drawable.ic_flecha_roja)
             }
@@ -540,9 +537,11 @@ class HomeFragment : Fragment() {
 
     private fun multiplicaDolares() {
         val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
+
         binding.inputDolares?.addTextChangedListener(object : TextWatcher {
 
             override fun afterTextChanged(s: Editable?) {
+                ultimoTecleado= 1
                 var valorDolares = 0.0
                 if (binding.inputDolares.isFocused) {
                     val inputText = binding.inputDolares.text.toString()
@@ -587,6 +586,7 @@ class HomeFragment : Fragment() {
         binding.inputBolivares?.addTextChangedListener(object : TextWatcher {
 
             override fun afterTextChanged(s: Editable?) {
+                ultimoTecleado= 0
                 var valorDolares = 0.0
                 if (binding.inputBolivares.isFocused) {
                     val inputText = binding.inputBolivares.text.toString()

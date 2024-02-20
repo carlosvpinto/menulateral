@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.carlosv.dolaraldia.ApiService
+import com.carlosv.dolaraldia.MainActivity
 import com.carlosv.dolaraldia.adapter.BancosAdapter
 import com.carlosv.dolaraldia.adapter.OtrasPaginasAdapter
 //import com.carlosv.dolaraldia.databinding.FragmentGalleryBinding
@@ -58,6 +59,10 @@ class OtrasPaginasFragment : Fragment() {
         _binding = FragmentPaginasBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        val fabBoton = (activity as MainActivity).fabBoton
+
+        // Ahora puedes trabajar con el FloatingActionButton
+        fabBoton.visibility= View.GONE
 
         // Aquí puedes añadir la animación de aparición hacia abajo lentamente
         // Aplicar la animación
@@ -87,7 +92,7 @@ class OtrasPaginasFragment : Fragment() {
             val response = HomeFragment.ApiResponseHolder.getResponse()
             Log.d("RESPUESTA", " VALOR DEL RESPONSE $response ")
             if (response != null) {
-                valorActualBcv = response.monitors.banesco.price.toDouble()
+                valorActualBcv = response.monitors.banesco?.price!!.toDouble()
 
 
                 // Agregar más Paginas según sea necesario
