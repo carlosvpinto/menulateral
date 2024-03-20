@@ -57,10 +57,10 @@ class BancosFragment : Fragment() {
         val root: View = binding.root
         val linearLayoutManager = LinearLayoutManager(requireContext())
         binding.recyclerOtrasBancos.layoutManager = linearLayoutManager
-        val fabBoton = (activity as MainActivity).fabBoton
+     //   val fabBoton = (activity as MainActivity).fabBoton
 
         // Ahora puedes trabajar con el FloatingActionButton
-        fabBoton.visibility= View.GONE
+       // fabBoton.visibility= View.GONE
 
         //llamarBancos()
         llamarBancosdelfragmen()

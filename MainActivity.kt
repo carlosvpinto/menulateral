@@ -56,9 +56,9 @@ class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 123
     var filePath = ""
 
-    val fabBoton: FloatingActionButton by lazy {
-        binding.appBarMain.botonFloating
-    }
+//    val fabBoton: FloatingActionButton by lazy {
+//        binding.appBarMain.botonFloating
+//    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,21 +70,21 @@ class MainActivity : AppCompatActivity() {
 
         MobileAds.initialize(this) {}
         setSupportActionBar(binding.appBarMain.toolbar)
-
-        binding.appBarMain.botonFloating.setOnClickListener { view ->
-
-            // Verificar si se tienen los permisos antes de capturar la pantalla
-            if (checkPermission()) {
-                captureScreen()
-                binding.appBarMain.botonFloating.isEnabled= false
-               binding.appBarMain.botonFloating.isEnabled = true
-
-            } else {
-                // Si no se tienen los permisos, solicitarlos
-                requestPermissionsIfNecessary()
-            }
-
-        }
+//
+//        binding.appBarMain.botonFloating.setOnClickListener { view ->
+//
+//            // Verificar si se tienen los permisos antes de capturar la pantalla
+//            if (checkPermission()) {
+//                captureScreen()
+//                binding.appBarMain.botonFloating.isEnabled= false
+//               binding.appBarMain.botonFloating.isEnabled = true
+//
+//            } else {
+//                // Si no se tienen los permisos, solicitarlos
+//                requestPermissionsIfNecessary()
+//            }
+//
+//        }
 
         binding.navView
 
@@ -126,6 +126,19 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.action_salir->{
                 salirdelApp()
+            }
+            R.id.action_Capture->{
+                // Verificar si se tienen los permisos antes de capturar la pantalla
+                if (checkPermission()) {
+                    captureScreen()
+//                    binding.appBarMain.botonFloating.isEnabled= false
+//                    binding.appBarMain.botonFloating.isEnabled = true
+
+                } else {
+                    // Si no se tienen los permisos, solicitarlos
+                    requestPermissionsIfNecessary()
+                }
+
             }
 
 

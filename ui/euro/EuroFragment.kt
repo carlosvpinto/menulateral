@@ -84,10 +84,10 @@ class EuroFragment : Fragment() {
         _binding = FragmentEuroBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val fabBoton = (activity as MainActivity).fabBoton
+      //  val fabBoton = (activity as MainActivity).fabBoton
 
         // Ahora puedes trabajar con el FloatingActionButton
-        fabBoton.visibility= View.VISIBLE
+    //    fabBoton.visibility= View.VISIBLE
 
         //Para el Admon
         MobileAds.initialize(requireContext()) {}

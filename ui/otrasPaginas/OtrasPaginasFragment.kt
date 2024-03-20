@@ -59,10 +59,10 @@ class OtrasPaginasFragment : Fragment() {
         _binding = FragmentPaginasBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val fabBoton = (activity as MainActivity).fabBoton
+       // val fabBoton = (activity as MainActivity).fabBoton
 
         // Ahora puedes trabajar con el FloatingActionButton
-        fabBoton.visibility= View.GONE
+    //    fabBoton.visibility= View.GONE
 
         // Aquí puedes añadir la animación de aparición hacia abajo lentamente
         // Aplicar la animación
