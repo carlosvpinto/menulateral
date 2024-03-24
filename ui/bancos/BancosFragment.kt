@@ -90,7 +90,7 @@ class BancosFragment : Fragment() {
 
             try {
                 val response = HomeFragment.ApiResponseHolder.getResponse()
-                Log.d("RESPUESTA", " VALOR DEL RESPONSE $response ")
+                Log.d("llamarPrecioOtros", " VALOR DEL RESPONSE en bancosFragmnet $response ")
                 if (response != null) {
                     valorActualBcv = response.monitors.banesco?.price?.toDouble()
 
@@ -111,7 +111,6 @@ class BancosFragment : Fragment() {
                         )
                     }
 
-                    // Agregar más bancos según sea necesario
                     if ( !verificarVacio( response.monitors.mercantil?.price)) {
                         bancosList.add(
                             BancoModelAdap(
@@ -243,7 +242,7 @@ class BancosFragment : Fragment() {
 
 
             } catch (e: Exception) {
-                    Log.d("RESPUESTA", " ERROR DE RESPONSE $e ")
+                    Log.d("llamarPrecioOtros", " ERROR DE RESPONSE $e ")
                     Toast.makeText(
                         requireContext(),
                         "No Actualizo dolar BCV Revise Conexion $e",

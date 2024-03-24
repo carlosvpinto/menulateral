@@ -1,4 +1,4 @@
-package com.carlosv.preciodolarvzla
+package com.carlosv.dolaraldia.model.bancos
 
 data class Datetime(
     var date: String,

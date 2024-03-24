@@ -3,6 +3,7 @@ package com.carlosv.dolaraldia.ui.home
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -22,6 +23,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
+import com.carlosv.dolaraldia.model.bancos.BancosNew
 import com.carlosv.dolaraldia.model.bcv.BcvNew
 import com.carlosv.dolaraldia.model.paralelo.ParaleloVzla
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
@@ -102,6 +104,7 @@ class HomeFragment : Fragment() {
 
         // Recuperar el valor entero
         numeroNoturno = sharedPreferences.getInt("numero_noturno", 0)
+
 
         //VERIFICA SI QUE MEDO TIENE GUARDADO
        // setDayNight(modoDark())
@@ -187,10 +190,8 @@ class HomeFragment : Fragment() {
 
     //INTERFACE PARA COMUNICAR CON EL ACTIVITY
     object ApiResponseHolder {
-        private var response: BancosModel? = null
-        private var responseBcv: BcvNew? = null
-        private var responsePVzla: ParaleloVzla? = null
-        private var precioEuro: Double? = null
+        private var response: BancosNew? = null
+
         private const val VALOR_EURO = "ValorEuro"
         private const val NUMERO_EURO = "euro"
         private const val FECHA_EURO = "fecha"
@@ -201,11 +202,11 @@ class HomeFragment : Fragment() {
         fun getResponseBcv(responseBcvNew: BcvNew):BcvNew? {
             return responseBcvNew
         }
-        fun getResponse(): BancosModel? {
+        fun getResponse(): BancosNew? {
             return response
         }
 
-        fun setResponse(newResponse: BancosModel) {
+        fun setResponse(newResponse: BancosNew) {
             response = newResponse
         }
 
@@ -534,7 +535,7 @@ class HomeFragment : Fragment() {
 
                     withContext(Dispatchers.Main) {
                         binding.swipeRefreshLayout.isRefreshing = false
-                        binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),
+                        binding.txtFechaActualizacionBcv.setTextColor(ContextCompat.getColor(requireContext(),
                             R.color.md_theme_light_surfaceTint))
                         llenarCampoBCVNew(response)
                     }
@@ -578,7 +579,7 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             //val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/page?page=exchangemonitor"
-            val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar"
+            val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=exchangemonitor"
 
             val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
 
@@ -596,7 +597,7 @@ class HomeFragment : Fragment() {
             val apiService = retrofit.create(ApiService::class.java)
 
             try {
-                val response = apiService.getBancos(url)
+                val response = apiService.getBancoNew(url)
                 Log.d("llamarPrecioOtros", " llamarPrecioOtros try segundo  $response ")
                 binding.swipeRefreshLayout.isRefreshing = false
                 if (response != null) {
@@ -643,7 +644,7 @@ class HomeFragment : Fragment() {
         editor.apply()
     }
 
-    private fun guardarResponse(context: Context, responseBCV: BancosModel) {
+    private fun guardarResponse(context: Context, responseBCV: BancosNew) {
         val gson = Gson()
         val responseJson = gson.toJson(responseBCV)
 
@@ -669,7 +670,7 @@ class HomeFragment : Fragment() {
     }
 
     // Define una función para recuperar la respuesta de SharedPreferences
-    private fun getResponseFromSharedPreferences(context: Context): BancosModel? {
+    private fun getResponseFromSharedPreferences(context: Context): BancosNew? {
         val sharedPreferences: SharedPreferences =
             context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
         val responseJson = sharedPreferences.getString("dolarBCVResponse", null)
@@ -677,7 +678,7 @@ class HomeFragment : Fragment() {
         if (responseJson != null) {
             val gson = Gson()
 
-            return gson.fromJson(responseJson, BancosModel::class.java)
+            return gson.fromJson(responseJson, BancosNew::class.java)
         }
 
         return null // Retorna null si no se encontró la respuesta en SharedPreferences
@@ -898,6 +899,8 @@ class HomeFragment : Fragment() {
         lifecycleScope.coroutineContext.cancel()
         _binding = null
     }
+
+
 }
 
 
