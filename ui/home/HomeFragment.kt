@@ -23,16 +23,29 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
+import com.carlosv.dolaraldia.InterstitialActivity
 import com.carlosv.dolaraldia.model.bancos.BancosNew
 import com.carlosv.dolaraldia.model.bcv.BcvNew
 import com.carlosv.dolaraldia.model.paralelo.ParaleloVzla
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
+import com.facebook.gamingservices.cloudgaming.InAppAdLibrary.loadInterstitialAd
+import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
+import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.ump.ConsentForm
+import com.google.android.ump.ConsentInformation
+import com.google.android.ump.ConsentRequestParameters
+import com.google.android.ump.UserMessagingPlatform
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +64,10 @@ import java.text.DecimalFormat
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.net.ssl.*
+
+
 
 
 class HomeFragment : Fragment() {
@@ -71,6 +87,13 @@ class HomeFragment : Fragment() {
 
     private var repeatCount = 0
 
+    // Para Admob Reguard
+
+    private var TAG = "CargarIntentisial"
+
+
+    private var interstitial: InterstitialAd? = null
+    private var count = 0
 
 
     lateinit var navigation : BottomNavigationView
@@ -92,11 +115,25 @@ class HomeFragment : Fragment() {
 
         MobileAds.initialize(requireContext()) {}
 
+
+
         //PARA CARGAR ADMOB
         mAdView= binding.adView
        // mAdView = findViewById(R.id.adView)
         val adRequest = AdRequest.Builder().build()
         mAdView.loadAd(adRequest)
+        // Inicializa AdMob
+
+        initAds()
+        initListeners()
+        binding.btnImageColaboracion.setOnClickListener {
+            showAds()
+            count = 0
+            initAds()
+        }
+
+
+        initListeners()
 
         // Obtén una referencia a SharedPreferences
         val sharedPreferences = requireContext().getSharedPreferences("MiPreferencia", AppCompatActivity.MODE_PRIVATE  )
@@ -183,10 +220,7 @@ class HomeFragment : Fragment() {
         return root
     }
 
-    override fun onStart() {
-        super.onStart()
 
-    }
 
     //INTERFACE PARA COMUNICAR CON EL ACTIVITY
     object ApiResponseHolder {
@@ -234,6 +268,60 @@ class HomeFragment : Fragment() {
         }
 
     }
+
+    private fun initListeners() {
+        interstitial?.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+            }
+
+            override fun onAdFailedToShowFullScreenContent(p0: AdError) {
+
+            }
+
+            override fun onAdShowedFullScreenContent() {
+                interstitial = null
+            }
+        }
+    }
+
+    private fun initAds() {
+        var adRequest = AdRequest.Builder().build()
+        InterstitialAd.load(
+            requireContext(),
+            "ca-app-pub-5303101028880067/5189629725",
+            adRequest,
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                    interstitial = interstitialAd
+                }
+
+                override fun onAdFailedToLoad(p0: LoadAdError) {
+                    interstitial = null
+                }
+            })
+    }
+
+    private fun checkCounter() {
+        if (count == 5) {
+            showAds()
+            count = 0
+            initAds()
+        }
+    }
+
+    private fun showAds() {
+        interstitial?.show(requireActivity())
+    }
+
+//    private fun initListeners() {
+////        val bannerIntent = Intent(requireContext(), InterstitialActivity::class.java)
+////        binding.btnImageColaboracion.setOnClickListener { startActivity(bannerIntent) }
+//
+//        val interstitialIntent = Intent(requireContext(), InterstitialActivity::class.java)
+//        binding.btnImageColaboracion.setOnClickListener { startActivity(interstitialIntent) }
+//    }
+
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         isFragmentAttached = true
