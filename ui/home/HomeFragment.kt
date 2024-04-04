@@ -301,13 +301,6 @@ class HomeFragment : Fragment() {
             })
     }
 
-    private fun checkCounter() {
-        if (count == 5) {
-            showAds()
-            count = 0
-            initAds()
-        }
-    }
 
     private fun showAds() {
         interstitial?.show(requireActivity())
