@@ -401,16 +401,47 @@ class MainActivity : AppCompatActivity() {
 
 
     //**********************************
+//    fun compartirLinkconFoto(context: Context, text: String) {
+//        try {
+//                       // Crear un archivo temporal para compartir
+//            val tempFile = createTempImageFile()
+//
+//
+//            writeDrawableImageToFile(context, R.drawable.logodolar_al_dia, tempFile)
+//            // Obtener la Uri segura utilizando FileProvider
+//            val uri = FileProvider.getUriForFile(
+//                this,
+//                "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
+//                tempFile
+//            )
+//            Log.d("Capture", "shareImageWithText:uri $uri ")
+//
+//            // Crear un intent para compartir
+//            val shareIntent = Intent().apply {
+//                action = Intent.ACTION_SEND
+//                type = "image/*"
+//                putExtra(Intent.EXTRA_STREAM, uri)
+//                putExtra(Intent.EXTRA_TEXT, text)
+//                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+//            }
+//
+//            // Iniciar la actividad de compartir
+//            context.startActivity(Intent.createChooser(shareIntent, "Compartir con"))
+//        } catch (e: IOException) {
+//            // Manejar cualquier excepción que pueda ocurrir durante la creación del archivo temporal
+//            e.printStackTrace()
+//        }
+//    }
     fun compartirLinkconFoto(context: Context, text: String) {
         try {
-                       // Crear un archivo temporal para compartir
+            // Crear un archivo temporal para compartir
             val tempFile = createTempImageFile()
 
-
             writeDrawableImageToFile(context, R.drawable.logodolar_al_dia, tempFile)
+
             // Obtener la Uri segura utilizando FileProvider
             val uri = FileProvider.getUriForFile(
-                this,
+                context,
                 "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
                 tempFile
             )
@@ -432,6 +463,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
+
 
 
     @Throws(IOException::class)

@@ -122,18 +122,19 @@ class HomeFragment : Fragment() {
        // mAdView = findViewById(R.id.adView)
         val adRequest = AdRequest.Builder().build()
         mAdView.loadAd(adRequest)
-        // Inicializa AdMob
 
-        initAds()
-        initListeners()
-        binding.btnImageColaboracion.setOnClickListener {
-            showAds()
-            count = 0
-            initAds()
-        }
-
-
-        initListeners()
+//        // Inicializa AdMob
+//
+//        initAds()
+//        initListeners()
+//        binding.btnImageColaboracion.setOnClickListener {
+//            showAds()
+//            count = 0
+//            initAds()
+//        }
+//
+//
+//        initListeners()
 
         // Obtén una referencia a SharedPreferences
         val sharedPreferences = requireContext().getSharedPreferences("MiPreferencia", AppCompatActivity.MODE_PRIVATE  )
