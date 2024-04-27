@@ -18,9 +18,15 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.view.animation.ScaleAnimation
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
 import com.carlosv.dolaraldia.InterstitialActivity
@@ -83,6 +89,9 @@ class HomeFragment : Fragment() {
     private var valorActualEuro: Float? = 0.0f
     private var ultimoTecleado: Int? = 2
     var numeroNoturno = 0
+    //Verificar llamado API
+    private var llamdoParalelo: Boolean= false
+    private var llamadoBCV: Boolean= false
     lateinit var mAdView : AdView
 
     private var repeatCount = 0
@@ -94,6 +103,7 @@ class HomeFragment : Fragment() {
 
     private var interstitial: InterstitialAd? = null
     private var count = 0
+
 
 
     lateinit var navigation : BottomNavigationView
@@ -109,9 +119,6 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        llamarBcvNew()
-        llamarParaVzla()
-        llamarPrecioOtros()
 
         MobileAds.initialize(requireContext()) {}
 
@@ -122,6 +129,8 @@ class HomeFragment : Fragment() {
        // mAdView = findViewById(R.id.adView)
         val adRequest = AdRequest.Builder().build()
         mAdView.loadAd(adRequest)
+
+
 
 //        // Inicializa AdMob
 //
@@ -202,6 +211,9 @@ class HomeFragment : Fragment() {
         binding.imgCoyBolivar.setOnClickListener {
             copiarBs()
         }
+        binding.progressBar.setOnClickListener {
+            binding.progressBar.visibility = View.INVISIBLE
+        }
 
         //PARA ACTUALIZAR EL PRECIO DEL DOLAR SOLO CUANDO CARGA POR PRIMERA VEZ
         if(savedInstanceState== null){
@@ -219,6 +231,18 @@ class HomeFragment : Fragment() {
 
         //***********************
         return root
+    }
+
+
+
+    override fun onStart() {
+        super.onStart()
+        binding.progressBar.visibility = View.VISIBLE
+        if ( binding.progressBar.visibility!= View.VISIBLE) binding.swipeRefreshLayout.isRefreshing = true
+
+        llamarBcvNew()
+        llamarParaVzla()
+        llamarPrecioOtros()
     }
 
 
@@ -514,6 +538,7 @@ class HomeFragment : Fragment() {
 
 
         lifecycleScope.launch(Dispatchers.IO) {
+
             val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/unit/enparalelovzla"
             val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
 
@@ -541,6 +566,7 @@ class HomeFragment : Fragment() {
                     guardarResponseVzla(requireContext(), response)
 
                     withContext(Dispatchers.Main) {
+                        animacionCrecerTexto(binding.txtFechaActualizacionPara)
                         binding.swipeRefreshLayout.isRefreshing = false
                         binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),
                             R.color.md_theme_light_surfaceTint))
@@ -562,6 +588,7 @@ class HomeFragment : Fragment() {
                     binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
                     Log.d("RESPUESTA", "llamarParaVzla: catch 2 response $e ")
                     binding.swipeRefreshLayout.isRefreshing = false
+                    binding.progressBar.visibility= View.INVISIBLE
                 }
 
                 println("Error: ${e.message}")
@@ -579,6 +606,7 @@ class HomeFragment : Fragment() {
                 llenarCampoBCVNew(savedResponseBCV)
                 multiplicaDolares()
                 dividirABolivares()
+
                 binding.swipeRefreshLayout.isRefreshing = false
             }
         }catch (e: Exception){
@@ -607,7 +635,8 @@ class HomeFragment : Fragment() {
 
             try {
                 val response = apiService.getBcv(url)
-                Log.d("RESPUESTA", " llamarBcvNew try 2 RESPONSE$response ")
+                Log.d("RESPUESTA", " llamarBcvNew try 2 RESPONSE: $response ")
+
                 binding.swipeRefreshLayout.isRefreshing = false
                 if (response != null) {
                     ApiResponseHolder.getResponseBcv(response)
@@ -616,6 +645,8 @@ class HomeFragment : Fragment() {
                     guardarResponseBcvNew(requireContext(), response)
 
                     withContext(Dispatchers.Main) {
+                        animacionCrecerTexto(binding.txtFechaActualizacionBcv)
+                        binding.progressBar.visibility= View.INVISIBLE
                         binding.swipeRefreshLayout.isRefreshing = false
                         binding.txtFechaActualizacionBcv.setTextColor(ContextCompat.getColor(requireContext(),
                             R.color.md_theme_light_surfaceTint))
@@ -635,6 +666,7 @@ class HomeFragment : Fragment() {
                     ).show()
                     binding.txtFechaActualizacionBcv.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
                     animarSwipe()
+                    binding.progressBar.visibility= View.INVISIBLE
                     binding.swipeRefreshLayout.isRefreshing = false
                 }
                 Log.d("RESPUESTA", " llamarBcvNew caych 2 RESPONSE$e ")
@@ -642,6 +674,41 @@ class HomeFragment : Fragment() {
                 println("Error: ${e.message}")
             }
         }
+    }
+
+    private fun animacionCrecerTexto(texto:TextView){
+        val scaleUpAnimation = ScaleAnimation(
+            1f, 1.5f, // De tamaño normal a 1.5 veces el tamaño original
+            1f, 1.5f, // Igual para la altura
+            Animation.RELATIVE_TO_SELF, 0.5f,
+            Animation.RELATIVE_TO_SELF, 0.5f
+        )
+        scaleUpAnimation.duration = 300 // Duración de la animación (en milisegundos)
+        scaleUpAnimation.fillAfter = false // Mantener la escala después de la animación
+
+        val scaleDownAnimation = ScaleAnimation(
+            1.5f, 1f, // De 1.5 veces el tamaño original a tamaño normal
+            1.5f, 1f, // Igual para la altura
+            Animation.RELATIVE_TO_SELF, 0.5f,
+            Animation.RELATIVE_TO_SELF, 0.5f
+        )
+        scaleDownAnimation.duration = 300 // Duración de la animación (en milisegundos)
+        scaleDownAnimation.fillAfter = false // Mantener la escala después de la animación
+
+        scaleUpAnimation.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation) {}
+
+            override fun onAnimationEnd(animation: Animation) {
+                // Al finalizar la primera animación, iniciar la segunda
+                texto.startAnimation(scaleDownAnimation)
+            }
+
+            override fun onAnimationRepeat(animation: Animation) {}
+        })
+
+        // Iniciar la primera animación
+        texto.startAnimation(scaleUpAnimation)
+
     }
 
     fun llamarPrecioOtros() {
