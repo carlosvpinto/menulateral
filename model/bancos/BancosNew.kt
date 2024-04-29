@@ -1,6 +1,6 @@
 package com.carlosv.dolaraldia.model.bancos
 
-data class BancosNew(
+data class DolarNew(
     var datetime: Datetime,
     var monitors: Monitors
 )

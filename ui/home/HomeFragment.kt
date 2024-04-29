@@ -30,7 +30,8 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
 import com.carlosv.dolaraldia.InterstitialActivity
-import com.carlosv.dolaraldia.model.bancos.BancosNew
+
+import com.carlosv.dolaraldia.model.bancos.DolarNew
 import com.carlosv.dolaraldia.model.bcv.BcvNew
 import com.carlosv.dolaraldia.model.paralelo.ParaleloVzla
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
@@ -98,7 +99,7 @@ class HomeFragment : Fragment() {
 
     // Para Admob Reguard
 
-    private var TAG = "CargarIntentisial"
+    private var TAG = "HomeFragment"
 
 
     private var interstitial: InterstitialAd? = null
@@ -157,9 +158,8 @@ class HomeFragment : Fragment() {
        // setDayNight(modoDark())
         binding.swipeRefreshLayout.setOnRefreshListener {
            binding.swipeRefreshLayout.isRefreshing = true
-            llamarPrecioOtros()
+            llamarDolarNew()
             llamarBcvNew()
-            llamarParaVzla()
             actualizarEuro()
 
         }
@@ -211,9 +211,9 @@ class HomeFragment : Fragment() {
         binding.imgCoyBolivar.setOnClickListener {
             copiarBs()
         }
-        binding.progressBar.setOnClickListener {
-            binding.progressBar.visibility = View.INVISIBLE
-        }
+//        binding.progressBar.setOnClickListener {
+//            binding.progressBar.visibility = View.INVISIBLE
+//        }
 
         //PARA ACTUALIZAR EL PRECIO DEL DOLAR SOLO CUANDO CARGA POR PRIMERA VEZ
         if(savedInstanceState== null){
@@ -235,21 +235,13 @@ class HomeFragment : Fragment() {
 
 
 
-    override fun onStart() {
-        super.onStart()
-        binding.progressBar.visibility = View.VISIBLE
-        if ( binding.progressBar.visibility!= View.VISIBLE) binding.swipeRefreshLayout.isRefreshing = true
 
-        llamarBcvNew()
-        llamarParaVzla()
-        llamarPrecioOtros()
-    }
 
 
 
     //INTERFACE PARA COMUNICAR CON EL ACTIVITY
     object ApiResponseHolder {
-        private var response: BancosNew? = null
+        private var response: DolarNew? = null
 
         private const val VALOR_EURO = "ValorEuro"
         private const val NUMERO_EURO = "euro"
@@ -261,11 +253,11 @@ class HomeFragment : Fragment() {
         fun getResponseBcv(responseBcvNew: BcvNew):BcvNew? {
             return responseBcvNew
         }
-        fun getResponse(): BancosNew? {
+        fun getResponse(): DolarNew? {
             return response
         }
 
-        fun setResponse(newResponse: BancosNew) {
+        fun setResponse(newResponse: DolarNew) {
             response = newResponse
         }
 
@@ -515,87 +507,87 @@ class HomeFragment : Fragment() {
     }
 
     //LLAMAR A LAS APIS*****************************************************************
-    fun llamarParaVzla() {
-        try {
-            val savedResponseVzla = getResponsePreferencesVzla(requireContext())
-            Log.d("RESPUESTA", "llamarParaVzla: TRY 1 savedResponseVzla $savedResponseVzla ")
-            if (savedResponseVzla != null) {
-                ApiResponseHolder.getResponseParalelovzla(savedResponseVzla)
-
-                valorActualParalelo = savedResponseVzla.price.toDouble()
-                //llenarCampoBCV(savedResponseBCV)
-                llenarParaleloVzla(savedResponseVzla)
-                multiplicaDolares()
-                dividirABolivares()
-                binding.swipeRefreshLayout.isRefreshing = false
-            }
-        }catch (e: Exception){
-            binding.swipeRefreshLayout.isRefreshing = false
-            animarSwipe()
-           // Toast.makeText(requireContext(), "Problemas de Conexion $e", Toast.LENGTH_SHORT).show()
-            Log.d("RESPUESTA", "llamarParaVzla: catch 1 savedResponseBCV $e ")
-        }
-
-
-        lifecycleScope.launch(Dispatchers.IO) {
-
-            val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/unit/enparalelovzla"
-            val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
-
-            val client = OkHttpClient.Builder().build()
-            val request = Request.Builder()
-                .url(url)
-                .build()
-
-            val retrofit = Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build()
-
-            val apiService = retrofit.create(ApiService::class.java)
-
-            try {
-                val response = apiService.getParalelovzla(url)
-                Log.d("RESPUESTA", "llamarParaVzla: TRY 2 response $response ")
-                binding.swipeRefreshLayout.isRefreshing = false
-                if (response != null) {
-                    ApiResponseHolder.getResponseParalelovzla(response)
-                    valorActualParalelo = response.price.toDouble()
-
-                    guardarResponseVzla(requireContext(), response)
-
-                    withContext(Dispatchers.Main) {
-                        animacionCrecerTexto(binding.txtFechaActualizacionPara)
-                        binding.swipeRefreshLayout.isRefreshing = false
-                        binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),
-                            R.color.md_theme_light_surfaceTint))
-                        llenarParaleloVzla(response)
-                    }
-
-                    multiplicaDolares()
-                    dividirABolivares()
-                }
-
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        requireContext(),
-                        "No se actualizó el dólar Paralelo! Revise la conexión: $e",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    animarSwipe()
-                    binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
-                    Log.d("RESPUESTA", "llamarParaVzla: catch 2 response $e ")
-                    binding.swipeRefreshLayout.isRefreshing = false
-                    binding.progressBar.visibility= View.INVISIBLE
-                }
-
-                println("Error: ${e.message}")
-            }
-        }
-    }
-
+//    fun llamarParaVzla() {
+//        try {
+//            val savedResponseVzla = getResponsePreferencesVzla(requireContext())
+//            Log.d("RESPUESTA", "llamarParaVzla: TRY 1 savedResponseVzla $savedResponseVzla ")
+//            if (savedResponseVzla != null) {
+//                ApiResponseHolder.getResponseParalelovzla(savedResponseVzla)
+//
+//                valorActualParalelo = savedResponseVzla.price.toDouble()
+//                //llenarCampoBCV(savedResponseBCV)
+//                llenarParaleloVzla(savedResponseVzla)
+//                multiplicaDolares()
+//                dividirABolivares()
+//                binding.swipeRefreshLayout.isRefreshing = false
+//            }
+//        }catch (e: Exception){
+//            binding.swipeRefreshLayout.isRefreshing = false
+//            animarSwipe()
+//           // Toast.makeText(requireContext(), "Problemas de Conexion $e", Toast.LENGTH_SHORT).show()
+//            Log.d("RESPUESTA", "llamarParaVzla: catch 1 savedResponseBCV $e ")
+//        }
+//
+//
+//        lifecycleScope.launch(Dispatchers.IO) {
+//
+//            val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/unit/enparalelovzla"
+//            val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
+//
+//            val client = OkHttpClient.Builder().build()
+//            val request = Request.Builder()
+//                .url(url)
+//                .build()
+//
+//            val retrofit = Retrofit.Builder()
+//                .baseUrl(baseUrl)
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .client(client)
+//                .build()
+//
+//            val apiService = retrofit.create(ApiService::class.java)
+//
+//            try {
+//                val response = apiService.getParalelovzla(url)
+//                Log.d("RESPUESTA", "llamarParaVzla: TRY 2 response $response ")
+//                binding.swipeRefreshLayout.isRefreshing = false
+//                if (response != null) {
+//                    ApiResponseHolder.getResponseParalelovzla(response)
+//                    valorActualParalelo = response.price.toDouble()
+//
+//                    guardarResponseVzla(requireContext(), response)
+//
+//                    withContext(Dispatchers.Main) {
+//                        animacionCrecerTexto(binding.txtFechaActualizacionPara)
+//                        binding.swipeRefreshLayout.isRefreshing = false
+//                        binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),
+//                            R.color.md_theme_light_surfaceTint))
+//                        llenarParaleloVzla(response)
+//                    }
+//
+//                    multiplicaDolares()
+//                    dividirABolivares()
+//                }
+//
+//            } catch (e: Exception) {
+//                withContext(Dispatchers.Main) {
+//                    Toast.makeText(
+//                        requireContext(),
+//                        "No se actualizó el dólar Paralelo! Revise la conexión: $e",
+//                        Toast.LENGTH_LONG
+//                    ).show()
+//                    animarSwipe()
+//                    binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
+//                    Log.d("RESPUESTA", "llamarParaVzla: catch 2 response $e ")
+//                    binding.swipeRefreshLayout.isRefreshing = false
+//                    binding.progressBar.visibility= View.INVISIBLE
+//                }
+//
+//                println("Error: ${e.message}")
+//            }
+//        }
+//    }
+//
     fun llamarBcvNew() {
         try {
             val savedResponseBCV = getResponsePreferencesBcvNew(requireContext())
@@ -646,7 +638,7 @@ class HomeFragment : Fragment() {
 
                     withContext(Dispatchers.Main) {
                         animacionCrecerTexto(binding.txtFechaActualizacionBcv)
-                        binding.progressBar.visibility= View.INVISIBLE
+                       // binding.progressBar.visibility= View.INVISIBLE
                         binding.swipeRefreshLayout.isRefreshing = false
                         binding.txtFechaActualizacionBcv.setTextColor(ContextCompat.getColor(requireContext(),
                             R.color.md_theme_light_surfaceTint))
@@ -666,7 +658,7 @@ class HomeFragment : Fragment() {
                     ).show()
                     binding.txtFechaActualizacionBcv.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
                     animarSwipe()
-                    binding.progressBar.visibility= View.INVISIBLE
+                   // binding.progressBar.visibility= View.INVISIBLE
                     binding.swipeRefreshLayout.isRefreshing = false
                 }
                 Log.d("RESPUESTA", " llamarBcvNew caych 2 RESPONSE$e ")
@@ -675,6 +667,82 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+
+    fun llamarDolarNew() {
+        try {
+            val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
+
+            if (savedResponseDolar != null) {
+                Log.d("RESPUESTA", " llamarPrecio Try 1 RESPONSE savedResponseDolar $savedResponseDolar ")
+                ApiResponseHolder.setResponse(savedResponseDolar)
+                valorActualParalelo = savedResponseDolar.monitors.enparalelovzla.price.toDouble()
+                binding.swipeRefreshLayout.isRefreshing = false
+                llenarDolarNew(savedResponseDolar)
+            }
+        }catch (e: Exception){
+            binding.swipeRefreshLayout.isRefreshing = false
+            Toast.makeText(requireContext(), "Problemas de Conexion $e", Toast.LENGTH_SHORT).show()
+            Log.d("RESPUESTA", " llamarPrecio catch 1 RESPONSE$e ")
+        }
+
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=exchangemonitor"
+
+            val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
+
+            val client = OkHttpClient.Builder().build()
+            val request = Request.Builder()
+                .url(url)
+                .build()
+
+            val retrofit = Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(client)
+                .build()
+
+            val apiService = retrofit.create(ApiService::class.java)
+
+            try {
+                val response = apiService.getDolarNew(url)
+                Log.d("RESPUESTA", " llamarDolarNew try segundo  $response ")
+                binding.swipeRefreshLayout.isRefreshing = false
+                if (response != null) {
+                    ApiResponseHolder.setResponse(response)
+                    valorActualParalelo = response.monitors.enparalelovzla.price.toDouble()
+                    guardarResponse(requireContext(), response)
+                    withContext(Dispatchers.Main) {
+
+                        animacionCrecerTexto(binding.txtFechaActualizacionPara)
+                       // binding.progressBar.visibility= View.INVISIBLE
+                        binding.swipeRefreshLayout.isRefreshing = false
+                       // binding.txtFechaActualizacionBcv.setTextColor(ContextCompat.getColor(requireContext(),
+                       //     R.color.md_theme_light_surfaceTint))
+                        llenarDolarNew(response)
+
+                    }
+                    multiplicaDolares()
+                    dividirABolivares()
+
+                }
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.d("RESPUESTA", " llamarDolarNew cash 2 segundo  $e ")
+                    binding.swipeRefreshLayout.isRefreshing = false
+                    binding.txtFechaActualizacionBcv.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
+                    animarSwipe()
+                 //   binding.progressBar.visibility= View.INVISIBLE
+                    binding.swipeRefreshLayout.isRefreshing = false
+                }
+
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
 
     private fun animacionCrecerTexto(texto:TextView){
         val scaleUpAnimation = ScaleAnimation(
@@ -710,68 +778,6 @@ class HomeFragment : Fragment() {
         texto.startAnimation(scaleUpAnimation)
 
     }
-
-    fun llamarPrecioOtros() {
-        try {
-            val savedResponseBCV = getResponseFromSharedPreferences(requireContext())
-
-            if (savedResponseBCV != null) {
-                ApiResponseHolder.setResponse(savedResponseBCV)
-                binding.swipeRefreshLayout.isRefreshing = false
-            }
-        }catch (e: Exception){
-            binding.swipeRefreshLayout.isRefreshing = false
-            Toast.makeText(requireContext(), "Problemas de Conexion $e", Toast.LENGTH_SHORT).show()
-            Log.d("llamarPrecioOtros", " llamarPrecio catch 1 RESPONSE$e ")
-        }
-
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            //val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/page?page=exchangemonitor"
-            val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=exchangemonitor"
-
-            val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
-
-            val client = OkHttpClient.Builder().build()
-            val request = Request.Builder()
-                .url(url)
-                .build()
-
-            val retrofit = Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build()
-
-            val apiService = retrofit.create(ApiService::class.java)
-
-            try {
-                val response = apiService.getBancoNew(url)
-                Log.d("llamarPrecioOtros", " llamarPrecioOtros try segundo  $response ")
-                binding.swipeRefreshLayout.isRefreshing = false
-                if (response != null) {
-                    ApiResponseHolder.setResponse(response)
-                    guardarResponse(requireContext(), response)
-                    withContext(Dispatchers.Main) {
-                        binding.swipeRefreshLayout.isRefreshing = false
-                        binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),
-                            R.color.md_theme_light_surfaceTint))
-
-                    }
-
-                }
-
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
-                    Log.d("llamarPrecioOtros", " llamarPrecioOtros catch segundo  $e ")
-                    binding.swipeRefreshLayout.isRefreshing = false
-                }
-
-                println("Error: ${e.message}")
-            }
-        }
-    }
     private fun guardarResponseBcvNew(context: Context, responseBCVNew: BcvNew) {
         val gson = Gson()
         val responseJson = gson.toJson(responseBCVNew)
@@ -793,7 +799,7 @@ class HomeFragment : Fragment() {
         editor.apply()
     }
 
-    private fun guardarResponse(context: Context, responseBCV: BancosNew) {
+    private fun guardarResponse(context: Context, responseBCV: DolarNew) {
         val gson = Gson()
         val responseJson = gson.toJson(responseBCV)
 
@@ -819,7 +825,7 @@ class HomeFragment : Fragment() {
     }
 
     // Define una función para recuperar la respuesta de SharedPreferences
-    private fun getResponseFromSharedPreferences(context: Context): BancosNew? {
+    private fun getResponseFromSharedPreferences(context: Context): DolarNew? {
         val sharedPreferences: SharedPreferences =
             context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
         val responseJson = sharedPreferences.getString("dolarBCVResponse", null)
@@ -827,7 +833,7 @@ class HomeFragment : Fragment() {
         if (responseJson != null) {
             val gson = Gson()
 
-            return gson.fromJson(responseJson, BancosNew::class.java)
+            return gson.fromJson(responseJson, DolarNew::class.java)
         }
 
         return null // Retorna null si no se encontró la respuesta en SharedPreferences
@@ -846,31 +852,68 @@ class HomeFragment : Fragment() {
 
         return null // Retorna null si no se encontró la respuesta en SharedPreferences
     }
+
     fun llenarCampoBCVNew(response: BcvNew) {
-        Log.d("RESPUESTA", " llenarCampoBCVNew response $response valor de ${response.monitors.usd?.price}  ")
-        if (!response.monitors.usd?.price.isNullOrEmpty()){
+        Log.d(
+            "llenarCampoBCVNew",
+            " llenarCampoBCVNew response $response valor COLORRR ${response.monitors.usd?.color}  "
+        )
+        // DATOS DEL BCV
+        if (!response.monitors.usd.price.isNullOrEmpty()) {
             binding.btnBcv.text = response.monitors.usd?.price
-            binding.btnBcv.textOff =  response.monitors.usd?.price
-            binding.btnBcv.textOn =  response.monitors.usd?.price
+            binding.btnBcv.textOff = response.monitors.usd?.price
+            binding.btnBcv.textOn = response.monitors.usd?.price
             binding.txtFechaActualizacionBcv.text = response.monitors.last_update
-        }
-    }
 
+            if (response.monitors.usd.color == "red") binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_roja)
+            if (response.monitors.usd.color == "neutral") binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_igual)
+            if (response.monitors.usd.color == "green") binding.imgflechaBcv.setImageResource(R.drawable.ic_flechaverde)
+            binding.txtVariacionBcv.text = response.monitors.usd.percent
 
-    fun llenarParaleloVzla(response: ParaleloVzla) {
-        Log.d("RESPUESTA", " llenarParaleloVzla DEL response $response valor de ${response.price}  ")
-        if (!response.price.isNullOrEmpty()){
-            binding.btnParalelo.text = response.price
-            binding.btnParalelo.textOff =  response.price
-            binding.btnParalelo.textOn =  response.price
-            binding.txtFechaActualizacionPara.text= response.last_update
 
         }
+
     }
+    fun llenarDolarNew(response: DolarNew) {
+        Log.d("RESPUESTA", " llenarCampoBCVNew response $response valor de ${response.monitors.bcv?.price}  ")
+        // DATOS DEL BCV
+//        if (!response.monitors.bcv.price.isNullOrEmpty()){
+//            binding.btnBcv.text = response.monitors.bcv?.price
+//            binding.btnBcv.textOff =  response.monitors.bcv?.price
+//            binding.btnBcv.textOn =  response.monitors.bcv?.price
+//            binding.txtFechaActualizacionBcv.text = response.monitors.bcv.last_update
+//
+//            if (response.monitors.bcv.color=="red") binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_roja)
+//            if (response.monitors.bcv.color=="neutral") binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_igual)
+//            if (response.monitors.bcv.color=="green") binding.imgflechaBcv.setImageResource(R.drawable.ic_flechaverde)
+//            binding.txtVariacionBcv.text= response.monitors.bcv.percent
+//
+//
+//
+//
+//        }
+
+        //DATOS DEL PARALELO
+        Log.d("RESPUESTA", " llenarCampoBCVNew response $response valor de ${response.monitors.bcv?.price}  ")
+        if (!response.monitors.enparalelovzla.price.isNullOrEmpty()){
+            binding.btnParalelo.text = response.monitors.enparalelovzla?.price
+            binding.btnParalelo.textOff =  response.monitors.enparalelovzla?.price
+            binding.btnParalelo.textOn =  response.monitors.enparalelovzla?.price
+            binding.txtFechaActualizacionPara.text = response.monitors.enparalelovzla.last_update
+
+            if (response.monitors.enparalelovzla.color=="red") binding.imgFlechaParalelo.setImageResource(R.drawable.ic_flecha_roja)
+            if (response.monitors.enparalelovzla.color=="neutral") binding.imgFlechaParalelo.setImageResource(R.drawable.ic_flecha_igual)
+            if (response.monitors.enparalelovzla.color=="green") binding.imgFlechaParalelo.setImageResource(R.drawable.ic_flechaverde)
+            binding.txtVariacionParalelo.text= response.monitors.enparalelovzla.percent
+
+        }
+
+    }
+
 
     private fun multiplicaDolares() {
         val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-
+        Log.d(TAG, "multiplicaDolares: entro a funcion")
         binding.inputDolares?.addTextChangedListener(object : TextWatcher {
 
             override fun afterTextChanged(s: Editable?) {
@@ -879,13 +922,16 @@ class HomeFragment : Fragment() {
                 if (binding.inputDolares.isFocused) {
                     val inputText = binding.inputDolares.text.toString()
                     if (inputText.isNotEmpty()) {
+                        Log.d(TAG, "afterTextChanged: entro a isNotEmpy")
                         if (binding.switchDolar.isChecked) {
-
+                            Log.d(TAG, "afterTextChanged: valorActualParalelo $valorActualParalelo")
                             if (valorActualParalelo != null) {
                                 val cleanedText =
                                     inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
                                 val parsedValue = cleanedText.toDoubleOrNull() ?: 0.0
+
                                 valorDolares = parsedValue * valorActualParalelo!!.toDouble()
+                                Log.d(TAG, "afterTextChanged: valorDolares $valorDolares")
                             }
                         }
 
@@ -1042,11 +1088,22 @@ class HomeFragment : Fragment() {
         imageView.startAnimation(slideDown)
     }
 
+    override fun onStart() {
+        super.onStart()
 
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         lifecycleScope.coroutineContext.cancel()
         _binding = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+      //  binding.progressBar.visibility = View.VISIBLE
+        if ( binding.progressBar.visibility!= View.VISIBLE) binding.swipeRefreshLayout.isRefreshing = true
+        llamarDolarNew()
+        llamarBcvNew()
     }
 
 

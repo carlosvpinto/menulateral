@@ -47,6 +47,7 @@ import androidx.core.content.FileProvider
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 
 
 class MainActivity : AppCompatActivity() {
@@ -85,6 +86,7 @@ class MainActivity : AppCompatActivity() {
 //            }
 //
 //        }
+      //  verificarVersionMinima()
 
         binding.navView
 
@@ -145,6 +147,73 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+    //VERIFICA LA VERSION DEL LA APP
+//    private fun versionUltima(){
+//        val remoteConfig = FirebaseRemoteConfig.getInstance()
+//        remoteConfig.fetchAndActivate()
+//        val requiredVersionMinima = remoteConfig.getLong("version_min_dolar_al_dia")
+//        val requiredSaludo = remoteConfig.getString("mensajebienvenida")
+//        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+//        val versionCodeActual = packageInfo.versionCode
+//
+//        Log.d("totalDolarConfig", "VALOR DE LA VERSION requiredSaludo: $requiredSaludo")
+//        Log.d("totalDolarConfig", "VALOR DE LA VERSION requiredVersionMinima: $requiredVersionMinima packageInfo $packageInfo versionCode $versionCodeActual")
+//        if (versionCodeActual < requiredVersionMinima) {
+//            // Mostrar un diálogo de actualización y redirigir a la Play Store.
+//            Toast.makeText(this, "Necesitas Actualizar Tu version por la $requiredVersionMinima", Toast.LENGTH_LONG).show()
+//            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.carlosvicente.uberkotlin"))
+//            startActivity(intent)
+//            finish() // O bloquea el acceso a la aplicación
+//        } else {
+//            // Continuar con la aplicación normalmente.
+//            if (requiredSaludo.isNotEmpty()){
+//                Toast.makeText(this, " $requiredSaludo", Toast.LENGTH_LONG).show()
+//            }
+//
+//        }
+//
+//    }
+
+    private fun verificarVersionMinima() {
+        val remoteConfig = FirebaseRemoteConfig.getInstance()
+
+        // Fetch de la configuración remota
+        remoteConfig.fetchAndActivate()
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Configuración remota obtenida con éxito
+                    val requiredVersionMinima = remoteConfig.getLong("version_min_dolar_al_dia")
+                    val requiredSaludo = remoteConfig.getString("mensajebienvenida")
+                    val packageInfo = packageManager.getPackageInfo(packageName, 0)
+                    val versionCodeActual = packageInfo.versionCode
+
+                    Log.d("totalDolarConfig", "VALOR DE LA VERSION requiredSaludo: $requiredSaludo")
+                    Log.d("totalDolarConfig", "VALOR DE LA VERSION requiredVersionMinima: $requiredVersionMinima packageInfo $packageInfo versionCode $versionCodeActual")
+
+                    if (versionCodeActual < requiredVersionMinima) {
+                        // La versión actual no cumple con la versión mínima requerida
+                        // Mostrar un diálogo de actualización y redirigir a la Play Store.
+                        val mensaje = "Necesitas actualizar tu versión a la $requiredVersionMinima"
+                        Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show()
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${this.packageName}"))
+                        startActivity(intent)
+                        finish() // O bloquear el acceso a la aplicación
+                    } else {
+                        // La versión actual cumple con la versión mínima requerida
+                        // Continuar con la aplicación normalmente.
+                        if (requiredSaludo.isNotEmpty()) {
+                            Toast.makeText(this, requiredSaludo, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } else {
+                    // Error al obtener la configuración remota
+                    Log.e("totalDolarConfig", "Error al obtener la configuración remota", task.exception)
+                    // Podrías manejar el error mostrando un mensaje al usuario o intentando nuevamente.
+                }
+            }
+    }
+
+
 
 
     fun compartirEnlacePlayStore(context: Context) {
