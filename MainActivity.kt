@@ -44,13 +44,25 @@ import androidx.annotation.RequiresApi
 
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.content.PackageManagerCompat.LOG_TAG
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var appOpenAdManager: AppOpenAdManager
+    val miAplicacion = MyApplication()
+    private val isMobileAdsInitializeCalled = AtomicBoolean(false)
+    private val LOG_TAG: String  = "AppOpenAdManager"
+
+    private  val AD_UNIT_ID: String? = "ca-app-pub-3940256099942544/9257395921"
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
@@ -70,6 +82,7 @@ class MainActivity : AppCompatActivity() {
 
 
         MobileAds.initialize(this) {}
+        appOpenAdManager = AppOpenAdManager()
         setSupportActionBar(binding.appBarMain.toolbar)
 //
 //        binding.appBarMain.botonFloating.setOnClickListener { view ->
@@ -86,7 +99,10 @@ class MainActivity : AppCompatActivity() {
 //            }
 //
 //        }
-      //  verificarVersionMinima()
+        //verificarVersionMinima()
+
+        //adOpen*********************
+        initializeMobileAdsSdk()
 
         binding.navView
 
@@ -105,6 +121,43 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+    }
+    inner class AppOpenAdManager {
+        private var appOpenAd: AppOpenAd? = null
+        private var isLoadingAd = false
+        var isShowingAd = false
+
+        fun loadAd(context: Context) {
+            // Do not load ad if there is an unused ad or one is already loading.
+            if (isLoadingAd || isAdAvailable()) {
+                return
+            }
+
+            isLoadingAd = true
+            val request = AdRequest.Builder().build()
+            AppOpenAd.load(
+                context, AD_UNIT_ID!!, request,
+                AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,
+                object : AppOpenAd.AppOpenAdLoadCallback() {
+
+                    override fun onAdLoaded(ad: AppOpenAd) {
+                        // Called when an app open ad has loaded.
+                        Log.d(LOG_TAG, "Ad was loaded.")
+                        appOpenAd = ad
+                        isLoadingAd = false
+                    }
+
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        // Called when an app open ad has failed to load.
+                        Log.d(LOG_TAG, loadAdError.message)
+                        isLoadingAd = false;
+                    }
+                })
+        }
+
+        private fun isAdAvailable(): Boolean {
+            return appOpenAd != null
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -173,6 +226,18 @@ class MainActivity : AppCompatActivity() {
 //        }
 //
 //    }
+
+    private fun initializeMobileAdsSdk() {
+        if (isMobileAdsInitializeCalled.getAndSet(true)) {
+            return
+        }
+
+        // Initialize the Mobile Ads SDK.
+        MobileAds.initialize(this) {}
+
+        // Load an ad.
+        (application as MyApplication).loadAd(this)
+    }
 
     private fun verificarVersionMinima() {
         val remoteConfig = FirebaseRemoteConfig.getInstance()
@@ -389,6 +454,11 @@ class MainActivity : AppCompatActivity() {
             ).show()
 
         }
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        initializeMobileAdsSdk()
     }
 
 

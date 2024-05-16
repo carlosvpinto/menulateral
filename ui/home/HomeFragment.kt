@@ -13,6 +13,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 //import com.carlosv.dolaraldia.databinding.FragmentHomeBinding
 import android.content.SharedPreferences
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -20,24 +22,22 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.ScaleAnimation
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.ApiService
-import com.carlosv.dolaraldia.InterstitialActivity
 
 import com.carlosv.dolaraldia.model.bancos.DolarNew
 import com.carlosv.dolaraldia.model.bcv.BcvNew
+
 import com.carlosv.dolaraldia.model.paralelo.ParaleloVzla
-import com.carlosv.dolaraldia.ui.bancos.BancosModel
+import com.carlosv.dolaraldia.provider.ImagenProvider
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
-import com.facebook.gamingservices.cloudgaming.InAppAdLibrary.loadInterstitialAd
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
@@ -46,13 +46,8 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
-import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
-import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.ump.ConsentForm
-import com.google.android.ump.ConsentInformation
-import com.google.android.ump.ConsentRequestParameters
-import com.google.android.ump.UserMessagingPlatform
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,18 +66,39 @@ import java.text.DecimalFormat
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.Date
 import javax.net.ssl.*
-
-
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import com.carlosv.dolaraldia.MyApplication
+import com.carlosv.dolaraldia.model.clickAnuncios.ClickAnunicosModel
+import com.carlosv.dolaraldia.model.configImagen.ConfigImagenModel
+import com.carlosv.dolaraldia.provider.ClickAnuncioProvider
+import java.security.Timestamp
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
 
+    private val isMobileAdsInitializeCalled = AtomicBoolean(false)
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
     private var isFragmentAttached: Boolean = false
+
+
+    var url: String?= null
+    var nombreAnuncio: String?= null
+    var pagina: String?= null
+    var linkAfaliado:String?= null
+    private val imagenConfProvider = ImagenProvider()
+    private val clickAnuncioProvider = ClickAnuncioProvider()
+    private var imageConfigListener: ListenerRegistration? = null
+    private var configImageModels = ArrayList<ConfigImagenModel>()
 
     private var bcvActivo: Boolean?= null
     private var valorActualParalelo: Double? = 0.0
@@ -94,6 +110,8 @@ class HomeFragment : Fragment() {
     private var llamdoParalelo: Boolean= false
     private var llamadoBCV: Boolean= false
     lateinit var mAdView : AdView
+
+    private lateinit var layout: LinearLayout
 
     private var repeatCount = 0
 
@@ -122,15 +140,22 @@ class HomeFragment : Fragment() {
 
 
         MobileAds.initialize(requireContext()) {}
+       // cargarImagendelConfig()
+
 
 
 
         //PARA CARGAR ADMOB
+        layout = binding.linearLayout3
         mAdView= binding.adView
        // mAdView = findViewById(R.id.adView)
         val adRequest = AdRequest.Builder().build()
         mAdView.loadAd(adRequest)
+//******************************************
 
+        initializeMobileAdsSdk(requireContext())
+
+        //**************************************
 
 
 //        // Inicializa AdMob
@@ -158,9 +183,11 @@ class HomeFragment : Fragment() {
        // setDayNight(modoDark())
         binding.swipeRefreshLayout.setOnRefreshListener {
            binding.swipeRefreshLayout.isRefreshing = true
+            eliminarListener()
             llamarDolarNew()
             llamarBcvNew()
             actualizarEuro()
+            listenerImagenConfig()
 
         }
 
@@ -211,9 +238,20 @@ class HomeFragment : Fragment() {
         binding.imgCoyBolivar.setOnClickListener {
             copiarBs()
         }
-//        binding.progressBar.setOnClickListener {
-//            binding.progressBar.visibility = View.INVISIBLE
-//        }
+
+        binding.imglogo.setOnClickListener {
+            crearImagenUrl()
+        }
+
+        binding.imgVPublicidad.setOnClickListener {
+            guardarClickAnuncio()
+             irAlArticulo()
+
+        }
+        binding.imgCerrarAnuncio.setOnClickListener {
+           // binding.layoutCerraAnun.visibility= View.GONE
+            binding.LnerPubliImagen.visibility= View.GONE
+        }
 
         //PARA ACTUALIZAR EL PRECIO DEL DOLAR SOLO CUANDO CARGA POR PRIMERA VEZ
         if(savedInstanceState== null){
@@ -233,7 +271,203 @@ class HomeFragment : Fragment() {
         return root
     }
 
+    private fun guardarClickAnuncio() {
+        try {
+            val nombreAnuncio = nombreAnuncio
+            val uri = url
 
+            val clickAnuncioModel = ClickAnunicosModel(
+
+                articulo = nombreAnuncio,
+                date = Date(),
+                timestamp = Date().time,
+                pagina = pagina
+
+
+
+            )
+
+            clickAnuncioProvider.create(clickAnuncioModel).addOnCompleteListener { it ->
+                if (it.isSuccessful) {
+
+                   // Toast.makeText(requireContext(), "GUARDANDO DATOS DEL CLICK", Toast.LENGTH_LONG).show()
+
+                } else {
+                    Log.d(TAG, "crearImagenUrl: ${it.exception}")
+                    Toast.makeText(requireContext(), "Error ${it.exception}", Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: NumberFormatException) {
+            Toast.makeText(requireContext(), "Error en datos $e", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun irAlArticulo() {
+        // URL que quieres abrir cuando se hace clic en la imagen
+        //  url = "https://www.ejemplo.com/tu_link_de_afiliado"
+        Log.d(TAG, "irAlArticulo: URl: $url")
+        // Crea un intent implícito para abrir la URL en un navegador web
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(linkAfaliado)
+        startActivity(intent)
+        // Comprueba si hay aplicaciones que pueden manejar este intento
+        if (intent.resolveActivity(requireActivity().packageManager) != null) {
+            // Abre la URL en un navegador web
+
+        }
+    }
+
+
+    private fun techadoDesplegado():Boolean{
+
+        // Obtén el contexto de la actividad
+        val context: Context = requireContext()
+
+        // Verifica si el teclado está desplegado
+        val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val isKeyboardVisible = inputMethodManager.isActive
+
+        if (isKeyboardVisible) {
+            Log.d(TAG, "onCreateView: El teclado está desplegado")  // El teclado está desplegado
+            // Realiza las acciones que necesites
+            return true
+        } else {
+            // El teclado no está desplegado
+            Log.d(TAG, "onCreateView:El teclado no está desplegado ")
+            // Realiza las acciones que necesites
+            return false
+        }
+
+    }
+    private fun initializeMobileAdsSdk(context: Context) {
+        if (isMobileAdsInitializeCalled.getAndSet(true)) {
+            return
+        }
+
+        // Initialize the Mobile Ads SDK.
+        MobileAds.initialize(context) {}
+
+        // Load an ad.
+        (requireActivity().application as MyApplication).loadAd(context)
+    }
+
+
+    private fun listenerImagenConfig() {
+        //************************
+        imageConfigListener = imagenConfProvider.getAllImagenConfig()
+            .addSnapshotListener { querySnapshot, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+
+                if (querySnapshot != null) {
+
+                    configImageModels.clear() // Limpiar la lista antes de agregar los nuevos elementos
+
+                    if (querySnapshot.documents.size > 0) {
+                        val documents = querySnapshot.documents
+
+                        for (d in documents) {
+                            var imageConfig = d.toObject(ConfigImagenModel::class.java)
+                            imageConfig?.id = d.id
+                            configImageModels.add(imageConfig!!)
+                        }
+                        if (configImageModels.isNotEmpty()) {
+                            // Accede al primer elemento del ArrayList
+                            // Generar un número aleatorio entre el rango de índices del array
+                            val randomIndex = (0 until configImageModels.size).random()
+                            url = configImageModels[randomIndex].url
+                            nombreAnuncio = configImageModels[randomIndex].nombre
+                            linkAfaliado = configImageModels[randomIndex].linkAfiliado
+                            pagina = configImageModels[randomIndex].pagina
+                            Log.d(TAG, "listenerImagenConfig: url: $url, nombreAnuncio $nombreAnuncio, linkAfaliado: $linkAfaliado pagina: $pagina")
+
+                            cargarImagen(url)
+
+                        } else {
+                            binding.LnerPubliImagen.visibility = View.INVISIBLE
+                        }
+
+                    } else {
+                        Log.d(TAG, "listenerpagomovil: sin datos de imagen")
+                    }
+
+
+                }
+            }
+    }
+
+    override fun onPause() {
+       eliminarListener()
+        super.onPause()
+    }
+
+    private fun eliminarListener() {
+        imageConfigListener?.remove()
+    }
+
+
+    private fun crearImagenUrl() {
+
+
+        try {
+            val uri = "https://loremflickr.com/g/320/240/paris,girl/all"
+            val linkAfiliado = "https://www.google.com"
+
+            val imagenConfigModel = ConfigImagenModel(
+                url = uri,
+                linkAfiliado = linkAfiliado,
+                date = Date()
+            )
+
+            imagenConfProvider.create(imagenConfigModel).addOnCompleteListener { it ->
+                if (it.isSuccessful) {
+
+                    Toast.makeText(requireContext(), "Datos Enviados para Validar", Toast.LENGTH_LONG).show()
+
+                } else {
+                    Log.d(TAG, "crearImagenUrl: ${it.exception}")
+                    Toast.makeText(requireContext(), "Error al crear los datos", Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: NumberFormatException) {
+            Toast.makeText(requireContext(), "Error en datos $e", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun cargarImagen(uri: String?) {
+        if (uri != "") {
+            Glide.with(this)
+                .load(uri)
+                .listener(object : RequestListener<Drawable> {
+
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        model: Any,
+                        target: com.bumptech.glide.request.target.Target<Drawable>?,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean,
+                    ): Boolean {
+                     //   binding.layoutCerraAnun.visibility = View.VISIBLE
+                        binding.layoutCerraAnun.visibility= View.VISIBLE
+                        Log.d(TAG, "onResourceReady: visiblke true")
+                        return false
+                    }
+
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable>,
+                        isFirstResource: Boolean,
+                    ): Boolean {
+                        return false
+                    }
+                })
+                .into(binding.imgVPublicidad)
+        } else {
+            Log.d(TAG, "cargarImagen: URI Vacio")
+        }
+    }
 
 
 
@@ -507,87 +741,7 @@ class HomeFragment : Fragment() {
     }
 
     //LLAMAR A LAS APIS*****************************************************************
-//    fun llamarParaVzla() {
-//        try {
-//            val savedResponseVzla = getResponsePreferencesVzla(requireContext())
-//            Log.d("RESPUESTA", "llamarParaVzla: TRY 1 savedResponseVzla $savedResponseVzla ")
-//            if (savedResponseVzla != null) {
-//                ApiResponseHolder.getResponseParalelovzla(savedResponseVzla)
-//
-//                valorActualParalelo = savedResponseVzla.price.toDouble()
-//                //llenarCampoBCV(savedResponseBCV)
-//                llenarParaleloVzla(savedResponseVzla)
-//                multiplicaDolares()
-//                dividirABolivares()
-//                binding.swipeRefreshLayout.isRefreshing = false
-//            }
-//        }catch (e: Exception){
-//            binding.swipeRefreshLayout.isRefreshing = false
-//            animarSwipe()
-//           // Toast.makeText(requireContext(), "Problemas de Conexion $e", Toast.LENGTH_SHORT).show()
-//            Log.d("RESPUESTA", "llamarParaVzla: catch 1 savedResponseBCV $e ")
-//        }
-//
-//
-//        lifecycleScope.launch(Dispatchers.IO) {
-//
-//            val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/unit/enparalelovzla"
-//            val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
-//
-//            val client = OkHttpClient.Builder().build()
-//            val request = Request.Builder()
-//                .url(url)
-//                .build()
-//
-//            val retrofit = Retrofit.Builder()
-//                .baseUrl(baseUrl)
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .client(client)
-//                .build()
-//
-//            val apiService = retrofit.create(ApiService::class.java)
-//
-//            try {
-//                val response = apiService.getParalelovzla(url)
-//                Log.d("RESPUESTA", "llamarParaVzla: TRY 2 response $response ")
-//                binding.swipeRefreshLayout.isRefreshing = false
-//                if (response != null) {
-//                    ApiResponseHolder.getResponseParalelovzla(response)
-//                    valorActualParalelo = response.price.toDouble()
-//
-//                    guardarResponseVzla(requireContext(), response)
-//
-//                    withContext(Dispatchers.Main) {
-//                        animacionCrecerTexto(binding.txtFechaActualizacionPara)
-//                        binding.swipeRefreshLayout.isRefreshing = false
-//                        binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),
-//                            R.color.md_theme_light_surfaceTint))
-//                        llenarParaleloVzla(response)
-//                    }
-//
-//                    multiplicaDolares()
-//                    dividirABolivares()
-//                }
-//
-//            } catch (e: Exception) {
-//                withContext(Dispatchers.Main) {
-//                    Toast.makeText(
-//                        requireContext(),
-//                        "No se actualizó el dólar Paralelo! Revise la conexión: $e",
-//                        Toast.LENGTH_LONG
-//                    ).show()
-//                    animarSwipe()
-//                    binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(),R.color.red))
-//                    Log.d("RESPUESTA", "llamarParaVzla: catch 2 response $e ")
-//                    binding.swipeRefreshLayout.isRefreshing = false
-//                    binding.progressBar.visibility= View.INVISIBLE
-//                }
-//
-//                println("Error: ${e.message}")
-//            }
-//        }
-//    }
-//
+
     fun llamarBcvNew() {
         try {
             val savedResponseBCV = getResponsePreferencesBcvNew(requireContext())
@@ -788,16 +942,6 @@ class HomeFragment : Fragment() {
         editor.putString("dolarBCVNew", responseJson)
         editor.apply()
     }
-    private fun guardarResponseVzla(context: Context, responseBCVNew: ParaleloVzla) {
-        val gson = Gson()
-        val responseJson = gson.toJson(responseBCVNew)
-
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferencesVzla", AppCompatActivity.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("dolarVzlaNew", responseJson)
-        editor.apply()
-    }
 
     private fun guardarResponse(context: Context, responseBCV: DolarNew) {
         val gson = Gson()
@@ -863,11 +1007,12 @@ class HomeFragment : Fragment() {
             binding.btnBcv.text = response.monitors.usd?.price
             binding.btnBcv.textOff = response.monitors.usd?.price
             binding.btnBcv.textOn = response.monitors.usd?.price
-            binding.txtFechaActualizacionBcv.text = response.monitors.last_update
-
+            val fechaCovertida=cambiarFormatoFecha(response.monitors.last_update)
+            binding.txtFechaActualizacionBcv.text = fechaCovertida
             if (response.monitors.usd.color == "red") binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_roja)
             if (response.monitors.usd.color == "neutral") binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_igual)
             if (response.monitors.usd.color == "green") binding.imgflechaBcv.setImageResource(R.drawable.ic_flechaverde)
+
             binding.txtVariacionBcv.text = response.monitors.usd.percent
 
 
@@ -876,22 +1021,7 @@ class HomeFragment : Fragment() {
     }
     fun llenarDolarNew(response: DolarNew) {
         Log.d("RESPUESTA", " llenarCampoBCVNew response $response valor de ${response.monitors.bcv?.price}  ")
-        // DATOS DEL BCV
-//        if (!response.monitors.bcv.price.isNullOrEmpty()){
-//            binding.btnBcv.text = response.monitors.bcv?.price
-//            binding.btnBcv.textOff =  response.monitors.bcv?.price
-//            binding.btnBcv.textOn =  response.monitors.bcv?.price
-//            binding.txtFechaActualizacionBcv.text = response.monitors.bcv.last_update
-//
-//            if (response.monitors.bcv.color=="red") binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_roja)
-//            if (response.monitors.bcv.color=="neutral") binding.imgflechaBcv.setImageResource(R.drawable.ic_flecha_igual)
-//            if (response.monitors.bcv.color=="green") binding.imgflechaBcv.setImageResource(R.drawable.ic_flechaverde)
-//            binding.txtVariacionBcv.text= response.monitors.bcv.percent
-//
-//
-//
-//
-//        }
+
 
         //DATOS DEL PARALELO
         Log.d("RESPUESTA", " llenarCampoBCVNew response $response valor de ${response.monitors.bcv?.price}  ")
@@ -909,11 +1039,23 @@ class HomeFragment : Fragment() {
         }
 
     }
+    fun cambiarFormatoFecha(fecha: String): String {
+        // Definir el formato de la fecha de entrada
+        val formatoEntrada = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+        // Definir el formato de la fecha de salida
+        val formatoSalida = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+        // Parsear la fecha de entrada al formato LocalDate
+        val fechaLocalDate = LocalDate.parse(fecha, formatoEntrada)
+
+        // Formatear la fecha al nuevo formato y devolverla
+        return fechaLocalDate.format(formatoSalida)
+    }
+
 
 
     private fun multiplicaDolares() {
         val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-        Log.d(TAG, "multiplicaDolares: entro a funcion")
         binding.inputDolares?.addTextChangedListener(object : TextWatcher {
 
             override fun afterTextChanged(s: Editable?) {
@@ -922,16 +1064,13 @@ class HomeFragment : Fragment() {
                 if (binding.inputDolares.isFocused) {
                     val inputText = binding.inputDolares.text.toString()
                     if (inputText.isNotEmpty()) {
-                        Log.d(TAG, "afterTextChanged: entro a isNotEmpy")
                         if (binding.switchDolar.isChecked) {
-                            Log.d(TAG, "afterTextChanged: valorActualParalelo $valorActualParalelo")
                             if (valorActualParalelo != null) {
                                 val cleanedText =
                                     inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
                                 val parsedValue = cleanedText.toDoubleOrNull() ?: 0.0
 
                                 valorDolares = parsedValue * valorActualParalelo!!.toDouble()
-                                Log.d(TAG, "afterTextChanged: valorDolares $valorDolares")
                             }
                         }
 
@@ -1088,10 +1227,7 @@ class HomeFragment : Fragment() {
         imageView.startAnimation(slideDown)
     }
 
-    override fun onStart() {
-        super.onStart()
 
-    }
     override fun onDestroyView() {
         super.onDestroyView()
         lifecycleScope.coroutineContext.cancel()
@@ -1102,8 +1238,12 @@ class HomeFragment : Fragment() {
         super.onResume()
       //  binding.progressBar.visibility = View.VISIBLE
         if ( binding.progressBar.visibility!= View.VISIBLE) binding.swipeRefreshLayout.isRefreshing = true
+        eliminarListener()
         llamarDolarNew()
         llamarBcvNew()
+        listenerImagenConfig()
+        //admon appOpen
+
     }
 
 
