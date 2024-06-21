@@ -2,7 +2,6 @@ package com.carlosv.dolaraldia.provider
 
 import android.util.Log
 import com.carlosv.dolaraldia.model.clickAnuncios.ClickAnunicosModel
-import com.carlosv.dolaraldia.model.configImagen.ConfigImagenModel
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.Query

@@ -1,5 +1,6 @@
 package com.carlosv.dolaraldia
 
+import ShakeDetector
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -35,9 +36,15 @@ import android.Manifest
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.ToggleButton
 
 import androidx.annotation.RequiresApi
@@ -50,6 +57,7 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import java.util.concurrent.atomic.AtomicBoolean
@@ -58,6 +66,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appOpenAdManager: AppOpenAdManager
+
     val miAplicacion = MyApplication()
     private val isMobileAdsInitializeCalled = AtomicBoolean(false)
     private val LOG_TAG: String  = "AppOpenAdManager"
@@ -69,11 +78,6 @@ class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 123
     var filePath = ""
 
-//    val fabBoton: FloatingActionButton by lazy {
-//        binding.appBarMain.botonFloating
-//    }
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -84,6 +88,7 @@ class MainActivity : AppCompatActivity() {
         MobileAds.initialize(this) {}
         appOpenAdManager = AppOpenAdManager()
         setSupportActionBar(binding.appBarMain.toolbar)
+
 //
 //        binding.appBarMain.botonFloating.setOnClickListener { view ->
 //
@@ -174,26 +179,18 @@ class MainActivity : AppCompatActivity() {
 
         when(item.itemId){
             R.id.action_compartir->{
-               // compartirEnlacePlayStore(this)
-                Toast.makeText(this, "Compartir link Playstore", Toast.LENGTH_SHORT).show()
-                compartirLinkconFoto(this,"https://play.google.com/store/apps/details?id=$packageName")
-
-            }
-            R.id.action_salir->{
-                salirdelApp()
-            }
-            R.id.action_Capture->{
                 // Verificar si se tienen los permisos antes de capturar la pantalla
                 if (checkPermission()) {
                     captureScreen()
-//                    binding.appBarMain.botonFloating.isEnabled= false
-//                    binding.appBarMain.botonFloating.isEnabled = true
 
                 } else {
                     // Si no se tienen los permisos, solicitarlos
                     requestPermissionsIfNecessary()
                 }
 
+            }
+            R.id.action_salir->{
+                salirdelApp()
             }
 
 
@@ -336,31 +333,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkPermission(): Boolean {
-        val writeExternalStoragePermission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-        val readExternalStoragePermission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        )
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val writeExternalStoragePermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+            val readExternalStoragePermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
 
-        return writeExternalStoragePermission == PackageManager.PERMISSION_GRANTED &&
-                readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
+            writeExternalStoragePermission == PackageManager.PERMISSION_GRANTED &&
+                    readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun  captureScreen() {
-        // Tomar la captura de pantalla y guardarla en el archivo
+    private fun captureScreen() {
         try {
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val fileName = "screenshot_$timestamp.png"
-            filePath = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)}/$fileName"
+            val picturesDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // For Android 10 and above
+                getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+            } else {
+                // For older versions
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            }
+            filePath = "$picturesDir/$fileName"
 
-            // Crear un File para la captura de pantalla
+            // Create a File for the screenshot
             val file = File(filePath)
 
-            // Tomar la captura de pantalla y guardarla en el archivo
+            // Take the screenshot and save it to the file
             val rootView = window.decorView.rootView
             rootView.isDrawingCacheEnabled = true
             val bitmap = Bitmap.createBitmap(rootView.drawingCache)
@@ -371,14 +378,15 @@ class MainActivity : AppCompatActivity() {
             stream.flush()
             stream.close()
 
-            // Mostrar un mensaje indicando la ubicación del archivo
+            // Show a message indicating the file location
             Toast.makeText(
                 this,
                 "Captura de pantalla guardada en: $filePath",
                 Toast.LENGTH_SHORT
             ).show()
-            //llama a la funcion de compartir
-            shareImageWithText(filePath,crearTextoCapture())
+
+            // Call the share function
+            shareImageWithText(filePath, crearTextoCapture())
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -393,20 +401,19 @@ class MainActivity : AppCompatActivity() {
 
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (checkPermission()) {
-                // Si se otorgan los permisos, realizar la captura de pantalla
+                // If permissions are granted, take the screenshot
                 captureScreen()
             } else {
-                // Si se niegan los permisos, mostrar un mensaje al usuario
+                // If permissions are denied, show a message to the user
                 Toast.makeText(
                     this,
                     "Los permisos son necesarios para realizar la captura de pantalla",
                     Toast.LENGTH_SHORT
                 ).show()
-
-
             }
         }
     }
+
 
 
     private fun shareImageWithText(imagePath: String, shareText: String) {
@@ -487,6 +494,7 @@ class MainActivity : AppCompatActivity() {
         var inputTextoDolla=""
         var bcv= ""
         var paralelo= ""
+        val linkCorto= "https://bit.ly/dolaraldia"
 
         //**************************
         val nombreFragmentAct = getCurrentFragmentTag()
@@ -504,13 +512,13 @@ class MainActivity : AppCompatActivity() {
                 inputTextoDolla= editTextInFragmentDolar?.text.toString()
                 if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
 
-                    textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs"
+                    textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n -Descarga la App \n $linkCorto"
             }else{
                     val btnTextInFragmentBcv = fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
                     val btnTextInFragmentParalelo = fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
                     bcv = btnTextInFragmentBcv?.text.toString()
                     paralelo= btnTextInFragmentParalelo?.text.toString()
-                    textoCapture="Precio del Dolar Bcv: $bcv Precio del Paralelo es: $paralelo"
+                    textoCapture="-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n -Descarga la App \n $linkCorto"
                 }
 
             }
@@ -519,10 +527,11 @@ class MainActivity : AppCompatActivity() {
                 textoCapture= "Precio del Dolar en Paginas Web"
         }
         if (nombreFragmentAct== "Precio en Bancos"){
-            textoCapture= "Precio de venta del dolar en Bancos Venezolanos"
+            textoCapture= "Precio de venta del dolar en Bancos Venezolanos \n -Descarga la App \n $linkCorto"
         }
         if (nombreFragmentAct== "Acerca..."){
-            textoCapture= "Acerca de la Aplicacion"
+            textoCapture= "Acerca de la Aplicacion la App \n -Descarga la App \n" +
+                    " $linkCorto"
         }
 
         if (nombreFragmentAct== "Precio del Euro"){
@@ -532,7 +541,7 @@ class MainActivity : AppCompatActivity() {
             val euro = btnTextInFragmentEuro?.text
             val totalBs = TextBsFragmentEuro?.text
             val totalEuro = TextEurosFragmentEuro?.text
-            textoCapture = "Precio del Euro: $euro total en Bs:$totalBs Total en Euro: $totalEuro "
+            textoCapture = "Precio del Euro: $euro total en Bs:$totalBs Total en Euro: $totalEuro \n -Descarga la App \n $linkCorto"
         }
         Log.d("Capture", "crearTextoCapture: $textoCapture")
         return textoCapture
@@ -619,8 +628,7 @@ class MainActivity : AppCompatActivity() {
 
         return currentDestination?.label.toString()
     }
-
-
-
     //***********************************
+
+
 }

@@ -1,4 +1,4 @@
-package com.carlosv.dolaraldia.model.configImagen
+package com.carlosv.dolaraldia.model.controlPublicidad
 
 import com.beust.klaxon.Klaxon
 import java.util.Date
@@ -8,6 +8,8 @@ data class ConfigImagenModel (
 
     var id: String? = null,
     var url: String? = null,
+    var url2: String? = null,
+    var url3: String? = null,
     val linkAfiliado: String? = null,
     val date: Date?= null,
     val nombre:String?=null,

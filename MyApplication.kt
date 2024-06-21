@@ -22,7 +22,8 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import java.util.Date
 
 private const val LOG_TAG : String = "AppOpenAdManager"
-private const val AD_UNIT_ID: String  = "ca-app-pub-3940256099942544/9257395921"
+//private const val AD_UNIT_ID: String  = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 
@@ -176,7 +177,7 @@ class MyApplication :
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         isLoadingAd = false
                         Log.d(LOG_TAG, "No se pudo Cargar el Anuncio: " + loadAdError.message)
-                        Toast.makeText(context, "onAdFai ledToLoad", Toast.LENGTH_SHORT).show()
+                      //  Toast.makeText(context, "onAdFai ledToLoad", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -259,7 +260,7 @@ class MyApplication :
                         appOpenAd = null
                         isShowingAd = false
                         Log.d(LOG_TAG, "el anuncio no se puede mostrar cuando la aplicación no está en primer plano: " + adError.message)
-                        Toast.makeText(activity, " el anuncio no se puede mostrar cuando la aplicación no está en primer plano", Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(activity, " el anuncio no se puede mostrar cuando la aplicación no está en primer plano", Toast.LENGTH_SHORT).show()
 
                         onShowAdCompleteListener.onShowAdComplete()
                         if (googleMobileAdsConsentManager.canRequestAds) {
