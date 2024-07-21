@@ -22,8 +22,8 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import java.util.Date
 
 private const val LOG_TAG : String = "AppOpenAdManager"
-//private const val AD_UNIT_ID: String  = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
-private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
+private const val AD_UNIT_ID: String  = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+//private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 

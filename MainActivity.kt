@@ -33,16 +33,29 @@ import java.util.Locale
 import java.util.*
 
 import android.Manifest
+import android.content.SharedPreferences
 import android.content.res.Resources
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ImageSpan
+import android.text.style.StyleSpan
 import android.util.Log
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.ToggleButton
@@ -52,6 +65,9 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.PackageManagerCompat.LOG_TAG
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import com.carlosv.dolaraldia.model.datosPMovil.DatosPMovilModel
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
@@ -59,19 +75,26 @@ import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import com.google.common.reflect.TypeToken
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.gson.Gson
+import java.text.DecimalFormat
 import java.util.concurrent.atomic.AtomicBoolean
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appOpenAdManager: AppOpenAdManager
+    private lateinit var navController2: NavController
 
     val miAplicacion = MyApplication()
     private val isMobileAdsInitializeCalled = AtomicBoolean(false)
     private val LOG_TAG: String  = "AppOpenAdManager"
+    private val TAG: String = "MainPrincipal"
 
     private  val AD_UNIT_ID: String? = "ca-app-pub-3940256099942544/9257395921"
+
+    private var snackbar: Snackbar? = null
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
@@ -89,31 +112,25 @@ class MainActivity : AppCompatActivity() {
         appOpenAdManager = AppOpenAdManager()
         setSupportActionBar(binding.appBarMain.toolbar)
 
-//
-//        binding.appBarMain.botonFloating.setOnClickListener { view ->
-//
-//            // Verificar si se tienen los permisos antes de capturar la pantalla
-//            if (checkPermission()) {
-//                captureScreen()
-//                binding.appBarMain.botonFloating.isEnabled= false
-//               binding.appBarMain.botonFloating.isEnabled = true
-//
-//            } else {
-//                // Si no se tienen los permisos, solicitarlos
-//                requestPermissionsIfNecessary()
-//            }
-//
-//        }
-        //verificarVersionMinima()
 
         //adOpen*********************
-        initializeMobileAdsSdk()
+       // initializeMobileAdsSdk()
+        // Cargar el anuncio al crear la actividad
+       // (application as MyApplication).loadAd(this)
+
+        //***********************
+        // Obtén el NavHostFragment y el NavController
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
+        navController2 = navHostFragment.navController
+        //**********************
+
+        verificasiLeyoMsj()
 
         binding.navView
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
+         val navController = findNavController(R.id.nav_host_fragment_content_main)
         // Pasando cada ID de menú como un conjunto de ID porque cada
         // el menú debe considerarse como destino de nivel superior.
         appBarConfiguration = AppBarConfiguration(
@@ -127,6 +144,16 @@ class MainActivity : AppCompatActivity() {
         navView.setupWithNavController(navController)
 
     }
+//    override fun onResume() {
+//        super.onResume()
+//        // Mostrar el anuncio si está disponible cuando la actividad está en primer plano
+//        (application as MyApplication).showAdIfAvailable(this, object : MyApplication.OnShowAdCompleteListener {
+//            override fun onShowAdComplete() {
+//                // Lógica para cuando el anuncio se completa
+//            }
+//        })
+//    }
+
     inner class AppOpenAdManager {
         private var appOpenAd: AppOpenAd? = null
         private var isLoadingAd = false
@@ -181,13 +208,18 @@ class MainActivity : AppCompatActivity() {
             R.id.action_compartir->{
                 // Verificar si se tienen los permisos antes de capturar la pantalla
                 if (checkPermission()) {
-                    captureScreen()
+
+                    showCustomSnackbarPM()
+                    //captureScreen()
 
                 } else {
                     // Si no se tienen los permisos, solicitarlos
                     requestPermissionsIfNecessary()
                 }
 
+            }
+            R.id.action_personal->{
+                navController2.navigate(R.id.nav_Personal)
             }
             R.id.action_salir->{
                 salirdelApp()
@@ -197,32 +229,7 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
-    //VERIFICA LA VERSION DEL LA APP
-//    private fun versionUltima(){
-//        val remoteConfig = FirebaseRemoteConfig.getInstance()
-//        remoteConfig.fetchAndActivate()
-//        val requiredVersionMinima = remoteConfig.getLong("version_min_dolar_al_dia")
-//        val requiredSaludo = remoteConfig.getString("mensajebienvenida")
-//        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-//        val versionCodeActual = packageInfo.versionCode
-//
-//        Log.d("totalDolarConfig", "VALOR DE LA VERSION requiredSaludo: $requiredSaludo")
-//        Log.d("totalDolarConfig", "VALOR DE LA VERSION requiredVersionMinima: $requiredVersionMinima packageInfo $packageInfo versionCode $versionCodeActual")
-//        if (versionCodeActual < requiredVersionMinima) {
-//            // Mostrar un diálogo de actualización y redirigir a la Play Store.
-//            Toast.makeText(this, "Necesitas Actualizar Tu version por la $requiredVersionMinima", Toast.LENGTH_LONG).show()
-//            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.carlosvicente.uberkotlin"))
-//            startActivity(intent)
-//            finish() // O bloquea el acceso a la aplicación
-//        } else {
-//            // Continuar con la aplicación normalmente.
-//            if (requiredSaludo.isNotEmpty()){
-//                Toast.makeText(this, " $requiredSaludo", Toast.LENGTH_LONG).show()
-//            }
-//
-//        }
-//
-//    }
+
 
     private fun initializeMobileAdsSdk() {
         if (isMobileAdsInitializeCalled.getAndSet(true)) {
@@ -235,77 +242,6 @@ class MainActivity : AppCompatActivity() {
         // Load an ad.
         (application as MyApplication).loadAd(this)
     }
-
-    private fun verificarVersionMinima() {
-        val remoteConfig = FirebaseRemoteConfig.getInstance()
-
-        // Fetch de la configuración remota
-        remoteConfig.fetchAndActivate()
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Configuración remota obtenida con éxito
-                    val requiredVersionMinima = remoteConfig.getLong("version_min_dolar_al_dia")
-                    val requiredSaludo = remoteConfig.getString("mensajebienvenida")
-                    val packageInfo = packageManager.getPackageInfo(packageName, 0)
-                    val versionCodeActual = packageInfo.versionCode
-
-                    Log.d("totalDolarConfig", "VALOR DE LA VERSION requiredSaludo: $requiredSaludo")
-                    Log.d("totalDolarConfig", "VALOR DE LA VERSION requiredVersionMinima: $requiredVersionMinima packageInfo $packageInfo versionCode $versionCodeActual")
-
-                    if (versionCodeActual < requiredVersionMinima) {
-                        // La versión actual no cumple con la versión mínima requerida
-                        // Mostrar un diálogo de actualización y redirigir a la Play Store.
-                        val mensaje = "Necesitas actualizar tu versión a la $requiredVersionMinima"
-                        Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show()
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${this.packageName}"))
-                        startActivity(intent)
-                        finish() // O bloquear el acceso a la aplicación
-                    } else {
-                        // La versión actual cumple con la versión mínima requerida
-                        // Continuar con la aplicación normalmente.
-                        if (requiredSaludo.isNotEmpty()) {
-                            Toast.makeText(this, requiredSaludo, Toast.LENGTH_LONG).show()
-                        }
-                    }
-                } else {
-                    // Error al obtener la configuración remota
-                    Log.e("totalDolarConfig", "Error al obtener la configuración remota", task.exception)
-                    // Podrías manejar el error mostrando un mensaje al usuario o intentando nuevamente.
-                }
-            }
-    }
-
-
-
-
-    fun compartirEnlacePlayStore(context: Context) {
-        val packageName = context.packageName
-
-        try {
-            // Crear la URL de la Play Store con el paquete de la aplicación
-            val playStoreLink = "https://play.google.com/store/apps/details?id=$packageName"
-
-            // Crear un Intent para compartir
-            val compartirIntent = Intent(Intent.ACTION_SEND)
-            compartirIntent.type = "text/plain"
-            compartirIntent.putExtra(Intent.EXTRA_TEXT, playStoreLink)
-
-            // Mostrar el diálogo de compartir
-            context.startActivity(Intent.createChooser(compartirIntent, "Compartir enlace de la Play Store"))
-
-        } catch (e: Exception) {
-            // Manejar excepciones, por ejemplo, si la aplicación de la Play Store no está instalada
-            Toast.makeText(context, "No se puede abrir la Play Store", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
-        }
-    }
-
-
-
-
-
-
-
 
     private fun salirdelApp(){
 
@@ -350,8 +286,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (checkPermission()) {
+                // If permissions are granted, take the screenshot
+                showCustomSnackbarPM()
+               // captureScreen(false, null)
+            } else {
+                // If permissions are denied, show a message to the user
+                Toast.makeText(
+                    this,
+                    "Los permisos son necesarios para realizar la captura de pantalla",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun captureScreen() {
+    private fun  captureScreen(enviarDatosPM:Boolean,datosPMovilModel:DatosPMovilModel?) {
         try {
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val fileName = "screenshot_$timestamp.png"
@@ -381,38 +341,273 @@ class MainActivity : AppCompatActivity() {
             // Show a message indicating the file location
             Toast.makeText(
                 this,
-                "Captura de pantalla guardada en: $filePath",
+                "Enviando...: ",
                 Toast.LENGTH_SHORT
             ).show()
 
-            // Call the share function
-            shareImageWithText(filePath, crearTextoCapture())
+            //veridica si esta en Fragmento para no hacer el Capture
+            val nombreFragmentAct = getCurrentFragmentTag()
+            Log.d("CAPTURA", "crearTextoCapture: currentFragmentTag $nombreFragmentAct")
+            if (nombreFragmentAct == "Pago Movil") {
+
+                // Realiza la lógica específica del fragmento actual
+
+            shareText(crearTextoCapture(enviarDatosPM,datosPMovilModel))
+            }else{
+                // Call the share function
+                shareImageWithText(filePath, crearTextoCapture(enviarDatosPM, datosPMovilModel))
+            }
+
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    //Solo Envia Texto
+    private fun shareText(shareText: String) {
+        // Crear un intent para compartir
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "text/plain"
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
 
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (checkPermission()) {
-                // If permissions are granted, take the screenshot
-                captureScreen()
-            } else {
-                // If permissions are denied, show a message to the user
-                Toast.makeText(
-                    this,
-                    "Los permisos son necesarios para realizar la captura de pantalla",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+        // Iniciar la actividad de compartir
+        startActivity(Intent.createChooser(shareIntent, "Compartir texto"))
+    }
+
+
+    //Crear un Texto con una imagen!!************************************
+    private fun llamaElMsj(){
+
+        val rootView = findViewById<View>(android.R.id.content)
+        snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
+
+
+
+        // Inflar el diseño personalizado
+        val snackbarLayout = snackbar?.view as Snackbar.SnackbarLayout
+        val customView = LayoutInflater.from(this).inflate(R.layout.custom_toast_informacion, null)
+
+        // Configurar el ícono y el texto
+        val snackbarTextView: TextView = customView.findViewById(R.id.txtContenido)
+
+        snackbarTextView.textSize= 16f
+        snackbarTextView.text= getCustomSpannableString(this)
+
+
+
+
+        // Configurar el botón de cierre
+        val btnRecordarDespues: Button = customView.findViewById(R.id.btnRecordarDespues)
+        btnRecordarDespues.setOnClickListener {
+            snackbar?.dismiss()
+            //initializeMobileAdsSdk  Activar para Produccion************************************* 409 385 377
+        }
+        // Configurar el botón de Envio Pago movil
+        val btnOkEntendi: Button = customView.findViewById(R.id.btnOkEntendi)
+        btnOkEntendi.setOnClickListener {
+            // Para guardar que el usuario ha leído el mensaje
+            saveMessageReadState(this, true)
+            snackbar?.dismiss()
+            // initializeMobileAdsSdk()  Activar para Produccion************************************* 409 385 377
+        }
+
+        // Agregar el diseño personalizado al Snackbar
+        snackbarLayout.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
+        snackbarLayout.addView(customView, 0)
+
+        // Mostrar el Snackbar centrado
+        snackbar?.show()
+
+        // Ajustar la posición del Snackbar al centro de la pantalla
+        val params = snackbar?.view?.layoutParams as FrameLayout.LayoutParams
+        params.gravity = Gravity.TOP // or Gravity.CENTER_HORIZONTAL
+        val marginTop = 250 // Cambia este valor según la separación que desees desde la parte superior
+        params.setMargins(0, marginTop, 0, 0)
+        snackbar?.view?.layoutParams = params
+    }
+
+    private fun verificasiLeyoMsj(){
+
+        // Para verificar si el usuario ha leído el mensaje
+        val hasRead = hasUserReadMessage(this)
+        if (hasRead) {
+            // El usuario ya ha leído el mensaje
+          //  initializeMobileAdsSdk()  Activar para Produccion************************************* 409 385 377
+
+        } else {
+            // El usuario no ha leído el mensaje
+            llamaElMsj()
+
         }
     }
+    fun getCustomSpannableString(context: Context): SpannableString {
+        // El texto que deseas mostrar
+        val text = "Ahora Presionando el Siguiente Icono:  Puede Guardar tus numeros de pagos Movil para enviarlo con mayor rapidez a la hora de solicitar algun pago"
+
+        // Crear un SpannableStringBuilder con el texto
+        val spannableStringBuilder = SpannableStringBuilder(text)
+
+
+        // Crear el Drawable para la imagen
+        val drawable = ContextCompat.getDrawable(context, R.drawable.enviar_2_png)!!
+
+        // Convertir 24dp a píxeles
+        val widthInDp = 35
+        val heightInDp = 35
+        val widthInPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthInDp.toFloat(), context.resources.displayMetrics).toInt()
+        val heightInPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, heightInDp.toFloat(), context.resources.displayMetrics).toInt()
+
+        // Establecer el tamaño del Drawable
+        drawable.setBounds(0, 0, widthInPx, heightInPx)
+
+        // Crear un ImageSpan con el Drawable
+        val imageSpan = ImageSpan(drawable, ImageSpan.ALIGN_BASELINE)
+
+        // Encuentra la posición donde quieres insertar la imagen
+        val position = text.indexOf("Icono:  ") + "Icono: ".length
+
+        // Añadir espacio en el texto donde la imagen será insertada
+        spannableStringBuilder.insert(position, " ")
+
+        // Añadir el ImageSpan al SpannableStringBuilder
+        spannableStringBuilder.setSpan(imageSpan, position, position + 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+
+        // Convertir SpannableStringBuilder a SpannableString y devolverlo
+        return SpannableString(spannableStringBuilder)
+    }
+
+
+
+        // Función para guardar el estado de lectura del mensaje
+        fun saveMessageReadState(context: Context, hasRead: Boolean) {
+            val sharedPreferences = context.getSharedPreferences("LeyoMsj", Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            editor.putBoolean("MSJLeido", hasRead)
+            editor.apply()
+        }
+
+        // Función para verificar el estado de lectura del mensaje
+        fun hasUserReadMessage(context: Context): Boolean {
+            val sharedPreferences = context.getSharedPreferences("LeyoMsj", Context.MODE_PRIVATE)
+            return sharedPreferences.getBoolean("MSJLeido", false)
+        }
+
+    //********************************************************************
+
+
+    //Abre el mensaje Snackbar Personalizado para Enviar Datos de Pago Movil
+    private fun showCustomSnackbarPM() {
+        var botonPrecionado= 0
+        val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
+        val rootView = findViewById<View>(android.R.id.content)
+        snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
+
+
+
+        // Inflar el diseño personalizado
+        val snackbarLayout = snackbar?.view as Snackbar.SnackbarLayout
+        val customView = LayoutInflater.from(this).inflate(R.layout.custom_toast_pago_movil, null)
+
+        // Configurar el ícono y el texto
+        val snackbarTextView: TextView = customView.findViewById(R.id.toast_text)
+
+        snackbarTextView.textSize= 12f
+
+
+        val chechPagoMovil: CheckBox = customView.findViewById(R.id.checPagomovil)
+        val pagoMovilListTrue = obtenerPagoMovilListTrue(this)
+        Log.d(TAG, "showCustomSnackbarPM: pagoMovilListTrue ${pagoMovilListTrue?.seleccionado} $pagoMovilListTrue")
+        if (pagoMovilListTrue?.seleccionado == null){
+            chechPagoMovil.isChecked= false
+            chechPagoMovil.isEnabled= false
+
+            chechPagoMovil.text= "Sin Cuenta Guardada"
+        }else{
+            chechPagoMovil.isChecked= true
+            chechPagoMovil.text = pagoMovilListTrue?.nombre
+        }
+
+        // Configurar el botón de cierre
+        val closeButton: ImageButton = customView.findViewById(R.id.close_button)
+        closeButton.setOnClickListener {
+            snackbar?.dismiss()
+            botonPrecionado= 1
+        }
+        // Configurar el botón de Envio Pago movil
+        val enviareButton: ImageButton = customView.findViewById(R.id.btnEnviarPM)
+        enviareButton.setOnClickListener {
+            botonPrecionado= 0
+            snackbar?.dismiss()
+
+        }
+        // Añadir el callback para escuchar cuando el Snackbar se cierra
+        snackbar?.addCallback(object : Snackbar.Callback() {
+            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                // Se llama cuando el Snackbar se cierra
+                val enviarDatosPM= chechPagoMovil.isChecked
+                Log.d(TAG, "onDismissed: chkActivo $enviarDatosPM")
+                if (botonPrecionado== 0 ){
+                    captureScreen(enviarDatosPM,pagoMovilListTrue)
+                }
+
+            }
+        })
+
+        // Agregar el diseño personalizado al Snackbar
+        snackbarLayout.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
+        snackbarLayout.addView(customView, 0)
+
+        // Mostrar el Snackbar centrado
+        snackbar?.show()
+
+        // Ajustar la posición del Snackbar al centro de la pantalla
+        val params = snackbar?.view?.layoutParams as FrameLayout.LayoutParams
+        params.gravity = Gravity.TOP // or Gravity.CENTER_HORIZONTAL
+        val marginTop = 250 // Cambia este valor según la separación que desees desde la parte superior
+        params.setMargins(0, marginTop, 0, 0)
+        snackbar?.view?.layoutParams = params
+    }
+    private fun obtenerPagoMovilList(context: Context): List<DatosPMovilModel> {
+        val gson = Gson()
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
+
+        // Leer la lista existente de pagoMovil desde SharedPreferences
+        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
+        return if (pagoMovilJson != null) {
+            gson.fromJson(pagoMovilJson, object : TypeToken<List<DatosPMovilModel>>() {}.type)
+        } else {
+            emptyList()
+        }
+    }
+
+    //Obtiene el pago Movil Activo
+    private fun obtenerPagoMovilListTrue(context: Context): DatosPMovilModel? {
+        val gson = Gson()
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
+
+        // Leer la lista existente de pagoMovil desde SharedPreferences
+        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
+        val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
+            gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
+        } else {
+            mutableListOf()
+        }
+
+        // Buscar y retornar el nombre del elemento que tiene seleccionado igual a true
+        for (datosPMovilModel in pagoMovilList) {
+            if (datosPMovilModel.seleccionado) {
+                Log.d("obtenerPagoMovilListTrue", "Elemento seleccionado: ${datosPMovilModel.nombre}")
+                return datosPMovilModel
+            }
+        }
+
+        // Retornar null si no se encuentra ningún elemento seleccionado
+        return null
+    }
+
+
+
 
 
 
@@ -433,7 +628,7 @@ class MainActivity : AppCompatActivity() {
                     "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
                     tempFile
                 )
-                Log.d("Capture", "shareImageWithText:uri $uri ")
+
                 // Crear un intent para compartir
                 val shareIntent = Intent(Intent.ACTION_SEND)
                 shareIntent.type = "multipart/*"
@@ -465,7 +660,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRestart() {
         super.onRestart()
-        initializeMobileAdsSdk()
+        //initializeMobileAdsSdk()
     }
 
 
@@ -488,13 +683,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private fun crearTextoCapture():String{
+
+    //Crea el Texto que va a ir junto con el Capture
+    private fun crearTextoCapture(enviarDatosPM:Boolean,pagoMovilListTrue: DatosPMovilModel?):String{
         var textoCapture=""
         var inputTextoBs=""
         var inputTextoDolla=""
         var bcv= ""
         var paralelo= ""
         val linkCorto= "https://bit.ly/dolaraldia"
+
 
         //**************************
         val nombreFragmentAct = getCurrentFragmentTag()
@@ -506,25 +704,44 @@ class MainActivity : AppCompatActivity() {
         val fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
         if (fragment != null && fragment.isAdded) {
             if (nombreFragmentAct== "Dolar al Dia"){
+
                 val editTextInFragmentBs = fragment.view?.findViewById<EditText>(R.id.inputBolivares)
                 val editTextInFragmentDolar = fragment.view?.findViewById<EditText>(R.id.inputDolares)
                 inputTextoBs = editTextInFragmentBs?.text.toString()
                 inputTextoDolla= editTextInFragmentDolar?.text.toString()
                 if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
+                    //Verifica se el Usuario quiere enviar Datos
+                    Log.d(TAG, "crearTextoCapture: enviarDatosPM $enviarDatosPM ")
+                    if (enviarDatosPM){
 
-                    textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n -Descarga la App \n $linkCorto"
+                        textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -CI: ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+                    }else{
+                        textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Descarga la App $linkCorto"
+                    }
+
+
             }else{
                     val btnTextInFragmentBcv = fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
                     val btnTextInFragmentParalelo = fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
                     bcv = btnTextInFragmentBcv?.text.toString()
                     paralelo= btnTextInFragmentParalelo?.text.toString()
-                    textoCapture="-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n -Descarga la App \n $linkCorto"
+                    if (enviarDatosPM){
+                        textoCapture="-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -CI: ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+                    }else{
+                        textoCapture="-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Descarga la App \n $linkCorto"
+                    }
+
                 }
 
             }
         }
         if (nombreFragmentAct== "Otras Paginas"){
-                textoCapture= "Precio del Dolar en Paginas Web"
+
+            if (enviarDatosPM){
+                textoCapture="-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Descarga la App \n $linkCorto"
+            }else{
+                textoCapture= "Precio del Dolar en Paginas Web\n \n -Descarga la App \n $linkCorto"
+            }
         }
         if (nombreFragmentAct== "Precio en Bancos"){
             textoCapture= "Precio de venta del dolar en Bancos Venezolanos \n -Descarga la App \n $linkCorto"
@@ -543,43 +760,14 @@ class MainActivity : AppCompatActivity() {
             val totalEuro = TextEurosFragmentEuro?.text
             textoCapture = "Precio del Euro: $euro total en Bs:$totalBs Total en Euro: $totalEuro \n -Descarga la App \n $linkCorto"
         }
+
+        if (nombreFragmentAct== "Pago Movil"){
+            textoCapture = "Informacion \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -CI: ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+        }
         Log.d("Capture", "crearTextoCapture: $textoCapture")
         return textoCapture
     }
 
-
-    //**********************************
-//    fun compartirLinkconFoto(context: Context, text: String) {
-//        try {
-//                       // Crear un archivo temporal para compartir
-//            val tempFile = createTempImageFile()
-//
-//
-//            writeDrawableImageToFile(context, R.drawable.logodolar_al_dia, tempFile)
-//            // Obtener la Uri segura utilizando FileProvider
-//            val uri = FileProvider.getUriForFile(
-//                this,
-//                "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
-//                tempFile
-//            )
-//            Log.d("Capture", "shareImageWithText:uri $uri ")
-//
-//            // Crear un intent para compartir
-//            val shareIntent = Intent().apply {
-//                action = Intent.ACTION_SEND
-//                type = "image/*"
-//                putExtra(Intent.EXTRA_STREAM, uri)
-//                putExtra(Intent.EXTRA_TEXT, text)
-//                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-//            }
-//
-//            // Iniciar la actividad de compartir
-//            context.startActivity(Intent.createChooser(shareIntent, "Compartir con"))
-//        } catch (e: IOException) {
-//            // Manejar cualquier excepción que pueda ocurrir durante la creación del archivo temporal
-//            e.printStackTrace()
-//        }
-//    }
     fun compartirLinkconFoto(context: Context, text: String) {
         try {
             // Crear un archivo temporal para compartir

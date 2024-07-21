@@ -2,6 +2,7 @@ package com.carlosv.dolaraldia
 
 import com.carlosv.dolaraldia.model.bancos.DolarNew
 import com.carlosv.dolaraldia.model.bcv.BcvNew
+import com.carlosv.dolaraldia.model.emergencia.ParaleloEmergencia
 import com.carlosv.dolaraldia.model.monedas.DolarInstituciones
 import com.carlosv.dolaraldia.model.paralelo.ParaleloVzla
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
@@ -15,10 +16,12 @@ interface ApiService {
     @GET
     suspend fun getBcv(@Url url: String):BcvNew
 
- @GET
+    @GET
     suspend fun getDolarNew(@Url url: String): DolarNew
 
 
+    @GET
+    suspend fun getDolarEmergencia(@Url url: String): ParaleloEmergencia
 
     @GET
     suspend fun getInstituciones(@Url url: String):DolarInstituciones
