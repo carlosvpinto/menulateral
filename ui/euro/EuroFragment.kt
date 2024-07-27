@@ -250,20 +250,23 @@ class EuroFragment : Fragment() {
 
     //COPIAR LOS DATOS AL PORTAPEPEL
     private fun copiarBs() {
-        var montoBolivarCopyLimpio =0.0
-        var montoBolivarCopy = binding.inputBolivares.text.toString()
-        if (!montoBolivarCopy.isNullOrEmpty()) {
-            val cadenaNumerica = montoBolivarCopy
-            val cadenaLimpia = cadenaNumerica.replace(",", "")
-            montoBolivarCopyLimpio = cadenaLimpia.toDouble()
+        val montoBolivarCopy = binding.inputBolivares.text.toString()
+        if (montoBolivarCopy.isNotEmpty()) {
+            val cadenaNumerica = montoBolivarCopy.replace(",", "")
 
-            montoBolivarCopyLimpio.toDouble()
-            copyToClipboard(requireContext(), montoBolivarCopy.toString(), "$montoBolivarCopy", "Bs.")
+            // Verificación de que la cadena es un número válido
+            try {
+                val montoBolivarCopyLimpio = cadenaNumerica.toDouble()
+                copyToClipboard(requireContext(), montoBolivarCopyLimpio.toString(), montoBolivarCopy, "Bs.")
+            } catch (e: NumberFormatException) {
+                // Maneja el caso en el que la cadena no es un número válido
+                Toast.makeText(requireContext(), "Por favor, ingrese un número válido", Toast.LENGTH_SHORT).show()
+            }
         } else {
-            Toast.makeText(requireContext(), "Campo vacio", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Campo vacío", Toast.LENGTH_SHORT).show()
         }
-
     }
+
 
     //FUNCION PARA COPIAR AL PORTA PAPEL
     fun copyToClipboard(context: Context, text: String, titulo: String, unidad: String) {

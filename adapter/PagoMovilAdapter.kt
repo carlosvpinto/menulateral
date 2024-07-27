@@ -45,14 +45,21 @@ class PagoMovilAdapter(
         return pagosMoviles.size
     }
 
-    fun updatePrecioBancos(precionBancosList: List<DatosPMovilModel>) {
+    fun updatePrecioBancos(precionBancosList: List<DatosPMovilModel>?) {
+        if (precionBancosList == null) {
+            Log.e("ADAPTER", "precionBancosList es null")
+            return
+        }
+
         Log.d("ADAPTER", "DENTRO updatePrecioBancos precionBancosList $precionBancosList")
-        this.pagosMoviles = precionBancosList as ArrayList<DatosPMovilModel>
-        // Usar Handler para llamar notifyDataSetChanged()
+        this.pagosMoviles = ArrayList(precionBancosList)
+
+        // Usar Handler para llamar notifyDataSetChanged() en el hilo principal
         handler.post {
             notifyDataSetChanged()
         }
     }
+
 
     inner class PagoMovilAdapterViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val radioTipo: TextView= view.findViewById(R.id.txtTipo)

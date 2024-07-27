@@ -144,15 +144,6 @@ class MainActivity : AppCompatActivity() {
         navView.setupWithNavController(navController)
 
     }
-//    override fun onResume() {
-//        super.onResume()
-//        // Mostrar el anuncio si está disponible cuando la actividad está en primer plano
-//        (application as MyApplication).showAdIfAvailable(this, object : MyApplication.OnShowAdCompleteListener {
-//            override fun onShowAdComplete() {
-//                // Lógica para cuando el anuncio se completa
-//            }
-//        })
-//    }
 
     inner class AppOpenAdManager {
         private var appOpenAd: AppOpenAd? = null
@@ -351,8 +342,7 @@ class MainActivity : AppCompatActivity() {
             if (nombreFragmentAct == "Pago Movil") {
 
                 // Realiza la lógica específica del fragmento actual
-
-            shareText(crearTextoCapture(enviarDatosPM,datosPMovilModel))
+                shareText(crearTextoCapture(enviarDatosPM,datosPMovilModel))
             }else{
                 // Call the share function
                 shareImageWithText(filePath, crearTextoCapture(enviarDatosPM, datosPMovilModel))
@@ -400,7 +390,7 @@ class MainActivity : AppCompatActivity() {
         val btnRecordarDespues: Button = customView.findViewById(R.id.btnRecordarDespues)
         btnRecordarDespues.setOnClickListener {
             snackbar?.dismiss()
-            //initializeMobileAdsSdk  Activar para Produccion************************************* 409 385 377
+            initializeMobileAdsSdk()
         }
         // Configurar el botón de Envio Pago movil
         val btnOkEntendi: Button = customView.findViewById(R.id.btnOkEntendi)
@@ -408,7 +398,7 @@ class MainActivity : AppCompatActivity() {
             // Para guardar que el usuario ha leído el mensaje
             saveMessageReadState(this, true)
             snackbar?.dismiss()
-            // initializeMobileAdsSdk()  Activar para Produccion************************************* 409 385 377
+           initializeMobileAdsSdk()
         }
 
         // Agregar el diseño personalizado al Snackbar
@@ -432,7 +422,7 @@ class MainActivity : AppCompatActivity() {
         val hasRead = hasUserReadMessage(this)
         if (hasRead) {
             // El usuario ya ha leído el mensaje
-          //  initializeMobileAdsSdk()  Activar para Produccion************************************* 409 385 377
+            initializeMobileAdsSdk()
 
         } else {
             // El usuario no ha leído el mensaje
@@ -610,17 +600,65 @@ class MainActivity : AppCompatActivity() {
 
 
 
+// Comparte imagen contexto************************
+//    private fun shareImageWithText(imagePath: String, shareText: String) {
+//        val imageFile = File(imagePath)
+//
+//        if (imageFile.exists()) {
+//            try {
+//                // Crear un archivo temporal para compartir
+//                val tempFile = createTempImageFile()
+//
+//                // Copiar la imagen original al archivo temporal
+//                copyFile(imageFile, tempFile)
+//
+//                // Obtener la Uri segura utilizando FileProvider
+//                val uri = FileProvider.getUriForFile(
+//                    this,
+//                    "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
+//                    tempFile
+//                )
+//
+//                // Crear un intent para compartir
+//                val shareIntent = Intent(Intent.ACTION_SEND)
+//                shareIntent.type = "multipart/*"
+//                shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
+//                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+//                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+//
+//                // Iniciar la actividad de compartir
+//                startActivity(Intent.createChooser(shareIntent, "Compartir imagen"))
+//
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//                Toast.makeText(
+//                    this,
+//                    "Error al compartir la imagen",
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//
+//            }
+//        } else {
+//            Toast.makeText(
+//                this,
+//                "La imagen no existe en la ruta especificada",
+//                Toast.LENGTH_SHORT
+//            ).show()
+//
+//        }
+//    }
 
+    // Comparte imagen contexto************************
     private fun shareImageWithText(imagePath: String, shareText: String) {
         val imageFile = File(imagePath)
 
         if (imageFile.exists()) {
             try {
-                // Crear un archivo temporal para compartir
-                val tempFile = createTempImageFile()
-
-                // Copiar la imagen original al archivo temporal
-                copyFile(imageFile, tempFile)
+                // Verifica si el archivo temporal se puede crear y usar
+                val tempFile = File.createTempFile("temp_image", ".jpg", externalCacheDir).apply {
+                    // Copia el contenido del archivo original al archivo temporal
+                    imageFile.copyTo(this, overwrite = true)
+                }
 
                 // Obtener la Uri segura utilizando FileProvider
                 val uri = FileProvider.getUriForFile(
@@ -630,33 +668,28 @@ class MainActivity : AppCompatActivity() {
                 )
 
                 // Crear un intent para compartir
-                val shareIntent = Intent(Intent.ACTION_SEND)
-                shareIntent.type = "multipart/*"
-                shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
-                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/*"
+                    putExtra(Intent.EXTRA_TEXT, shareText)
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
 
                 // Iniciar la actividad de compartir
                 startActivity(Intent.createChooser(shareIntent, "Compartir imagen"))
 
+            } catch (e: IllegalArgumentException) {
+                e.printStackTrace()
+                Toast.makeText(this, "No se pudo compartir la imagen: Ruta no encontrada", Toast.LENGTH_SHORT).show()
             } catch (e: IOException) {
                 e.printStackTrace()
-                Toast.makeText(
-                    this,
-                    "Error al compartir la imagen",
-                    Toast.LENGTH_SHORT
-                ).show()
-
+                Toast.makeText(this, "No se Pudo compartir la imagen", Toast.LENGTH_SHORT).show()
             }
         } else {
-            Toast.makeText(
-                this,
-                "La imagen no existe en la ruta especificada",
-                Toast.LENGTH_SHORT
-            ).show()
-
+            Toast.makeText(this, "La imagen no existe en la ruta especificada", Toast.LENGTH_SHORT).show()
         }
     }
+
 
     override fun onRestart() {
         super.onRestart()
@@ -696,10 +729,7 @@ class MainActivity : AppCompatActivity() {
 
         //**************************
         val nombreFragmentAct = getCurrentFragmentTag()
-        Log.d("CAPTURA", "crearTextoCapture: currentFragmentTag $nombreFragmentAct")
-        if (nombreFragmentAct == "fragment_tag_que_quieres_comparar") {
-            // Realiza la lógica específica del fragmento actual
-        }
+        Log.d("CAPTURA", "crearTextoCapture: currentFragmentTag $nombreFragmentAct enviarDatosPM. $enviarDatosPM")
         //***********************************************
         val fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
         if (fragment != null && fragment.isAdded) {
@@ -710,6 +740,7 @@ class MainActivity : AppCompatActivity() {
                 inputTextoBs = editTextInFragmentBs?.text.toString()
                 inputTextoDolla= editTextInFragmentDolar?.text.toString()
                 if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
+
                     //Verifica se el Usuario quiere enviar Datos
                     Log.d(TAG, "crearTextoCapture: enviarDatosPM $enviarDatosPM ")
                     if (enviarDatosPM){
@@ -762,43 +793,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (nombreFragmentAct== "Pago Movil"){
-            textoCapture = "Informacion \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -CI: ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+            //Verifica se el Usuario quiere enviar Datos
+            Log.d(TAG, "crearTextoCapture: enviarDatosPM $enviarDatosPM ")
+            if (enviarDatosPM){
+
+                textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -CI: ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+            }else{
+                textoCapture="-Descarga la App $linkCorto"
+            }
+
         }
         Log.d("Capture", "crearTextoCapture: $textoCapture")
         return textoCapture
     }
 
-    fun compartirLinkconFoto(context: Context, text: String) {
-        try {
-            // Crear un archivo temporal para compartir
-            val tempFile = createTempImageFile()
-
-            writeDrawableImageToFile(context, R.drawable.logodolar_al_dia, tempFile)
-
-            // Obtener la Uri segura utilizando FileProvider
-            val uri = FileProvider.getUriForFile(
-                context,
-                "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
-                tempFile
-            )
-            Log.d("Capture", "shareImageWithText:uri $uri ")
-
-            // Crear un intent para compartir
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                type = "image/*"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_TEXT, text)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            // Iniciar la actividad de compartir
-            context.startActivity(Intent.createChooser(shareIntent, "Compartir con"))
-        } catch (e: IOException) {
-            // Manejar cualquier excepción que pueda ocurrir durante la creación del archivo temporal
-            e.printStackTrace()
-        }
-    }
 
 
 
@@ -810,13 +818,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    fun getCurrentFragmentTag(): String? {
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        val currentDestination = navController.currentDestination
 
-        return currentDestination?.label.toString()
+    fun getCurrentFragmentTag(): String? {
+        return try {
+            // Encuentra el NavHostFragment por su ID
+            val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as? NavHostFragment
+
+            // Obtén la etiqueta del destino actual
+            navHostFragment?.navController?.currentDestination?.label?.toString()
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+            null
+        }
     }
-    //***********************************
+
 
 
 }

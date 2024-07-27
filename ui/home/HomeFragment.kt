@@ -570,6 +570,8 @@ class HomeFragment : Fragment() {
     }
 
 
+
+    //CRE UN ARCHIVO PARA LA PUBLICIDAD INTERNA DE LA APP
     private fun crearImagenUrl() {
 
 
@@ -603,6 +605,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    //Carga la Imagen para la piblicidad Interna de la app
     private fun cargarImagen(uri: String?, nombreAnun: String?, id: String, fecha: String?) {
         Log.d(TAG, "onResourceReady: afuera del if Cargar Imagen true uri: $uri")
         if (uri != "") {
@@ -971,7 +974,7 @@ class HomeFragment : Fragment() {
         }
 
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv"
             val baseUrl = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/"
 
@@ -1083,7 +1086,7 @@ class HomeFragment : Fragment() {
 
     private fun llamadoAPIEmergencia(): Job {
         Log.d("RESPUESTA", "lllamadoAPIEmergencia entrooooooooooo")
-        return lifecycleScope.launch(Dispatchers.IO) {
+        return viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             Log.d("RESPUESTA", "lllamadoAPIEmergencia entrooooooooooo lifecycleScope")
             val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/unit/enparalelovzla"
             val baseUrl =
@@ -1540,35 +1543,45 @@ class HomeFragment : Fragment() {
     }
 
     private fun copiarDolar() {
-        var montoDolarCopy = binding.inputDolares.text.toString()
-        if (!montoDolarCopy.isNullOrEmpty()) {
-            //montoDolarCopy.toDouble()
-            copyToClipboard(requireContext(), montoDolarCopy.toString(), "$montoDolarCopy", "$")
-        } else {
-            Toast.makeText(requireContext(), "Campo vacio", Toast.LENGTH_SHORT).show()
+        try {
+            val montoDolarCopy = binding.inputDolares.text.toString()
+            if (!montoDolarCopy.isNullOrEmpty()) {
+                //montoDolarCopy.toDouble()
+                copyToClipboard(requireContext(), montoDolarCopy.toString(), "$montoDolarCopy", "$")
+            } else {
+                Toast.makeText(requireContext(), "Campo vacio", Toast.LENGTH_SHORT).show()
+            }
+        }catch (e: NumberFormatException){
+            Toast.makeText(requireContext(), "No se pudo Copiar", Toast.LENGTH_SHORT).show()
         }
+
 
     }
 
-    //COPIAR LOS DATOS AL PORTAPEPEL
+    //COPIAR LOS DATOS AL PORTA PAPELES
     private fun copiarBs() {
-        var montoBolivarCopyLimpio = 0.0
-        var montoBolivarCopy = binding.inputBolivares.text.toString()
-        if (!montoBolivarCopy.isNullOrEmpty()) {
-            val cadenaNumerica = montoBolivarCopy
-            val cadenaLimpia = cadenaNumerica.replace(",", "")
-            montoBolivarCopyLimpio = cadenaLimpia.toDouble()
+        try {
+            var montoBolivarCopyLimpio = 0.0
+            val montoBolivarCopy = binding.inputBolivares.text.toString()
+            if (!montoBolivarCopy.isNullOrEmpty()) {
+                val cadenaNumerica = montoBolivarCopy
+                val cadenaLimpia = cadenaNumerica.replace(",", "")
+                montoBolivarCopyLimpio = cadenaLimpia.toDouble()
 
-            montoBolivarCopyLimpio.toDouble()
-            copyToClipboard(
-                requireContext(),
-                montoBolivarCopy.toString(),
-                "$montoBolivarCopy",
-                "Bs."
-            )
-        } else {
-            Toast.makeText(requireContext(), "Campo vacio", Toast.LENGTH_SHORT).show()
+                montoBolivarCopyLimpio.toDouble()
+                copyToClipboard(
+                    requireContext(),
+                    montoBolivarCopy.toString(),
+                    "$montoBolivarCopy",
+                    "Bs."
+                )
+            } else {
+                Toast.makeText(requireContext(), "Campo vacio", Toast.LENGTH_SHORT).show()
+            }
+        }catch (e:NumberFormatException){
+            Toast.makeText(requireContext(), "No se pudo Copiar", Toast.LENGTH_SHORT).show()
         }
+        
 
     }
 
