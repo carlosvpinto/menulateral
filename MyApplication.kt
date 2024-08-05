@@ -18,12 +18,15 @@ import androidx.lifecycle.Lifecycle
 
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.google.firebase.installations.FirebaseInstallations
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
 
 import java.util.Date
 
 private const val LOG_TAG : String = "AppOpenAdManager"
-private const val AD_UNIT_ID: String  = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
-//private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
+//private const val AD_UNIT_ID: String  = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 
@@ -43,6 +46,40 @@ class MyApplication :
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         appOpenAdManager = AppOpenAdManager()
+
+
+
+    }
+
+    //Crea el Token de del dispoitivo para Firebase, Una sola vez se crea
+
+    private fun creaTokenFirebase():String{
+        var token= ""
+                Firebase.messaging.token.addOnCompleteListener {
+            if (!it.isSuccessful){
+                Log.d(LOG_TAG, "onCreate: el token no fue generado")
+                return@addOnCompleteListener
+            }
+            token = it.result
+            Log.d(LOG_TAG, "Token Creado $token")
+        }
+        return token
+    }
+
+    //Muestra la ID de la apliacion
+    private fun optenerID():String{
+        var claveId= ""
+                FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                claveId = task.result
+                Log.d("FirebaseInstallations", "FID: $claveId")
+
+            } else {
+                Log.e("FirebaseInstallations", "Error al obtener el FID", task.exception)
+                return@addOnCompleteListener
+            }
+        }
+        return claveId
     }
 
 

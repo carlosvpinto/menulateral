@@ -241,7 +241,12 @@ class EuroFragment : Fragment() {
         var montoDolarCopy = binding.inputEuros.text.toString()
         if (!montoDolarCopy.isNullOrEmpty()) {
             //montoDolarCopy.toDouble()
-            copyToClipboard(requireContext(), montoDolarCopy.toString(), "$montoDolarCopy", "$")
+            try {
+                copyToClipboard(requireContext(), montoDolarCopy.toString(), "$montoDolarCopy", "$")
+            }catch (e:NumberFormatException){
+                Toast.makeText(requireContext(), "No se puedo guardar", Toast.LENGTH_SHORT).show()
+            }
+
         } else {
             Toast.makeText(requireContext(), "Campo vacio", Toast.LENGTH_SHORT).show()
         }

@@ -14,19 +14,17 @@ class MyFirebaseMessagingClient: FirebaseMessagingService() {
 
     private val NOTIFICATION_CODE = 100
 
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-    }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-//        val data = message.data
-//        val title = data["title"]
-//        val body = data["body"]
-//        val idBooking = data["idBooking"]
-//        Log.d("NOTIFICACION", "ID BOOKING: ${idBooking}")
-//
+        val data = message.data
+        val title = data.values
+        val body = data["body"]
+        println()
+        val idBooking = data["idBooking"]
+      Log.d("NOTIFICACION", "title: $title body: $body  message: $message  message.data: ${message.data}" )
+
 //        if (!title.isNullOrBlank() && !body.isNullOrBlank()) {
 //            if (idBooking != null) {
 //                showNotificationActions(title, body, idBooking)
@@ -34,9 +32,9 @@ class MyFirebaseMessagingClient: FirebaseMessagingService() {
 //            else {
 //                showNotification(title, body)
 //            }
-//        }
+        }
 
-    }
+ //   }
 
 //    private fun showNotification(title: String, body: String) {
 //        val helper = NotificationHelper(baseContext)

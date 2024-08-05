@@ -32,6 +32,7 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import java.text.DecimalFormat
 import java.util.Date
+import java.util.Locale
 
 private var _binding: FragmentDatosPerBinding? = null
 private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
@@ -75,6 +76,8 @@ class DatosPerFragment : Fragment() {
 
         // Obtener el array de bancos desde los recursos
         val listaBancos = resources.getStringArray(R.array.lista_bancos)
+
+        val listaLetras = resources.getStringArray(R.array.lista_letras)
         llamarPagoMovil()
 
         binding.btnCancelar.setOnClickListener {
@@ -119,6 +122,13 @@ class DatosPerFragment : Fragment() {
             android.R.layout.simple_spinner_item,
             listaBancos
         )
+        val adaptadorLetras: ArrayAdapter<String> = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            listaLetras
+        )
+
+        binding.spinnerLetra.adapter = adaptadorLetras
 
         binding.spinnerBanco.adapter = adaptadorSp
 
@@ -140,12 +150,24 @@ class DatosPerFragment : Fragment() {
 
             return root
     }
+    private fun chequeaLenguajeSistema(): String {
+        val currentLocale = Locale.getDefault()
+        return when (currentLocale.language) {
+            "en" -> "Select Bank"
+            "es" -> "Seleccione el Banco"
+            "fr" -> "Sélectionner une banque"
+            // Puedes agregar más casos según sea necesario
+            else -> "El sistema está en otro idioma: ${currentLocale.displayLanguage}"
+        }
+    }
+
+
     private fun validarDatos(): Pair<Boolean, String> {
         val nombre = binding.txtNombre.text.toString().trim()
         val cedula = binding.txtCedula.text.toString().trim()
         val tlf = binding.txtTlf.text.toString().trim()
         val banco = binding.spinnerBanco.selectedItem.toString()
-
+        Log.d(TAG, "validarDatos: obtenerLenguajeSistema ${chequeaLenguajeSistema()}")
         return when {
             nombre.isEmpty() -> {
                 binding.txtNombre.error = "El nombre no puede estar vacío"
@@ -162,6 +184,9 @@ class DatosPerFragment : Fragment() {
             banco.isEmpty() -> {
                // binding.spinnerBanco.error = "El teléfono no puede estar vacío"
                 Pair(false, "El Banco no puede estar vacío")
+            }
+            banco == chequeaLenguajeSistema() -> {
+                Pair(false, chequeaLenguajeSistema())
             }
             else -> Pair(true, "")
         }
@@ -204,7 +229,7 @@ class DatosPerFragment : Fragment() {
                 tipo = tipo,
                 nombre = binding.txtNombre.text.toString(),
                 tlf = binding.txtTlf.text.toString(),
-                cedula = binding.txtCedula.text.toString(),
+                cedula = binding.spinnerLetra.selectedItem.toString()+ binding.txtCedula.text.toString(),
                 banco = bancoSeleccionado,
                 fecha = Date().toString()
             )
@@ -288,7 +313,6 @@ class DatosPerFragment : Fragment() {
             // Datos válidos, continuar con el procesamiento
 
             binding.btnGuardar.text= "Agregar"
-            Log.d(TAG, "onCreateView: Actualizar")
             binding.linearLayoutDatosInfo.visibility= View.GONE
             binding.recyPagoMovil.visibility= View.VISIBLE
             val gson = Gson()
@@ -304,7 +328,6 @@ class DatosPerFragment : Fragment() {
             }
             val pagoMovil = pagoMovilActivado()
             // Editar el pagoMovil en la lista
-            Log.d(TAG, "editarPagoMovil: posicion: $posicion")
             pagoMovilList[posicion!!] = pagoMovil
 
             // Serializar la lista actualizada a JSON
@@ -359,10 +382,10 @@ class DatosPerFragment : Fragment() {
 
         return DatosPMovilModel(
             seleccionado = binding.rdioPagoMovil.isChecked,
-              tipo =binding.rdioPagoMovil.text.toString(),
+            tipo =binding.rdioPagoMovil.text.toString(),
             nombre = binding.txtNombre.text.toString(),
             tlf =  binding.txtTlf.text.toString(),
-            cedula =  binding.txtCedula.text.toString(),
+            cedula = binding.spinnerLetra.selectedItem.toString()+binding.txtCedula.text.toString(),
             banco = binding.spinnerBanco.selectedItem.toString(),
             fecha = Date().toString()
         )
@@ -374,17 +397,30 @@ class DatosPerFragment : Fragment() {
         binding.btnGuardar.text = "Actualizar"
         binding.txtNombre.setText(pagomovil.nombre)
         binding.txtTlf.setText(pagomovil.tlf)
-        binding.txtCedula.setText(pagomovil.cedula)
+        // Verifica si texto en Pagomovul.cedula tiene una letra en su primer caracter
+        val cedula = pagomovil.cedula
+        if (cedula!!.isNotEmpty() && cedula[0].isLetter()) {
+            binding.txtCedula.setText(cedula.substring(1))
+        } else {
+            binding.txtCedula.setText(cedula)
+        }
+        binding.txtCedula.setText(pagomovil.cedula.substring(1))
         pagomovilActivo = pagomovil
-        Log.d(TAG, "mostrarDatosaEditar: position $position")
         posicion = position
 
 
         // Obtener el array de bancos desde los recursos
         val listaBancos = resources.getStringArray(R.array.lista_bancos)
+        val listaPrefijo = resources.getStringArray(R.array.lista_letras)
+        val prefijo = pagomovil.cedula!!.first().toString()
 
         // Encontrar la posición del valor en el Spinner
+        val prefijoCedula= listaPrefijo.indexOf(prefijo)
         val bancoPosition = listaBancos.indexOf(pagomovil.banco)
+
+        if (prefijoCedula>=0){
+            binding.spinnerLetra.setSelection(prefijoCedula)
+        }
 
         if (bancoPosition >= 0) {
             binding.spinnerBanco.setSelection(bancoPosition)

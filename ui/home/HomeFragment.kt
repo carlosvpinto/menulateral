@@ -532,9 +532,9 @@ class HomeFragment : Fragment() {
     }
 
 
-    private fun eliminarListener() {
-        imageConfigListener?.remove()
-    }
+//    private fun eliminarListener() {
+//        imageConfigListener?.remove()
+//    }
 
     //Contabiliza la veces que es Visible una Publicidad
     private fun crearImpresion(id: String, nombreArticulo: String?, fecha: String?) {
@@ -595,7 +595,6 @@ class HomeFragment : Fragment() {
                     ).show()
 
                 } else {
-                    Log.d(TAG, "crearImagenUrl: ${it.exception}")
                     Toast.makeText(requireContext(), "Error al crear los datos", Toast.LENGTH_LONG)
                         .show()
                 }
@@ -607,7 +606,6 @@ class HomeFragment : Fragment() {
 
     //Carga la Imagen para la piblicidad Interna de la app
     private fun cargarImagen(uri: String?, nombreAnun: String?, id: String, fecha: String?) {
-        Log.d(TAG, "onResourceReady: afuera del if Cargar Imagen true uri: $uri")
         if (uri != "") {
             binding.LnerPubliImagen.visibility = View.VISIBLE
             //para crear imprecion de publicidad
@@ -625,7 +623,6 @@ class HomeFragment : Fragment() {
                     ): Boolean {
                         //binding.LnerPubliImagen.visibility = View.VISIBLE
                         binding.layoutCerraAnun.visibility = View.VISIBLE
-                        Log.d(TAG, "onResourceReady: visiblke true")
 
                         return false
                     }
@@ -654,6 +651,8 @@ class HomeFragment : Fragment() {
         private const val VALOR_EURO = "ValorEuro"
         private const val NUMERO_EURO = "euro"
         private const val FECHA_EURO = "fecha"
+        private const val VALOR_DOLAR = "ValorDolar"
+        private const val NUMERO_DOLAR = "ValorEuro"
 
         fun getResponseParalelovzla(savedResponseVzla: ParaleloVzla): ParaleloVzla? {
             return savedResponseVzla
@@ -682,13 +681,29 @@ class HomeFragment : Fragment() {
             editor.putFloat(NUMERO_EURO, numero)
             editor.apply()
         }
-
-
         fun recuperarEuro(context: Context): Float {
             val prefs: SharedPreferences =
                 context.getSharedPreferences(VALOR_EURO, Context.MODE_PRIVATE)
             return prefs.getFloat(
                 NUMERO_EURO,
+                0.0f
+            ) // 0 es el valor predeterminado si no se encuentra el número
+        }
+        
+        fun guadarDolar (context: Context, numero: Float){
+            val prefs: SharedPreferences =
+                context.getSharedPreferences(VALOR_DOLAR, Context.MODE_PRIVATE)
+            val editor = prefs.edit()
+            editor.putFloat(NUMERO_DOLAR, numero)
+            editor.apply()
+        }
+
+
+        fun recuperarDolar(context: Context): Float {
+            val prefs: SharedPreferences =
+                context.getSharedPreferences(VALOR_DOLAR, Context.MODE_PRIVATE)
+            return prefs.getFloat(
+                NUMERO_DOLAR,
                 0.0f
             ) // 0 es el valor predeterminado si no se encuentra el número
         }
@@ -746,14 +761,6 @@ class HomeFragment : Fragment() {
         interstitial?.show(requireActivity())
     }
 
-//    private fun initListeners() {
-////        val bannerIntent = Intent(requireContext(), InterstitialActivity::class.java)
-////        binding.btnImageColaboracion.setOnClickListener { startActivity(bannerIntent) }
-//
-//        val interstitialIntent = Intent(requireContext(), InterstitialActivity::class.java)
-//        binding.btnImageColaboracion.setOnClickListener { startActivity(interstitialIntent) }
-//    }
-
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -765,7 +772,7 @@ class HomeFragment : Fragment() {
         isFragmentAttached = false
     }
 
-    //SCRAPING PARA WW.ALCAMBIO.APP **************************************************
+    //SCRAPING PARA WW.BCV **************************************************
 
 
     //**********************************************************************************
@@ -774,7 +781,6 @@ class HomeFragment : Fragment() {
         try {
             // Recuperar el valor del euro guardado
             val savedEuro = ApiResponseHolder.recuperarEuro(requireContext())
-            Log.d("EUROACTU", "VALOR DE actualizarEuro: savedEuro $savedEuro")
 
             // Actualizar el valor del euro desde la web
             CoroutineScope(Dispatchers.IO).launch {
@@ -782,16 +788,14 @@ class HomeFragment : Fragment() {
                 val maxIntentos = 3
                 var obtenido = false
 
-                Log.d(
-                    "EUROACTU",
-                    "VALOR DE: intentos $intentos maxIntentos $maxIntentos obtenido $obtenido"
-                )
-
                 while (!obtenido && intentos < maxIntentos) {
                     try {
                         val document = Jsoup.connect("https://www.bcv.org.ve/").timeout(60000).get()
                         val precioEuro = document.select("#euro strong").first()?.text()
                         val valorEuro = precioEuro?.replace(",", ".")?.toFloatOrNull()
+                        val precioDolarBcv= document.select("#dolar strong").first()?.text()
+                        val valorDolar= precioDolarBcv?.replace(",", ".")?.toFloatOrNull()
+
 
                         // Extraer la fecha del elemento span con la clase date-display-single
                         val fechaElement = document.select("span.date-display-single").firstOrNull()
@@ -801,16 +805,17 @@ class HomeFragment : Fragment() {
                             if (isAdded) { // Verifica si el Fragment está adjunto
                                 if (valorEuro != null) {
                                     // Guardar el nuevo valor del euro y la fecha de actualización
+                                    Log.d(TAG, "actualizarEuro: valorEuro $valorEuro  valorDolar $valorDolar")
+                                    if (valorDolar!=null){
+                                        ApiResponseHolder.guadarDolar(requireContext(),valorDolar)
+                                    }
+
                                     ApiResponseHolder.guardarEuro(requireContext(), valorEuro)
                                     ApiResponseHolder.guardarEuroFecha(
                                         requireContext(),
                                         fecha.toString()
                                     )
 
-                                    Log.d(
-                                        "EUROACTU",
-                                        "VALOR DE: Dispatchers ENTROO A GUARDARRRRRR "
-                                    )
 
                                     // Marcar como obtenido y salir del bucle
                                     obtenido = true
@@ -953,7 +958,6 @@ class HomeFragment : Fragment() {
     fun llamarBcvNew() {
         try {
             val savedResponseBCV = getResponsePreferencesBcvNew(requireContext())
-            Log.d("RESPUESTA", "llamarBcvNew:Try 1 savedResponseBCV $savedResponseBCV ")
             if (savedResponseBCV != null) {
                 ApiResponseHolder.getResponseBcv(savedResponseBCV)
                 valorActualBcv = savedResponseBCV.monitors.usd.price!!.toDouble()
@@ -970,7 +974,6 @@ class HomeFragment : Fragment() {
                 "Problemas de obtencion de datos llamarBcvNew $e",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.d("RESPUESTA", " llamarBcvNew catch 1 $e ")
         }
 
 
@@ -993,18 +996,10 @@ class HomeFragment : Fragment() {
 
             try {
                 val response = apiService.getBcv(url)
-                Log.d(
-                    "llamarBcvNew",
-                    " llamarBcvNew try 2 RESPONSEEE: response.monitors.last_update ${response.monitors.usd.last_update}"
-                )
 
                 binding.swipeRefreshLayout.isRefreshing = false
                 if (response != null) {
                     ApiResponseHolder.getResponseBcv(response)
-                    Log.d(
-                        TAG,
-                        "llamarBcvNew: response $response  response.monitors.usd?.price!!.toDouble() ${response.monitors.usd?.price!!.toDouble()}"
-                    )
                     valorActualBcv = response.monitors.usd?.price!!.toDouble()
 
                     guardarResponseBcvNew(requireContext(), response)
@@ -1028,22 +1023,37 @@ class HomeFragment : Fragment() {
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        requireContext(),
-                        "No se actualizó el dólar BCV. Revise la conexión: $e",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    binding.txtFechaActualizacionBcv.setTextColor(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.red
+
+
+                    // Recuperar el valor del Dolar guardado
+                    val dolarBcvGuardado = ApiResponseHolder.recuperarDolar(requireContext())
+                    if (dolarBcvGuardado!=null){
+                        // Formatea el valor a 2 decimales
+                        val dolarFormateado = String.format("%.2f", dolarBcvGuardado)
+                        binding.btnBcv.text =dolarFormateado
+                        binding.btnBcv.textOff = dolarFormateado
+                        binding.btnBcv.textOn = dolarFormateado
+                        val fechaDolarBCVyEuro= ApiResponseHolder.recuperarEuroFecha(requireContext())
+                        binding.txtFechaActualizacionBcv.text = fechaDolarBCVyEuro
+                        animacionCrecerTexto(binding.txtFechaActualizacionBcv)
+                    }else{
+                        binding.txtFechaActualizacionBcv.setTextColor(
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.red
+                            )
                         )
-                    )
-                    animarSwipe()
-                    // binding.progressBar.visibility= View.INVISIBLE
-                    binding.swipeRefreshLayout.isRefreshing = false
+                        Toast.makeText(
+                            requireContext(),
+                            "No se actualizó el dólar BCV. Revise la conexión: $e",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        animarSwipe()
+                        // binding.progressBar.visibility= View.INVISIBLE
+                        binding.swipeRefreshLayout.isRefreshing = false
+                    }
+
                 }
-                Log.d("RESPUESTA", " llamarBcvNew caych 2 RESPONSE$e ")
 
                 println("Error: ${e.message}")
             }
@@ -1054,15 +1064,9 @@ class HomeFragment : Fragment() {
     private fun llamarDolarEmergencia() {
         try {
             val savedResponseDolar = getResponsePreferencesEmergencia(requireContext())
-            Log.d(
-                "RESPUESTA",
-                "llamarDolarEmergencia Try 1 savedResponseDolar $savedResponseDolar "
-            )
+
             if (savedResponseDolar != null) {
-                Log.d(
-                    "RESPUESTA",
-                    "llamarPrecio Try 1 RESPONSE savedResponseDolar $savedResponseDolar"
-                )
+
                 ApiResponseHolder.setResponseEmergencia(savedResponseDolar)
                 valorActualParalelo = savedResponseDolar.price
                 llenarDolarNewEmergencia(savedResponseDolar)
@@ -1073,7 +1077,6 @@ class HomeFragment : Fragment() {
                 "Problemas de Conexion Paralelo No actualizo!",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.d("RESPUESTA", "llamarDolarEmergencia Catch 1 Error: $e")
         } finally {
             binding.swipeRefreshLayout.isRefreshing =
                 false // Asegurarse de desactivar en el bloque finally
@@ -1085,7 +1088,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun llamadoAPIEmergencia(): Job {
-        Log.d("RESPUESTA", "lllamadoAPIEmergencia entrooooooooooo")
         return viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             Log.d("RESPUESTA", "lllamadoAPIEmergencia entrooooooooooo lifecycleScope")
             val url = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar/unit/enparalelovzla"
@@ -1104,7 +1106,6 @@ class HomeFragment : Fragment() {
 
             try {
                 val response = apiService.getDolarEmergencia(url)
-                Log.d("RESPUESTA", "llamarDolarEmergencia try segundo  $response")
                 if (response != null) {
                     withContext(Dispatchers.Main) {
                         ApiResponseHolder.setResponseEmergencia(response)
@@ -1125,7 +1126,6 @@ class HomeFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Log.d("RESPUESTA", "llamarDolarEmergencia catch 2 segundo  $e")
                     binding.txtFechaActualizacionPara.setTextColor(
                         ContextCompat.getColor(
                             requireContext(),
@@ -1146,10 +1146,6 @@ class HomeFragment : Fragment() {
             val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
 
             if (savedResponseDolar != null) {
-                Log.d(
-                    "RESPUESTA",
-                    "llamarPrecio Try 1 RESPONSE savedResponseDolar $savedResponseDolar"
-                )
                 ApiResponseHolder.setResponse(savedResponseDolar)
                 valorActualParalelo = savedResponseDolar.monitors.enparalelovzla.price.toDouble()
                 llenarDolarNew(savedResponseDolar)
@@ -1162,7 +1158,6 @@ class HomeFragment : Fragment() {
                 "Problemas de Conexion Paralelo No actualizo!",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.d("RESPUESTA", "llamarPrecio catch 1 RESPONSE$e")
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -1181,7 +1176,6 @@ class HomeFragment : Fragment() {
 
             try {
                 val response = apiService.getDolarNew(url)
-                Log.d("RESPUESTA", "llamarDolarNew try segundo  $response")
                 if (response != null) {
                     withContext(Dispatchers.Main) { // CAMBIO: Asegurar que esta parte se ejecute en el hilo principal
                         binding.swipeRefreshLayout.isRefreshing =
@@ -1203,7 +1197,6 @@ class HomeFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) { // CAMBIO: Asegurar que esta parte se ejecute en el hilo principal
-                    Log.d("RESPUESTA", "llamarDolarNew catch 2 segundo  $e")
                     binding.swipeRefreshLayout.isRefreshing =
                         false // CAMBIO: Mover esta línea dentro del bloque principal
                     binding.txtFechaActualizacionPara.setTextColor(
@@ -1477,9 +1470,73 @@ class HomeFragment : Fragment() {
         })
     }
 
+//    private fun dividirABolivares() {
+//        val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
+//
+//
+//        binding.inputBolivares?.addTextChangedListener(object : TextWatcher {
+//
+//            override fun afterTextChanged(s: Editable?) {
+//                ultimoTecleado = 0
+//                var valorDolares = 0.0
+//
+//                if (binding.inputBolivares.isFocused) {
+//                    val inputText = binding.inputBolivares.text.toString()
+//                    val dolarParalelo = binding.btnParalelo.text.toString().toDoubleOrNull()
+//                        ?: 0.0 //precio del paralelo
+//                    val dolarBcv =
+//                        binding.btnBcv.text.toString().toDoubleOrNull() ?: 0.0 //precio del paralelo
+//
+//                    if (inputText.isNotEmpty()) {
+//                        if (dolarParalelo != null) {
+//                            val cleanedText =
+//                                inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
+//                            val dolarLimpio = cleanedText.toDoubleOrNull() ?: 0.0
+//                            //  valorDolares = dolarLimpio / valorActualParalelo!!.toDouble()
+//                            valorDolares = dolarLimpio / dolarParalelo!!.toDouble()
+//
+//                        }
+//
+//                        if (!binding.switchDolar.isChecked) {
+//                            val cleanedText =
+//                                inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
+//                            val parsedValue = cleanedText.toDoubleOrNull() ?: 0.0
+//                            //valorDolares = parsedValue * valorActualParalelo!!.toDouble()
+//                            valorDolares = parsedValue * dolarParalelo
+//                            if (dolarBcv != null) {
+//                                val numeroFormateado = inputText.replace(",", "")
+//                                val numero = numeroFormateado.toDoubleOrNull()
+//                                if (numero != null) valorDolares =
+//                                    numero.toDouble() / dolarBcv!!.toDouble()
+//
+//                            }
+//
+//
+//                        }
+//
+//
+//                        val formattedValorDolares = decimalFormat.format(valorDolares)
+//                        binding.inputDolares.setText(formattedValorDolares)
+//                        //Calcular Diferencia**************
+//
+//                    } else {
+//                        binding.inputDolares.text?.clear()
+//                    }
+//                }
+//
+//            }
+//
+//            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+//            }
+//
+//            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+//            }
+//        })
+//
+//    }
+
     private fun dividirABolivares() {
         val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-
 
         binding.inputBolivares?.addTextChangedListener(object : TextWatcher {
 
@@ -1489,58 +1546,38 @@ class HomeFragment : Fragment() {
 
                 if (binding.inputBolivares.isFocused) {
                     val inputText = binding.inputBolivares.text.toString()
-                    val dolarParalelo = binding.btnParalelo.text.toString().toDoubleOrNull()
-                        ?: 0.0 //precio del paralelo
-                    val dolarBcv =
-                        binding.btnBcv.text.toString().toDoubleOrNull() ?: 0.0 //precio del paralelo
+                    val dolarParalelo = binding.btnParalelo.text.toString().toDoubleOrNull() ?: 0.0
+                    val dolarBcv = binding.btnBcv.text.toString().toDoubleOrNull() ?: 0.0
 
                     if (inputText.isNotEmpty()) {
-                        if (dolarParalelo != null) {
-                            val cleanedText =
-                                inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
-                            val dolarLimpio = cleanedText.toDoubleOrNull() ?: 0.0
-                            //  valorDolares = dolarLimpio / valorActualParalelo!!.toDouble()
-                            valorDolares = dolarLimpio / dolarParalelo!!.toDouble()
+                        val cleanedText = inputText.replace("[,]".toRegex(), "").toDoubleOrNull() ?: 0.0
 
+                        valorDolares = if (binding.switchDolar.isChecked) {
+                            // Dividir el valor en bolívares por el dólar paralelo
+                            cleanedText / dolarParalelo
+                        } else {
+                            // Convertir bolívares a dólares usando el paralelo o BCV dependiendo del estado del switch
+                            cleanedText / dolarBcv
                         }
-
-                        if (!binding.switchDolar.isChecked) {
-                            val cleanedText =
-                                inputText.replace("[,]".toRegex(), "") // Elimina puntos y comas
-                            val parsedValue = cleanedText.toDoubleOrNull() ?: 0.0
-                            //valorDolares = parsedValue * valorActualParalelo!!.toDouble()
-                            valorDolares = parsedValue * dolarParalelo
-                            if (dolarBcv != null) {
-                                val numeroFormateado = inputText.replace(",", "")
-                                val numero = numeroFormateado.toDoubleOrNull()
-                                if (numero != null) valorDolares =
-                                    numero.toDouble() / dolarBcv!!.toDouble()
-
-                            }
-
-
-                        }
-
 
                         val formattedValorDolares = decimalFormat.format(valorDolares)
                         binding.inputDolares.setText(formattedValorDolares)
-                        //Calcular Diferencia**************
-
                     } else {
                         binding.inputDolares.text?.clear()
                     }
                 }
-
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No se necesita lógica aquí por ahora
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // No se necesita lógica aquí por ahora
             }
         })
-
     }
+
 
     private fun copiarDolar() {
         try {
@@ -1639,7 +1676,7 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         lifecycleScope.coroutineContext.cancel()
-        eliminarListener()
+     //   eliminarListener()
         _binding = null
     }
 
@@ -1662,7 +1699,7 @@ class HomeFragment : Fragment() {
 
 
     override fun onPause() {
-        eliminarListener()
+        //eliminarListener()
         super.onPause()
         shakeDetector.stop()
     }
@@ -1833,6 +1870,8 @@ class HomeFragment : Fragment() {
         params.setMargins(0, marginTop, 0, 0)
         snackbar?.view?.layoutParams = params
     }
+
+
 
     //Obtiene el pago Movil Activo
     private fun obtenerPagoMovilListTrue(context: Context): DatosPMovilModel? {

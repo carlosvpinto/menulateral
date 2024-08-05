@@ -80,6 +80,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
 import java.text.DecimalFormat
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.log
 
 
 class MainActivity : AppCompatActivity() {
@@ -197,17 +198,18 @@ class MainActivity : AppCompatActivity() {
 
         when(item.itemId){
             R.id.action_compartir->{
-                // Verificar si se tienen los permisos antes de capturar la pantalla
-                if (checkPermission()) {
-
-                    showCustomSnackbarPM()
-                    //captureScreen()
-
-                } else {
-                    // Si no se tienen los permisos, solicitarlos
-                    requestPermissionsIfNecessary()
-                }
-
+                showCustomSnackbarPM()
+//                // Verificar si se tienen los permisos antes de capturar la pantalla
+//                if (checkPermission()) {
+//
+//                    showCustomSnackbarPM()
+//                    //captureScreen()
+//
+//                } else {
+//                    // Si no se tienen los permisos, solicitarlos
+//                    requestPermissionsIfNecessary()
+//                }
+//
             }
             R.id.action_personal->{
                 navController2.navigate(R.id.nav_Personal)
@@ -338,7 +340,6 @@ class MainActivity : AppCompatActivity() {
 
             //veridica si esta en Fragmento para no hacer el Capture
             val nombreFragmentAct = getCurrentFragmentTag()
-            Log.d("CAPTURA", "crearTextoCapture: currentFragmentTag $nombreFragmentAct")
             if (nombreFragmentAct == "Pago Movil") {
 
                 // Realiza la lógica específica del fragmento actual
@@ -506,14 +507,13 @@ class MainActivity : AppCompatActivity() {
 
         val chechPagoMovil: CheckBox = customView.findViewById(R.id.checPagomovil)
         val pagoMovilListTrue = obtenerPagoMovilListTrue(this)
-        Log.d(TAG, "showCustomSnackbarPM: pagoMovilListTrue ${pagoMovilListTrue?.seleccionado} $pagoMovilListTrue")
         if (pagoMovilListTrue?.seleccionado == null){
             chechPagoMovil.isChecked= false
             chechPagoMovil.isEnabled= false
 
-            chechPagoMovil.text= "Sin Cuenta Guardada"
+            chechPagoMovil.text= getString(R.string.sin_cuenta_seleccionada)
         }else{
-            chechPagoMovil.isChecked= true
+           // chechPagoMovil.isChecked= true
             chechPagoMovil.text = pagoMovilListTrue?.nombre
         }
 
@@ -535,7 +535,7 @@ class MainActivity : AppCompatActivity() {
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                 // Se llama cuando el Snackbar se cierra
                 val enviarDatosPM= chechPagoMovil.isChecked
-                Log.d(TAG, "onDismissed: chkActivo $enviarDatosPM")
+
                 if (botonPrecionado== 0 ){
                     captureScreen(enviarDatosPM,pagoMovilListTrue)
                 }
@@ -597,65 +597,15 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-
-
-// Comparte imagen contexto************************
-//    private fun shareImageWithText(imagePath: String, shareText: String) {
-//        val imageFile = File(imagePath)
-//
-//        if (imageFile.exists()) {
-//            try {
-//                // Crear un archivo temporal para compartir
-//                val tempFile = createTempImageFile()
-//
-//                // Copiar la imagen original al archivo temporal
-//                copyFile(imageFile, tempFile)
-//
-//                // Obtener la Uri segura utilizando FileProvider
-//                val uri = FileProvider.getUriForFile(
-//                    this,
-//                    "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
-//                    tempFile
-//                )
-//
-//                // Crear un intent para compartir
-//                val shareIntent = Intent(Intent.ACTION_SEND)
-//                shareIntent.type = "multipart/*"
-//                shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
-//                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-//                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-//
-//                // Iniciar la actividad de compartir
-//                startActivity(Intent.createChooser(shareIntent, "Compartir imagen"))
-//
-//            } catch (e: IOException) {
-//                e.printStackTrace()
-//                Toast.makeText(
-//                    this,
-//                    "Error al compartir la imagen",
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//
-//            }
-//        } else {
-//            Toast.makeText(
-//                this,
-//                "La imagen no existe en la ruta especificada",
-//                Toast.LENGTH_SHORT
-//            ).show()
-//
-//        }
-//    }
-
     // Comparte imagen contexto************************
     private fun shareImageWithText(imagePath: String, shareText: String) {
         val imageFile = File(imagePath)
 
         if (imageFile.exists()) {
             try {
-                // Verifica si el archivo temporal se puede crear y usar
-                val tempFile = File.createTempFile("temp_image", ".jpg", externalCacheDir).apply {
+                // Guarda la imagen en el directorio de caché
+                val cachePath = File(applicationContext.cacheDir, "images").apply { mkdirs() }
+                val tempFile = File(cachePath, "shared_image.jpg").apply {
                     // Copia el contenido del archivo original al archivo temporal
                     imageFile.copyTo(this, overwrite = true)
                 }
@@ -680,10 +630,12 @@ class MainActivity : AppCompatActivity() {
 
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()
+                Log.d(TAG, "IllegalArgumentException error: $e")
                 Toast.makeText(this, "No se pudo compartir la imagen: Ruta no encontrada", Toast.LENGTH_SHORT).show()
             } catch (e: IOException) {
                 e.printStackTrace()
-                Toast.makeText(this, "No se Pudo compartir la imagen", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "IOException error: $e")
+                Toast.makeText(this, "No se pudo compartir la imagen", Toast.LENGTH_SHORT).show()
             }
         } else {
             Toast.makeText(this, "La imagen no existe en la ruta especificada", Toast.LENGTH_SHORT).show()
@@ -742,10 +694,9 @@ class MainActivity : AppCompatActivity() {
                 if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
 
                     //Verifica se el Usuario quiere enviar Datos
-                    Log.d(TAG, "crearTextoCapture: enviarDatosPM $enviarDatosPM ")
                     if (enviarDatosPM){
 
-                        textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -CI: ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+                        textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${prefijo(pagoMovilListTrue?.cedula)} ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
                     }else{
                         textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Descarga la App $linkCorto"
                     }
@@ -757,7 +708,7 @@ class MainActivity : AppCompatActivity() {
                     bcv = btnTextInFragmentBcv?.text.toString()
                     paralelo= btnTextInFragmentParalelo?.text.toString()
                     if (enviarDatosPM){
-                        textoCapture="-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -CI: ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+                        textoCapture="-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${prefijo(pagoMovilListTrue?.cedula)} ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
                     }else{
                         textoCapture="-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Descarga la App \n $linkCorto"
                     }
@@ -794,10 +745,9 @@ class MainActivity : AppCompatActivity() {
 
         if (nombreFragmentAct== "Pago Movil"){
             //Verifica se el Usuario quiere enviar Datos
-            Log.d(TAG, "crearTextoCapture: enviarDatosPM $enviarDatosPM ")
             if (enviarDatosPM){
 
-                textoCapture="Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -CI: ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+                textoCapture="-Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${prefijo(pagoMovilListTrue?.cedula)} ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
             }else{
                 textoCapture="-Descarga la App $linkCorto"
             }
@@ -806,6 +756,39 @@ class MainActivity : AppCompatActivity() {
         Log.d("Capture", "crearTextoCapture: $textoCapture")
         return textoCapture
     }
+
+    private fun prefijo(cedula: String?): String {
+        var letra = ""
+        if (cedula!!.isNotEmpty()) {
+            when (cedula.first()) {
+                'V', 'E',  -> {
+                    // Acción para cuando la primera letra es 'V'
+                    letra = "CI:"
+                    return letra
+                }
+                'J', 'G' -> {
+                    // Acción para cuando la primera letra es 'J' o 'G'
+                    letra = "Rif:"
+                    return letra
+                }
+                'P' -> {
+                    // Acción para cuando la primera letra es 'P'
+                    letra = "Pasaporte:"
+                    return letra
+                }
+                else -> {
+                    // Acción para cuando la primera letra no es ninguna de las anteriores
+                    letra = "CI:"
+                    return letra
+                }
+            }
+        } else {
+            println("La variable está vacía")
+        }
+
+        return letra
+    }
+
 
 
 
