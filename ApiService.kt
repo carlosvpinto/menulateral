@@ -5,8 +5,10 @@ import com.carlosv.dolaraldia.model.bcv.BcvNew
 import com.carlosv.dolaraldia.model.emergencia.ParaleloEmergencia
 import com.carlosv.dolaraldia.model.monedas.DolarInstituciones
 import com.carlosv.dolaraldia.model.paralelo.ParaleloVzla
+import com.carlosv.dolaraldia.model.responseApiNew.ResponseApiNew
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
 import retrofit2.http.GET
+import retrofit2.http.Query
 import retrofit2.http.Url
 
 interface ApiService {
@@ -28,4 +30,8 @@ interface ApiService {
 
     @GET
     suspend fun getBancos(@Url url: String):BancosModel
+
+    // Nuevo método getDollar
+    @GET("dollar")
+    suspend fun getDollar(@Query("page") page: String): ResponseApiNew
 }
