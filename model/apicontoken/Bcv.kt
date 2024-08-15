@@ -1,6 +1,6 @@
-package com.carlosv.dolaraldia.model.emergencia
+package com.carlosv.dolaraldia.model.apicontoken
 
-data class ParaleloEmergencia(
+data class Bcv(
     var change: Double,
     var color: String,
     var image: String,

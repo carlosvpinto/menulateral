@@ -96,144 +96,144 @@ class OtrasPaginasFragment : Fragment() {
 
 
                 // Agregar más Paginas según sea necesario
-                if ( !verificarVacio( response.monitors.amazon_gift_card?.price.toString())) {
+                if ( !verificarVacio( response.monitors.enparalelovzla?.price.toString())) {
                     bancosList.add(
                         BancoModelAdap(
-                            "amazon_gift_card",
-                            response.monitors.amazon_gift_card.price.toDouble(),
-                            response.monitors.amazon_gift_card.percent.toString(),
-                            response.monitors.amazon_gift_card.color,
-                            response.monitors.amazon_gift_card.last_update,
-                            response.monitors.amazon_gift_card.percent.toString(),
-                            response.monitors.amazon_gift_card.symbol,
-                            response.monitors.amazon_gift_card.title,
+                            "En_Paralelo",
+                            response.monitors.enparalelovzla.price.toDouble(),
+                            response.monitors.enparalelovzla.percent.toString(),
+                            response.monitors.enparalelovzla.color,
+                            response.monitors.enparalelovzla.last_update,
+                            response.monitors.enparalelovzla.percent.toString(),
+                            response.monitors.enparalelovzla.symbol,
+                            response.monitors.enparalelovzla.title,
                         )
                     )
                 }
-                if ( !verificarVacio( response.monitors.binance?.price.toString())) {
+                if ( !verificarVacio( response.monitors.bcv?.price.toString())) {
                     bancosList.add(
                         BancoModelAdap(
-                            "binance",
-                            response.monitors.binance.price.toDouble(),
-                            response.monitors.binance.percent.toString(),
-                            response.monitors.binance.color,
-                            response.monitors.binance.last_update,
-                            response.monitors.binance.percent.toString(),
-                            response.monitors.binance.symbol,
-                            response.monitors.binance.title,
+                            "BCV",
+                            response.monitors.bcv.price.toDouble(),
+                            response.monitors.bcv.percent.toString(),
+                            response.monitors.bcv.color,
+                            response.monitors.bcv.last_update,
+                            response.monitors.bcv.percent.toString(),
+                            response.monitors.bcv.symbol,
+                            response.monitors.bcv.title,
                         )
                     )
                 }
-
-                if ( !verificarVacio( response.monitors.dolar_today.price.toString())) {
-                    bancosList.add(
-                        BancoModelAdap(
-                            "dolartoday",
-                            response.monitors.dolar_today.price.toDouble(),
-                            response.monitors.dolar_today.percent.toString(),
-                            response.monitors.dolar_today.color,
-                            response.monitors.dolar_today.last_update,
-                            response.monitors.dolar_today.percent.toString(),
-                            response.monitors.dolar_today.symbol,
-                            response.monitors.dolar_today.title,
-                        )
-                    )
-                }
-
-
-                if ( !verificarVacio( response.monitors.cripto_dolar?.price.toString())) {
-                    bancosList.add(
-                        BancoModelAdap(
-                            "el_dorado",
-                            response.monitors.cripto_dolar.price.toDouble(),
-                            response.monitors.cripto_dolar.percent.toString(),
-                            response.monitors.cripto_dolar.color,
-                            response.monitors.cripto_dolar.last_update,
-                            response.monitors.cripto_dolar.percent.toString(),
-                            response.monitors.cripto_dolar.symbol,
-                            response.monitors.cripto_dolar.title,
-                        )
-                    )
-                }
-
-
-
-                if ( !verificarVacio( response.monitors.paypal?.price.toString())) {
-                    bancosList.add(
-                        BancoModelAdap(
-                            "paypal",
-                            response.monitors.paypal.price.toDouble(),
-                            response.monitors.paypal.percent.toString(),
-                            response.monitors.paypal.color,
-                            response.monitors.paypal.last_update,
-                            response.monitors.paypal.percent.toString(),
-                            response.monitors.paypal.symbol,
-                            response.monitors.paypal.title,
-                        )
-                    )
-                }
-
-                if ( !verificarVacio( response.monitors.skrill?.price.toString())) {
-                    bancosList.add(
-                        BancoModelAdap(
-                            "monitor_dolar_venezuela",
-                            response.monitors.skrill.price.toDouble(),
-                            response.monitors.skrill.percent.toString(),
-                            response.monitors.skrill.color,
-                            response.monitors.skrill.last_update,
-                            response.monitors.skrill.percent.toString(),
-                            response.monitors.skrill.symbol,
-                            response.monitors.skrill.title,
-                        )
-                    )
-                }
-
-
-                if ( !verificarVacio( response.monitors.dolar_today?.price.toString())) {
-                    bancosList.add(
-                        BancoModelAdap(
-                            "petro",
-                            response.monitors.dolar_today.price.toDouble(),
-                            response.monitors.dolar_today.percent.toString(),
-                            response.monitors.dolar_today.color,
-                            response.monitors.dolar_today.last_update,
-                            response.monitors.dolar_today.percent.toString(),
-                            response.monitors.dolar_today.symbol,
-                            response.monitors.dolar_today.title,
-                        )
-                    )
-                }
-
-                if ( !verificarVacio( response.monitors.skrill?.price.toString())) {
-                    bancosList.add(
-                        BancoModelAdap(
-                            "skrill",
-                            response.monitors.skrill.price.toDouble(),
-                            response.monitors.skrill.percent.toString(),
-                            response.monitors.skrill.color,
-                            response.monitors.skrill.last_update,
-                            response.monitors.skrill.percent.toString(),
-                            response.monitors.skrill.symbol,
-                            response.monitors.skrill.title,
-                        )
-                    )
-                }
-
-
-                if ( !verificarVacio( response.monitors.uphold?.price.toString())) {
-                    bancosList.add(
-                        BancoModelAdap(
-                            "syklo",
-                            response.monitors.uphold.price.toDouble(),
-                            response.monitors.uphold.percent.toString(),
-                            response.monitors.uphold.color,
-                            response.monitors.uphold.last_update,
-                            response.monitors.uphold.percent.toString(),
-                            response.monitors.uphold.symbol,
-                            response.monitors.uphold.title,
-                        )
-                    )
-                }
+//
+//                if ( !verificarVacio( response.monitors.dolar_today.price.toString())) {
+//                    bancosList.add(
+//                        BancoModelAdap(
+//                            "dolartoday",
+//                            response.monitors.dolar_today.price.toDouble(),
+//                            response.monitors.dolar_today.percent.toString(),
+//                            response.monitors.dolar_today.color,
+//                            response.monitors.dolar_today.last_update,
+//                            response.monitors.dolar_today.percent.toString(),
+//                            response.monitors.dolar_today.symbol,
+//                            response.monitors.dolar_today.title,
+//                        )
+//                    )
+//                }
+//
+//
+//                if ( !verificarVacio( response.monitors.cripto_dolar?.price.toString())) {
+//                    bancosList.add(
+//                        BancoModelAdap(
+//                            "el_dorado",
+//                            response.monitors.cripto_dolar.price.toDouble(),
+//                            response.monitors.cripto_dolar.percent.toString(),
+//                            response.monitors.cripto_dolar.color,
+//                            response.monitors.cripto_dolar.last_update,
+//                            response.monitors.cripto_dolar.percent.toString(),
+//                            response.monitors.cripto_dolar.symbol,
+//                            response.monitors.cripto_dolar.title,
+//                        )
+//                    )
+//                }
+//
+//
+//
+//                if ( !verificarVacio( response.monitors.paypal?.price.toString())) {
+//                    bancosList.add(
+//                        BancoModelAdap(
+//                            "paypal",
+//                            response.monitors.paypal.price.toDouble(),
+//                            response.monitors.paypal.percent.toString(),
+//                            response.monitors.paypal.color,
+//                            response.monitors.paypal.last_update,
+//                            response.monitors.paypal.percent.toString(),
+//                            response.monitors.paypal.symbol,
+//                            response.monitors.paypal.title,
+//                        )
+//                    )
+//                }
+//
+//                if ( !verificarVacio( response.monitors.skrill?.price.toString())) {
+//                    bancosList.add(
+//                        BancoModelAdap(
+//                            "monitor_dolar_venezuela",
+//                            response.monitors.skrill.price.toDouble(),
+//                            response.monitors.skrill.percent.toString(),
+//                            response.monitors.skrill.color,
+//                            response.monitors.skrill.last_update,
+//                            response.monitors.skrill.percent.toString(),
+//                            response.monitors.skrill.symbol,
+//                            response.monitors.skrill.title,
+//                        )
+//                    )
+//                }
+//
+//
+//                if ( !verificarVacio( response.monitors.dolar_today?.price.toString())) {
+//                    bancosList.add(
+//                        BancoModelAdap(
+//                            "petro",
+//                            response.monitors.dolar_today.price.toDouble(),
+//                            response.monitors.dolar_today.percent.toString(),
+//                            response.monitors.dolar_today.color,
+//                            response.monitors.dolar_today.last_update,
+//                            response.monitors.dolar_today.percent.toString(),
+//                            response.monitors.dolar_today.symbol,
+//                            response.monitors.dolar_today.title,
+//                        )
+//                    )
+//                }
+//
+//                if ( !verificarVacio( response.monitors.skrill?.price.toString())) {
+//                    bancosList.add(
+//                        BancoModelAdap(
+//                            "skrill",
+//                            response.monitors.skrill.price.toDouble(),
+//                            response.monitors.skrill.percent.toString(),
+//                            response.monitors.skrill.color,
+//                            response.monitors.skrill.last_update,
+//                            response.monitors.skrill.percent.toString(),
+//                            response.monitors.skrill.symbol,
+//                            response.monitors.skrill.title,
+//                        )
+//                    )
+//                }
+//
+//
+//                if ( !verificarVacio( response.monitors.uphold?.price.toString())) {
+//                    bancosList.add(
+//                        BancoModelAdap(
+//                            "syklo",
+//                            response.monitors.uphold.price.toDouble(),
+//                            response.monitors.uphold.percent.toString(),
+//                            response.monitors.uphold.color,
+//                            response.monitors.uphold.last_update,
+//                            response.monitors.uphold.percent.toString(),
+//                            response.monitors.uphold.symbol,
+//                            response.monitors.uphold.title,
+//                        )
+//                    )
+//                }
 
 
             }

@@ -26,8 +26,8 @@ import com.google.firebase.messaging.ktx.messaging
 
 import java.util.Date
 
-private const val LOG_TAG : String = "AppOpenAdManager"
-private const val AD_UNIT_ID: String  = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+private const val LOG_TAG: String = "AppOpenAdManager"
+private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
 //private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
@@ -60,10 +60,10 @@ class MyApplication :
 
     //Crea el Token de del dispoitivo para Firebase, Una sola vez se crea
 
-    private fun creaTokenFirebase():String{
-        var token= ""
-                Firebase.messaging.token.addOnCompleteListener {
-            if (!it.isSuccessful){
+    private fun creaTokenFirebase(): String {
+        var token = ""
+        Firebase.messaging.token.addOnCompleteListener {
+            if (!it.isSuccessful) {
                 Log.d(LOG_TAG, "onCreate: el token no fue generado")
                 return@addOnCompleteListener
             }
@@ -74,9 +74,9 @@ class MyApplication :
     }
 
     //Muestra la ID de la apliacion
-    private fun optenerID():String{
-        var claveId= ""
-                FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
+    private fun optenerID(): String {
+        var claveId = ""
+        FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 claveId = task.result
                 Log.d("FirebaseInstallations", "FID: $claveId")
@@ -108,7 +108,6 @@ class MyApplication :
 //        currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
 //        // Acciones que deseas realizar cuando el LifecycleOwner pasa a estado STARTED
 //    }
-
 
 
     /** ActivityLifecycleCallback methods. */
@@ -206,7 +205,7 @@ class MyApplication :
                         isLoadingAd = false
                         loadTime = Date().time
                         Log.d(LOG_TAG, "Cargado!!")
-                       // Toast.makeText(context, "Cargado!!", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "Cargado!!", Toast.LENGTH_SHORT).show()
                         // Mostrar el anuncio automáticamente si no se ha mostrado antes
                         if (!hasAdBeenShown) {
                             showAdIfAvailable(context as Activity)
@@ -221,7 +220,7 @@ class MyApplication :
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         isLoadingAd = false
                         Log.d(LOG_TAG, "No se pudo Cargar el Anuncio: " + loadAdError.message)
-                      //  Toast.makeText(context, "onAdFai ledToLoad", Toast.LENGTH_SHORT).show()
+                        //  Toast.makeText(context, "onAdFai ledToLoad", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -264,7 +263,10 @@ class MyApplication :
          * @param activity the activity that shows the app open ad
          * @param onShowAdCompleteListener the listener to be notified when an app open ad is complete
          */
-        fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
+        fun showAdIfAvailable(
+            activity: Activity,
+            onShowAdCompleteListener: OnShowAdCompleteListener,
+        ) {
             // Si el anuncio de aplicación abierta ya se muestra, no vuelva a mostrarlo.
             if (isShowingAd) {
                 Log.d(LOG_TAG, "El anuncio de apertura de la aplicación ya se muestra.")
@@ -291,19 +293,22 @@ class MyApplication :
                         appOpenAd = null
                         isShowingAd = false
                         Log.d(LOG_TAG, "en Anuncio descartado en Contenido de pantalla completa.")
-                      //  Toast.makeText(activity, "en Anuncio descartado ed Contenido de pantalla completa", Toast.LENGTH_SHORT).show()
+                        //  Toast.makeText(activity, "en Anuncio descartado ed Contenido de pantalla completa", Toast.LENGTH_SHORT).show()
 
                         onShowAdCompleteListener.onShowAdComplete()
-                       // if (googleMobileAdsConsentManager.canRequestAds) {
-                            loadAd(activity)
-                     //   }
+                        // if (googleMobileAdsConsentManager.canRequestAds) {
+                        loadAd(activity)
+                        //   }
                     }
 
                     /** Called when fullscreen content failed to show. */
                     override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                         appOpenAd = null
                         isShowingAd = false
-                        Log.d(LOG_TAG, "el anuncio no se puede mostrar cuando la aplicación no está en primer plano: " + adError.message)
+                        Log.d(
+                            LOG_TAG,
+                            "el anuncio no se puede mostrar cuando la aplicación no está en primer plano: " + adError.message
+                        )
                         //Toast.makeText(activity, " el anuncio no se puede mostrar cuando la aplicación no está en primer plano", Toast.LENGTH_SHORT).show()
 
                         onShowAdCompleteListener.onShowAdComplete()
@@ -314,8 +319,11 @@ class MyApplication :
 
                     /** Se llama cuando se muestra contenido en pantalla completa.*/
                     override fun onAdShowedFullScreenContent() {
-                        Log.d(LOG_TAG, "** Se llama cuando se muestra contenido en pantalla completa.")
-                      //  Toast.makeText(activity, "contenido en pantalla completa.", Toast.LENGTH_SHORT).show()
+                        Log.d(
+                            LOG_TAG,
+                            "** Se llama cuando se muestra contenido en pantalla completa."
+                        )
+                        //  Toast.makeText(activity, "contenido en pantalla completa.", Toast.LENGTH_SHORT).show()
                     }
                 }
             isShowingAd = true
