@@ -1,8 +1,6 @@
 package com.carlosv.dolaraldia.ui.bancos
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -12,24 +10,13 @@ import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.carlosv.dolaraldia.ApiService
-import com.carlosv.dolaraldia.MainActivity
 import com.carlosv.dolaraldia.adapter.BancosAdapter
 import com.carlosv.dolaraldia.ui.home.HomeFragment
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentBancosBinding
 
 //import com.carlosv.dolaraldia.databinding.FragmentSlideshowBinding
-
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 class BancosFragment : Fragment() {
 
@@ -89,146 +76,149 @@ class BancosFragment : Fragment() {
 
 
             try {
-                val response = HomeFragment.ApiResponseHolder.getResponse()
+                val response = HomeFragment.ApiResponseHolder.getResponseApiBancoBCV()
                 Log.d("llamarPrecioOtros", " VALOR DEL RESPONSE en bancosFragmnet $response ")
                 if (response != null) {
-                    valorActualBcv = response.monitors.banesco?.price?.toDouble()
+                   // valorActualBcv = response.monitors.bnc?.price?
 
 
-                    if ( !verificarVacio( response.monitors.banesco?.price)){
+                    if ( !verificarVacio( response.monitors.bnc?.price.toString())){
                         bancosList.add(
                             BancoModelAdap(
-                                "Banesco",
-                                response.monitors.banesco?.price!!.toDouble(),
-                                response.monitors.banesco?.percent!!,
-                                response.monitors.banesco?.color!!,
-                                response.monitors.banesco?.last_update!!,
-                                response.monitors.banesco?.percent!!,
-                                response.monitors.banesco?.symbol!!,
-                                response.monitors.banesco?.title!!,
+                                "bnc",
+                                response.monitors.bnc?.price!!.toDouble(),
+                                response.monitors.bnc?.percent.toString(),
+                                response.monitors.bnc?.color!!,
+                                response.monitors.bnc?.last_update!!,
+                                response.monitors.bnc?.percent.toString(),
+                                response.monitors.bnc?.symbol!!,
+                                response.monitors.bnc?.title!!,
+
 
                                 )
                         )
                     }
 
-                    if ( !verificarVacio( response.monitors.mercantil?.price)) {
+                    if ( !verificarVacio( response.monitors.bancamiga?.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "Mercantil",
-                                response.monitors.mercantil?.price!!.toDouble(),
-                                response.monitors.mercantil?.percent!!,
-                                response.monitors.mercantil?.color!!,
-                                response.monitors.mercantil?.last_update!!,
-                                response.monitors.mercantil?.percent!!,
-                                response.monitors.mercantil?.symbol!!,
-                                response.monitors.mercantil?.title!!,
+                                "bancamiga",
+                                response.monitors.bancamiga?.price!!.toDouble(),
+                                response.monitors.bancamiga?.percent.toString(),
+                                response.monitors.bancamiga?.color!!,
+                                response.monitors.bancamiga?.last_update!!,
+                                response.monitors.bancamiga?.percent.toString(),
+                                response.monitors.bancamiga?.symbol!!,
+                                response.monitors.bancamiga?.title!!,
+
                             )
                         )
                     }
-                    if ( !verificarVacio( response.monitors.bancamiga.price)) {
-                        bancosList.add(
-                            BancoModelAdap(
-                                "Bancamiga",
-                                response.monitors.bancamiga.price.toDouble(),
-                                response.monitors.bancamiga.percent,
-                                response.monitors.bancamiga.color,
-                                response.monitors.bancamiga.last_update,
-                                response.monitors.bancamiga.percent,
-                                response.monitors.bancamiga.symbol,
-                                response.monitors.bancamiga.title,
-                            )
-                        )
-                    }
-
-
-                    if ( !verificarVacio( response.monitors.banco_de_venezuela?.price)) {
+                    if ( !verificarVacio( response.monitors.bdv.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
                                 "Banco de Venezuela",
-                                response.monitors.banco_de_venezuela?.price!!.toDouble(),
-                                response.monitors.banco_de_venezuela?.percent!!,
-                                response.monitors.banco_de_venezuela?.color!!,
-                                response.monitors.banco_de_venezuela?.last_update!!,
-                                response.monitors.banco_de_venezuela?.percent!!,
-                                response.monitors.banco_de_venezuela?.symbol!!,
-                                response.monitors.banco_de_venezuela?.title!!,
+                                response.monitors.bdv.price,
+                                response.monitors.bdv.percent.toString(),
+                                response.monitors.bdv.color,
+                                response.monitors.bdv.last_update,
+                                response.monitors.bdv.percent.toString(),
+                                response.monitors.bdv.symbol,
+                                response.monitors.bdv.title,
+
                             )
                         )
                     }
 
-                    if ( !verificarVacio( response.monitors.bbva_provincial?.price)) {
+
+                    if ( !verificarVacio( response.monitors.activo.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "Banco Provincial",
-                                response.monitors.bbva_provincial?.price!!.toDouble(),
-                                response.monitors.bbva_provincial?.percent!!,
-                                response.monitors.bbva_provincial?.color!!,
-                                response.monitors.bbva_provincial?.last_update!!,
-                                response.monitors.bbva_provincial?.percent!!,
-                                response.monitors.bbva_provincial?.symbol!!,
-                                response.monitors.bbva_provincial?.title!!,
+                                "activo",
+                                response.monitors.activo.price,
+                                response.monitors.activo.percent.toString(),
+                                response.monitors.activo.color,
+                                response.monitors.activo.last_update,
+                                response.monitors.activo.percent.toString(),
+                                response.monitors.activo.symbol,
+                                response.monitors.activo.title,
+
+                            )
+                        )
+                    }
+                    if ( !verificarVacio( response.monitors.banplus.price.toString())) {
+                        bancosList.add(
+                            BancoModelAdap(
+                                "banplus",
+                                response.monitors.banplus.price,
+                                response.monitors.banplus.percent.toString(),
+                                response.monitors.banplus.color,
+                                response.monitors.banplus.last_update,
+                                response.monitors.banplus.percent.toString(),
+                                response.monitors.banplus.symbol,
+                                response.monitors.banplus.title,
+
                             )
                         )
                     }
 
-                    if ( !verificarVacio( response.monitors.bnc?.price)) {
+                    if ( !verificarVacio( response.monitors.bvc.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "BNC",
-                                response.monitors.bnc?.price!!.toDouble(),
-                                response.monitors.bnc?.percent!!,
-                                response.monitors.bnc?.color!!,
-                                response.monitors.bnc?.last_update!!,
-                                response.monitors.bnc?.percent!!,
-                                response.monitors.bnc?.symbol!!,
-                                response.monitors.bnc?.title!!,
+                                "bvc",
+                                response.monitors.bvc.price,
+                                response.monitors.bvc.percent.toString(),
+                                response.monitors.bvc.color,
+                                response.monitors.bvc.last_update,
+                                response.monitors.bvc.percent.toString(),
+                                response.monitors.bvc.symbol,
+                                response.monitors.bvc.title,
                             )
                         )
                     }
 
-                    if ( !verificarVacio( response.monitors.remesas_zoom.price)) {
+                    if ( !verificarVacio( response.monitors.exterior.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "remesas_zoom",
-                                response.monitors.remesas_zoom.price.toDouble(),
-                                response.monitors.remesas_zoom.percent,
-                                response.monitors.remesas_zoom.color,
-                                response.monitors.remesas_zoom.last_update,
-                                response.monitors.remesas_zoom.percent,
-                                response.monitors.remesas_zoom.symbol,
-                                response.monitors.remesas_zoom.title,
+                                "exterior",
+                                response.monitors.exterior.price,
+                                response.monitors.exterior.percent.toString(),
+                                response.monitors.exterior.color,
+                                response.monitors.exterior.last_update,
+                                response.monitors.exterior.percent.toString(),
+                                response.monitors.exterior.symbol,
+                                response.monitors.exterior.title,
                             )
                         )
                     }
-                    if ( !verificarVacio( response.monitors.bcv?.price)) {
+                    if ( !verificarVacio( response.monitors.mercantil_banco.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "BCV",
-                                response.monitors.bcv?.price!!.toDouble(),
-                                response.monitors.bcv?.percent!!,
-                                response.monitors.bcv?.color!!,
-                                response.monitors.bcv?.last_update!!,
-                                response.monitors.bcv?.percent!!,
-                                response.monitors.bcv?.symbol!!,
-                                response.monitors.bcv?.title!!,
+                                "mercantil_banco",
+                                response.monitors.mercantil_banco.price,
+                                response.monitors.mercantil_banco.percent.toString(),
+                                response.monitors.mercantil_banco.color,
+                                response.monitors.mercantil_banco.last_update,
+                                response.monitors.mercantil_banco.percent.toString(),
+                                response.monitors.mercantil_banco.symbol,
+                                response.monitors.mercantil_banco.title,
                             )
                         )
                     }
-                        if ( !verificarVacio( response.monitors.italcambio.price)) {
-                            bancosList.add(
-                                BancoModelAdap(
-                                    "italcambio",
-                                    response.monitors.italcambio.price.toDouble(),
-                                    response.monitors.italcambio.percent,
-                                    response.monitors.italcambio.color,
-                                    response.monitors.italcambio.last_update,
-                                    response.monitors.italcambio.percent,
-                                    response.monitors.italcambio.symbol,
-                                    response.monitors.italcambio.title,
-                                )
+                    if ( !verificarVacio( response.monitors.provincial.price.toString())) {
+                        bancosList.add(
+                            BancoModelAdap(
+                                "provincial",
+                                response.monitors.provincial.price,
+                                response.monitors.provincial.percent.toString(),
+                                response.monitors.provincial.color,
+                                response.monitors.provincial.last_update,
+                                response.monitors.provincial.percent.toString(),
+                                response.monitors.provincial.symbol,
+                                response.monitors.provincial.title,
                             )
-
-                        }
+                        )
+                    }
                 }
 
                     // Inicializar el adaptador si aún no se ha hecho

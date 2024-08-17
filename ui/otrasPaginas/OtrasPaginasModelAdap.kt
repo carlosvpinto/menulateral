@@ -1,6 +1,6 @@
-package com.carlosv.dolaraldia.ui.bancos
+package com.carlosv.dolaraldia.ui.otrasPaginas
 
-data class BancoModelAdap(
+data class OtrasPaginasModelAdap(
     val nombre: String,
     val precio: Double,
     val diferencia: String,
@@ -9,6 +9,6 @@ data class BancoModelAdap(
     val procentaje: String,
     val Simbol: String,
     val titulo: String,
-
+    val image: Any,
 
     )

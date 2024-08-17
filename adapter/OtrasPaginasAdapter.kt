@@ -10,10 +10,13 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.ui.bancos.BancoModelAdap
+import com.carlosv.dolaraldia.ui.otrasPaginas.OtrasPaginasModelAdap
 import com.carlosv.menulateral.R
+import de.hdodenhof.circleimageview.CircleImageView
 
-class OtrasPaginasAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModelAdap>): RecyclerView.Adapter<OtrasPaginasAdapter.OtrosBancosAdapterViewHolder>() {
+class OtrasPaginasAdapter(val context: Fragment, var otrosBancos: ArrayList<OtrasPaginasModelAdap>): RecyclerView.Adapter<OtrasPaginasAdapter.OtrosBancosAdapterViewHolder>() {
 
 
 
@@ -46,86 +49,16 @@ class OtrasPaginasAdapter(val context: Fragment, var otrosBancos: ArrayList<Banc
         holder.textViewMontoBs.text = otroBanco.precio.toString()
         holder.textViewNombreBanco.text = otroBanco.nombre
         holder.textViewVariacion.text = otroBanco.diferencia.toString()
-       // holder.imgflecha.setImageResource(R.drawable.ic_flechaverde)
-        Log.d("ADAPTER", " otroBanco.nombre ${otroBanco.nombre} ")
+        Log.d("RESPUESTA", "onBindViewHolder:position: $position  otroBanco.image ${otroBanco.image} ")
+        Glide.with(context)
+            .load(otroBanco.image)
+            .placeholder(R.drawable.ic_little_person)  // Imagen de placeholder mientras se carga la URL
+            .error(R.drawable.ic_info_24)    // Imagen que se muestra si ocurre un error
+            .into(holder.imgCircleInsti)
 
-        if (otroBanco.nombre == "airtm"){
-            holder.imgLogo.setImageResource(R.drawable.logo_airtm_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-        if (otroBanco.nombre == "zinli"){
-            holder.imgLogo.setImageResource(R.drawable.banco_zinli_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-        if (otroBanco.nombre == "amazon_gift_card"){
-            holder.imgLogo.setImageResource(R.drawable.amazon_gif240x240)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
 
-        if (otroBanco.nombre == "binance"){
-            holder.imgLogo.setImageResource(R.drawable.binance240x240)
             val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-        if (otroBanco.nombre == "cambios_r&a"){
-            holder.imgLogo.setImageResource(R.drawable.logo_rya_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-
-        if (otroBanco.nombre == "dolartoday"){
-            holder.imgLogo.setImageResource(R.drawable.dolar_today240x240)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-
-        if (otroBanco.nombre == "el_dorado"){
-            holder.imgLogo.setImageResource(R.drawable.logo_eldorado_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-
-        if (otroBanco.nombre == "mkambio"){
-            holder.imgLogo.setImageResource(R.drawable.logo_mkambio_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-        if (otroBanco.nombre == "paypal"){
-            holder.imgLogo.setImageResource(R.drawable.paypal240x240)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-        if (otroBanco.nombre == "monitor_dolar_venezuela"){
-            holder.imgLogo.setImageResource(R.drawable.logo_monitordolarvenezuela_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-        if (otroBanco.nombre == "petro"){
-            holder.imgLogo.setImageResource(R.drawable.logo_petro_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-        if (otroBanco.nombre == "skrill"){
-            holder.imgLogo.setImageResource(R.drawable.skrill240x240)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-
-        if (otroBanco.nombre == "yadio"){
-            holder.imgLogo.setImageResource(R.drawable.logo_yadio_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-
-        if (otroBanco.nombre == "syklo"){
-            holder.imgLogo.setImageResource(R.drawable.logo_syklo_png)
-            val color = otroBanco.Color
-            mostrarFlecha(color,holder)
-        }
-
+            mostrarFlecha(color, holder)
 
 
 
@@ -152,9 +85,9 @@ class OtrasPaginasAdapter(val context: Fragment, var otrosBancos: ArrayList<Banc
     override fun getItemCount(): Int {
         return otrosBancos.size
     }
-    fun updatePrecioBancos(precionBancosList: List<BancoModelAdap> ){
+    fun updatePrecioBancos(precionBancosList: List<OtrasPaginasModelAdap> ){
         Log.d("ADAPTER", " DENTRO updatePrecioBancos precionBancosList $precionBancosList ")
-        this.otrosBancos = precionBancosList as ArrayList<BancoModelAdap>
+        this.otrosBancos = precionBancosList as ArrayList<OtrasPaginasModelAdap>
         notifyDataSetChanged()
     }
 
@@ -167,6 +100,7 @@ class OtrasPaginasAdapter(val context: Fragment, var otrosBancos: ArrayList<Banc
         val cardView: CardView // Nueva referencia a la CardView
         val imgLogo: ImageView
         val imgflecha: ImageView
+        val imgCircleInsti: CircleImageView
 
         init {
             textViewFechaActu = view.findViewById(R.id.txtFechaActualizacionBanco)
@@ -176,6 +110,7 @@ class OtrasPaginasAdapter(val context: Fragment, var otrosBancos: ArrayList<Banc
             textViewNombreBanco = view.findViewById(R.id.txtNombreBanco)
             cardView = view.findViewById(R.id.cardView) // Inicializar la referencia a la CardView
             imgflecha= view.findViewById(R.id.imgfechabanco)
+            imgCircleInsti =view.findViewById(R.id.circleInstitucion)
 
 
         }

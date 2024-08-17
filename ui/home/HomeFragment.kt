@@ -19,26 +19,20 @@ import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.text.Editable
-import android.text.Spannable
-import android.text.SpannableString
 import android.text.TextWatcher
-import android.text.style.ImageSpan
 import android.util.Log
 import android.view.Gravity
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.ScaleAnimation
 import android.view.inputmethod.InputMethodManager
-import android.widget.CheckBox
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -46,10 +40,6 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.ApiService
 
-import com.carlosv.dolaraldia.model.bancos.DolarNew
-import com.carlosv.dolaraldia.model.bcv.BcvNew
-
-import com.carlosv.dolaraldia.model.paralelo.ParaleloVzla
 import com.carlosv.dolaraldia.provider.ImagenProvider
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
@@ -71,7 +61,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.jsoup.Jsoup
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -84,12 +73,13 @@ import java.security.cert.X509Certificate
 import java.util.Date
 import javax.net.ssl.*
 import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.HttpException
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.carlosv.dolaraldia.MyApplication
 import com.carlosv.dolaraldia.model.apicontoken.ApiConTokenResponse
+import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseCripto
+import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseBCV
 import com.carlosv.dolaraldia.model.clickAnuncios.ClickAnunicosModel
 import com.carlosv.dolaraldia.model.controlPublicidad.ConfigImagenModel
 import com.carlosv.dolaraldia.model.controlPublicidad.ImprecionesArtiModel
@@ -100,15 +90,8 @@ import com.denzcoskun.imageslider.ImageSlider
 import com.denzcoskun.imageslider.constants.ScaleTypes
 import com.denzcoskun.imageslider.models.SlideModel
 import com.google.android.material.snackbar.Snackbar
-import com.google.common.reflect.TypeToken
 import kotlinx.coroutines.Job
-import okhttp3.Interceptor
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.ArrayList
-import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -180,6 +163,9 @@ class HomeFragment : Fragment() {
         shakeDetector = ShakeDetector(requireContext()) {
             // onShakeDetected()
         }
+        llamarDolarApiNew()
+        llamarApiCriptoDolar()
+        llamarApiPaginaBCV()
 
         MobileAds.initialize(requireContext()) {}
         // cargarImagendelConfig()
@@ -229,7 +215,6 @@ class HomeFragment : Fragment() {
 //            eliminarListener()
             llamarDolarApiNew()
 
-         //   llamarApiCriptoDolar()
             actualizarEuro()
 
             //PARA PUBLICIDAD INTERNA*******
@@ -653,8 +638,11 @@ class HomeFragment : Fragment() {
 
     //INTERFACE PARA COMUNICAR CON EL ACTIVITY
     object ApiResponseHolder {
-        private var response: DolarNew? = null
+        private var response: ApiConTokenResponse? = null
         private var responseApiNew: ApiConTokenResponse? = null
+        private var responseApiNew2: ApiModelResponseCripto? = null
+        private var responseApiBancoNew2: ApiModelResponseBCV? = null
+
 
         private const val VALOR_EURO = "ValorEuro"
         private const val NUMERO_EURO = "euro"
@@ -662,19 +650,13 @@ class HomeFragment : Fragment() {
         private const val VALOR_DOLAR = "ValorDolar"
         private const val NUMERO_DOLAR = "ValorEuro"
 
-        fun getResponseParalelovzla(savedResponseVzla: ParaleloVzla): ParaleloVzla? {
-            return savedResponseVzla
-        }
 
-        fun getResponseBcv(responseBcvNew: BcvNew): BcvNew? {
-            return responseBcvNew
-        }
-
-        fun getResponse(): DolarNew? {
+        fun getResponse(): ApiConTokenResponse? {
             return response
         }  fun getResponseApiNew(): ApiConTokenResponse? {
             return responseApiNew
         }
+
 
         fun setResponse(newResponse: ApiConTokenResponse) {
             responseApiNew = newResponse
@@ -682,6 +664,20 @@ class HomeFragment : Fragment() {
         fun setResponseApiNew(newResponse: ApiConTokenResponse) {
             responseApiNew = newResponse
         }
+        fun setResponseCripto(newResponse: ApiModelResponseCripto) {
+            responseApiNew2 = newResponse
+        }
+        fun setResponseBCV(newResponse: ApiModelResponseBCV) {
+            responseApiBancoNew2 = newResponse
+        }
+        fun getResponseApiCripto(): ApiModelResponseCripto? {
+            return responseApiNew2
+        }
+        fun getResponseApiBancoBCV(): ApiModelResponseBCV? {
+            return responseApiBancoNew2
+        }
+
+
 
         fun guardarEuro(context: Context, numero: Float) {
             val prefs: SharedPreferences =
@@ -965,7 +961,6 @@ class HomeFragment : Fragment() {
 
 
     fun llamarDolarApiNew() {
-        Log.d(TAG, "llamarApiCriptoDolar: ENTROO")
         try {
             val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
 
@@ -974,6 +969,9 @@ class HomeFragment : Fragment() {
                 valorActualParalelo = savedResponseDolar.monitors.enparalelovzla.price.toDouble()
                 llenarDolarNew(savedResponseDolar)
                 llenarCampoBCVNew(savedResponseDolar)
+                multiplicaDolares()
+                dividirABolivares()
+                binding.swipeRefreshLayout.isRefreshing = false
             }
         } catch (e: Exception) {
 
@@ -982,7 +980,7 @@ class HomeFragment : Fragment() {
             binding.swipeRefreshLayout.isRefreshing = false // Asegura que se detenga el refresco siempre
         }
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val baseUrl = "http://pydolarve.org/api/v1/" // URL base corregida
 
 
@@ -1013,6 +1011,7 @@ class HomeFragment : Fragment() {
                         valorActualParalelo = responseApinew.monitors.enparalelovzla.price
                         guardarResponse(requireContext(), responseApinew)
                         animacionCrecerTexto(binding.txtFechaActualizacionPara, binding.txtFechaActualizacionBcv)
+                        binding.swipeRefreshLayout.isRefreshing = false
                         binding.txtFechaActualizacionPara.setTextColor(
                             ContextCompat.getColor(
                                 requireContext(),
@@ -1030,10 +1029,13 @@ class HomeFragment : Fragment() {
                     binding.txtFechaActualizacionPara.setTextColor(
                         ContextCompat.getColor(requireContext(), R.color.red)
                     )
+                    binding.txtFechaActualizacionBcv.setTextColor(
+                        ContextCompat.getColor(requireContext(), R.color.red)
+                    )
                     animarSwipe()
                     Toast.makeText(
                         requireContext(),
-                        "Problemas de Conexion: ${e.message}",
+                        "Problemas de Conexion",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -1044,51 +1046,133 @@ class HomeFragment : Fragment() {
             }
         }
     }
-//    fun llamarApiCriptoDolar() {
-//        Log.d(TAG, "llamarApiCriptoDolar: ENTROO A llamarApiCriptoDolar")
-//        val baseUrl = "http://pydolarve.org/api/v1/"  // URL base sin la última parte
-//
-//        val client = OkHttpClient.Builder().build()
-//
-//        val retrofit = Retrofit.Builder()
-//            .baseUrl(baseUrl)
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .client(client)
-//            .build()
-//
-//        val apiService = retrofit.create(ApiService::class.java)
-//
-//        lifecycleScope.launch(Dispatchers.IO) {
-//            try {
-//                // Realizar la solicitud a la API con el parámetro de consulta
-//                val response = apiService.getDollarcriptodolar("criptodolar")
-//                Log.d(TAG, "llamarApiCriptoDolar: response $response")
-//                if (response.isSuccessful) {
-//                    val responseBody = response.body()
-//                    // Procesa la respuesta según tu lógica
-//                    withContext(Dispatchers.Main) {
-//                        // Actualizar la UI en el hilo principal si es necesario
-//                        Log.d(TAG, "llamarApiCriptoDolar: responseBody $responseBody")
-//                    }
-//                } else {
-//                    // Manejar errores HTTP
-//                    Log.e("API_ERROR", "Error HTTP: ${response.code()} - ${response.message()}")
-//                }
-//            } catch (e: Exception) {
-//                // Manejo de errores generales
-//                Log.e("API_CALL", "Error: ${e.message}")
-//            } finally {
-//                withContext(Dispatchers.Main) {
-//                    // Detener cualquier indicador de carga si es necesario
-//                }
-//            }
-//        }
-//    }
+   private fun llamarApiCriptoDolar() {
+       //Recupera los datos de la memoria Preference del dispositivo******************************
+       try {
+           val savedResponseCriptoDolar = getResponseSharedPreferencesCriptodolar(requireContext())
 
+           //Publico en el Api Holder
+           if (savedResponseCriptoDolar != null) {
+               ApiResponseHolder.setResponseCripto(savedResponseCriptoDolar)
 
+           }
+       } catch (e: Exception) {
 
+           Log.d(TAG, "llamarDolarApiNew: erre $e")
+       } finally {
+           binding.swipeRefreshLayout.isRefreshing = false // Asegura que se detenga el refresco siempre
+       }
+       //******************************************************************************************
 
+        val baseUrl = "http://pydolarve.org/api/v1/"  // URL base sin la última parte
 
+       val client = OkHttpClient.Builder()
+           .addInterceptor { chain ->
+               val request = chain.request().newBuilder()
+                   .addHeader("Authorization", "Bearer 2x9Qjpxl5F8CoKK6T395KA") // Token añadido
+                   .build()
+               chain.proceed(request)
+           }
+           .build()
+
+       val retrofit = Retrofit.Builder()
+           .baseUrl(baseUrl)
+           .addConverterFactory(GsonConverterFactory.create())
+           .client(client)
+           .build()
+        val apiService = retrofit.create(ApiService::class.java)
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Realizar la solicitud a la API con el parámetro de consulta
+                val response = apiService.getDollarcriptodolar("criptodolar")
+
+                if (response!=null) {
+
+                    // Procesa la respuesta según tu lógica
+                    withContext(Dispatchers.Main) {
+                        // Actualizar la UI en el hilo principal si es necesario
+                        ApiResponseHolder.setResponseCripto(response)
+                        guardarResponseCripto(requireContext(), response)
+
+                    }
+                } else {
+                    // Manejar errores HTTP
+                    Log.e("API_ERROR", "Error HTTP: del response}")
+                }
+            } catch (e: Exception) {
+                // Manejo de errores generales
+                Log.e("API_CALL", "Error: ${e.message}")
+            } finally {
+                withContext(Dispatchers.Main) {
+                    // Detener cualquier indicador de carga si es necesario
+                }
+            }
+        }
+    }
+    private fun llamarApiPaginaBCV() {
+        //Recupera los datos de la memoria Preference del dispositivo******************************
+        try {
+            val savedResponseBCV = getResponseSharedPreferencesBCV(requireContext())
+
+            //Publico en el Api Holder
+            if (savedResponseBCV != null) {
+                ApiResponseHolder.setResponseBCV(savedResponseBCV)
+
+            }
+        } catch (e: Exception) {
+
+            Log.d(TAG, "llamarDolarApiNew: erre $e")
+        } finally {
+            binding.swipeRefreshLayout.isRefreshing = false // Asegura que se detenga el refresco siempre
+        }
+        //******************************************************************************************
+        val baseUrl = "http://pydolarve.org/api/v1/"  // URL base sin la última parte
+
+        val client = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .addHeader("Authorization", "Bearer 2x9Qjpxl5F8CoKK6T395KA") // Token añadido
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
+
+        val apiService = retrofit.create(ApiService::class.java)
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Realizar la solicitud a la API con el parámetro de consulta
+                val response = apiService.getDollarBancosBcv("bcv")
+
+                if (response!=null) {
+
+                    // Procesa la respuesta según tu lógica
+                    withContext(Dispatchers.Main) {
+                        // Actualizar la UI en el hilo principal si es necesario
+                        ApiResponseHolder.setResponseBCV(response)
+                        guardarResponseBancoBCV(requireContext(), response)
+                    }
+                } else {
+                    // Manejar errores HTTP
+                    Log.e("API_ERROR", "Error HTTP: del response}")
+                }
+            } catch (e: Exception) {
+                // Manejo de errores generales
+                Log.e("API_CALL", "Error: ${e.message}")
+            } finally {
+                withContext(Dispatchers.Main) {
+                    // Detener cualquier indicador de carga si es necesario
+                }
+            }
+        }
+    }
 
     fun isInternetAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -1158,6 +1242,7 @@ class HomeFragment : Fragment() {
     }
 
 
+    //Guarda en SharePreference los Respose de cada solicitud al API
     private fun guardarResponse(context: Context, responseBCV: ApiConTokenResponse) {
         val gson = Gson()
         val responseJson = gson.toJson(responseBCV)
@@ -1169,6 +1254,29 @@ class HomeFragment : Fragment() {
         editor.apply()
     }
 
+    private fun guardarResponseCripto(context: Context, responseBCV: ApiModelResponseCripto) {
+        val gson = Gson()
+        val responseJson = gson.toJson(responseBCV)
+
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("dolarCripto", responseJson)
+        editor.apply()
+
+    }
+    private fun guardarResponseBancoBCV(context: Context, responseBCV: ApiModelResponseBCV) {
+        val gson = Gson()
+        val responseJson = gson.toJson(responseBCV)
+
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("dolarResponseBCV", responseJson)
+        editor.apply()
+
+    }
+    //*********************************************************************************************
 
     // Define una función para recuperar la respuesta de SharedPreferences
     private fun getResponseFromSharedPreferences(context: Context): ApiConTokenResponse? {
@@ -1180,6 +1288,37 @@ class HomeFragment : Fragment() {
             val gson = Gson()
 
             return gson.fromJson(responseJson, ApiConTokenResponse::class.java)
+        }
+
+        return null // Retorna null si no se encontró la respuesta en SharedPreferences
+    }
+
+
+    // Define una función para recuperar la respuesta de SharedPreferences
+    private fun getResponseSharedPreferencesCriptodolar(context: Context): ApiModelResponseCripto? {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+        val responseJson = sharedPreferences.getString("dolarCripto", null)
+
+        if (responseJson != null) {
+            val gson = Gson()
+
+            return gson.fromJson(responseJson, ApiModelResponseCripto::class.java)
+        }
+
+        return null // Retorna null si no se encontró la respuesta en SharedPreferences
+    }
+
+    // Define una función para recuperar la respuesta de SharedPreferences
+    private fun getResponseSharedPreferencesBCV(context: Context): ApiModelResponseBCV? {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+        val responseJson = sharedPreferences.getString("dolarResponseBCV", null)
+
+        if (responseJson != null) {
+            val gson = Gson()
+
+            return gson.fromJson(responseJson, ApiModelResponseBCV::class.java)
         }
 
         return null // Retorna null si no se encontró la respuesta en SharedPreferences
@@ -1442,6 +1581,7 @@ class HomeFragment : Fragment() {
         if (binding.progressBar.visibility != View.VISIBLE) binding.swipeRefreshLayout.isRefreshing =
             true
         llamarDolarApiNew()
+
         shakeDetector.start()
 
     }

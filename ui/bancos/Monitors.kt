@@ -1,12 +1,10 @@
 package com.carlosv.dolaraldia.ui.bancos
 
-import com.carlosv.dolaraldia.model.monedas.Airtm
-import com.carlosv.dolaraldia.model.monedas.AmazonGiftCard
+
 import com.google.gson.annotations.SerializedName
 
 data class Monitors(
-    var airtm: Airtm,
-    var amazon_gift_card: AmazonGiftCard,
+
     var bancamiga: Bancamiga,
     var banco_de_venezuela: BancoDeVenezuela?,
     var banesco: Banesco?,

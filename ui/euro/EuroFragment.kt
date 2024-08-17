@@ -145,24 +145,41 @@ class EuroFragment : Fragment() {
     }
 
     fun llenarCampoEuro() {
-        val valorEuroRecuperado= HomeFragment.ApiResponseHolder.recuperarEuro(requireContext())
-        val valorFechaRecuperado = HomeFragment.ApiResponseHolder.recuperarEuroFecha(requireContext())
-        Log.d(
-            "EUROACTU",
-            "VALOR DE llenarCampoEuro:valorEuroRecuperado $valorEuroRecuperado y valorFechaRecuperado $valorFechaRecuperado")
-        if (valorEuroRecuperado!= null){
-            valorActualEuro = valorEuroRecuperado
+        val responseBCV = HomeFragment.ApiResponseHolder.getResponseApiBancoBCV()
+        if (responseBCV!=null){
+            valorActualEuro= responseBCV.monitors.eur.price.toFloat()
             val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-            val formattedValorDolares = decimalFormat.format(valorEuroRecuperado)
+            val formattedValorDolares = decimalFormat.format(valorActualEuro)
             binding.btnEuro.text =formattedValorDolares.toString()
+            binding.txtFechaActualizacion.text = responseBCV.monitors.eur.last_update
             multiplicaDolares()
             dividirABolivares()
 
+        }else{
+
+            val valorEuroRecuperado= HomeFragment.ApiResponseHolder.recuperarEuro(requireContext())
+            val valorFechaRecuperado = HomeFragment.ApiResponseHolder.recuperarEuroFecha(requireContext())
+            Log.d(
+                "EUROACTU",
+                "VALOR DE llenarCampoEuro:valorEuroRecuperado $valorEuroRecuperado y valorFechaRecuperado $valorFechaRecuperado")
+            if (valorEuroRecuperado!= null){
+                valorActualEuro = valorEuroRecuperado
+                val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
+                val formattedValorDolares = decimalFormat.format(valorEuroRecuperado)
+                binding.btnEuro.text =formattedValorDolares.toString()
+                multiplicaDolares()
+                dividirABolivares()
+
+            }
+            if (valorFechaRecuperado!=null){
+                binding.txtFechaActualizacion.text= valorFechaRecuperado
+            }
+            binding.swipeRefreshLayout.isRefreshing = false
         }
-        if (valorFechaRecuperado!=null){
-            binding.txtFechaActualizacion.text= valorFechaRecuperado
-        }
-        binding.swipeRefreshLayout.isRefreshing = false
+
+
+
+
 
 
     }

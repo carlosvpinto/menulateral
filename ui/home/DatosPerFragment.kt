@@ -22,8 +22,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.carlosv.dolaraldia.adapter.PagoMovilAdapter
-import com.carlosv.dolaraldia.model.bancos.DolarNew
-import com.carlosv.dolaraldia.model.bcv.BcvNew
+
 import com.carlosv.dolaraldia.model.datosPMovil.DatosPMovilModel
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentDatosPerBinding

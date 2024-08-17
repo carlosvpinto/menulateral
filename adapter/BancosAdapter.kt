@@ -10,9 +10,10 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
-import com.carlosv.dolaraldia.model.monedas.OtrasPaginas
+import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.ui.bancos.BancoModelAdap
 import com.carlosv.menulateral.R
+import de.hdodenhof.circleimageview.CircleImageView
 
 class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModelAdap>): RecyclerView.Adapter<BancosAdapter.OtrosBancosAdapterViewHolder>() {
 
@@ -50,8 +51,16 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
        // holder.imgflecha.setImageResource(R.drawable.ic_flechaverde)
         Log.d("ADAPTER", " otroBanco.nombre ${otroBanco.nombre} ")
 
-        if (otroBanco.nombre == "Bancamiga"){
+        holder.imgLogo.visibility = View.VISIBLE
+        holder.imgCircleInsti.visibility= View.GONE
+
+        if (otroBanco.nombre == "bancamiga"){
             holder.imgLogo.setImageResource(R.drawable.banco_bancamiga_png)
+            val color = otroBanco.Color
+            mostrarFlecha(color,holder)
+        }
+        if (otroBanco.nombre == "exterior"){
+            holder.imgLogo.setImageResource(R.drawable.banco_exterior)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
@@ -66,17 +75,17 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "Banco Provincial"){
+        if (otroBanco.nombre == "provincial"){
             holder.imgLogo.setImageResource(R.drawable.banco_provincial_png)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "BNC"){
+        if (otroBanco.nombre == "bnc"){
             holder.imgLogo.setImageResource(R.drawable.banco_bnc_png)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "Mercantil"){
+        if (otroBanco.nombre == "mercantil_banco"){
             holder.imgLogo.setImageResource(R.drawable.banco_mercantil_png)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
@@ -87,18 +96,18 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "zinli"){
-            holder.imgLogo.setImageResource(R.drawable.banco_zinli_png)
+        if (otroBanco.nombre == "bvc"){
+            holder.imgLogo.setImageResource(R.drawable.banco_bvc)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "italcambio"){
-            holder.imgLogo.setImageResource(R.drawable.banco_italcambio_png)
+        if (otroBanco.nombre == "activo"){
+            holder.imgLogo.setImageResource(R.drawable.banco_activo)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "remesas_zoom"){
-            holder.imgLogo.setImageResource(R.drawable.banco_remesas_zoom)
+        if (otroBanco.nombre == "banplus"){
+            holder.imgLogo.setImageResource(R.drawable.banplus)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
@@ -142,6 +151,7 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
         val cardView: CardView // Nueva referencia a la CardView
         val imgLogo: ImageView
         val imgflecha: ImageView
+        val imgCircleInsti: CircleImageView
 
         init {
             textViewFechaActu = view.findViewById(R.id.txtFechaActualizacionBanco)
@@ -151,6 +161,7 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
             textViewNombreBanco = view.findViewById(R.id.txtNombreBanco)
             cardView = view.findViewById(R.id.cardView) // Inicializar la referencia a la CardView
             imgflecha= view.findViewById(R.id.imgfechabanco)
+            imgCircleInsti= view.findViewById(R.id.circleInstitucion)
 
 
         }
