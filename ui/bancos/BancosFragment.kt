@@ -49,8 +49,8 @@ class BancosFragment : Fragment() {
         // Ahora puedes trabajar con el FloatingActionButton
        // fabBoton.visibility= View.GONE
 
-        //llamarBancos()
         llamarBancosdelfragmen()
+
 
         binding.editTexFiltroC.addTextChangedListener { userfilter ->
             val bancosFiltrados = bancosList.filter { banco->
@@ -69,8 +69,7 @@ class BancosFragment : Fragment() {
 
     }
 
-
-        //USA LA INTERFACE PARA TRAER EL VALOR DEL RESPONSE
+//USA LA INTERFACE PARA TRAER EL VALOR DEL RESPONSE
 
     fun llamarBancosdelfragmen() {
 
@@ -85,7 +84,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.bnc?.price.toString())){
                         bancosList.add(
                             BancoModelAdap(
-                                "bnc",
+                                response.monitors.bnc.title,
                                 response.monitors.bnc?.price!!.toDouble(),
                                 response.monitors.bnc?.percent.toString(),
                                 response.monitors.bnc?.color!!,
@@ -102,7 +101,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.bancamiga?.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "bancamiga",
+                                response.monitors.bancamiga.title,
                                 response.monitors.bancamiga?.price!!.toDouble(),
                                 response.monitors.bancamiga?.percent.toString(),
                                 response.monitors.bancamiga?.color!!,
@@ -117,7 +116,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.bdv.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "Banco de Venezuela",
+                                response.monitors.bdv.title,
                                 response.monitors.bdv.price,
                                 response.monitors.bdv.percent.toString(),
                                 response.monitors.bdv.color,
@@ -134,7 +133,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.activo.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "activo",
+                                response.monitors.activo.title,
                                 response.monitors.activo.price,
                                 response.monitors.activo.percent.toString(),
                                 response.monitors.activo.color,
@@ -149,7 +148,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.banplus.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "banplus",
+                                response.monitors.banplus.title,
                                 response.monitors.banplus.price,
                                 response.monitors.banplus.percent.toString(),
                                 response.monitors.banplus.color,
@@ -165,7 +164,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.bvc.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "bvc",
+                                response.monitors.bvc.title,
                                 response.monitors.bvc.price,
                                 response.monitors.bvc.percent.toString(),
                                 response.monitors.bvc.color,
@@ -180,7 +179,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.exterior.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "exterior",
+                                response.monitors.exterior.title,
                                 response.monitors.exterior.price,
                                 response.monitors.exterior.percent.toString(),
                                 response.monitors.exterior.color,
@@ -194,7 +193,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.mercantil_banco.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "mercantil_banco",
+                                response.monitors.mercantil_banco.title,
                                 response.monitors.mercantil_banco.price,
                                 response.monitors.mercantil_banco.percent.toString(),
                                 response.monitors.mercantil_banco.color,
@@ -208,7 +207,7 @@ class BancosFragment : Fragment() {
                     if ( !verificarVacio( response.monitors.provincial.price.toString())) {
                         bancosList.add(
                             BancoModelAdap(
-                                "provincial",
+                                response.monitors.provincial.title,
                                 response.monitors.provincial.price,
                                 response.monitors.provincial.percent.toString(),
                                 response.monitors.provincial.color,
@@ -220,12 +219,12 @@ class BancosFragment : Fragment() {
                         )
                     }
                 }
-
+                Log.d("llamarPrecioOtros", " ERROR DE RESPONSE adapter: $adapter ")
                     // Inicializar el adaptador si aún no se ha hecho
-                    if (adapter == null) {
+               //     if (adapter == null) {
                         adapter = BancosAdapter(this@BancosFragment, ArrayList())
                         binding.recyclerOtrasBancos.adapter = adapter
-                    }
+                  //  }
 
                     // Actualizar los datos del adaptador
                     adapter?.updatePrecioBancos(bancosList)
@@ -242,10 +241,10 @@ class BancosFragment : Fragment() {
 
                 println("Error: ${e.message}")
             }
-
-
-
     }
+
+
+
 
     private fun verificarVacio(precio:String?):Boolean {
         var vacio = true

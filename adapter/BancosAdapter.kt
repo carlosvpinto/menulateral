@@ -54,12 +54,12 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
         holder.imgLogo.visibility = View.VISIBLE
         holder.imgCircleInsti.visibility= View.GONE
 
-        if (otroBanco.nombre == "bancamiga"){
+        if (otroBanco.nombre == "Bancamiga"){
             holder.imgLogo.setImageResource(R.drawable.banco_bancamiga_png)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "exterior"){
+        if (otroBanco.nombre == "Banco Exterior"){
             holder.imgLogo.setImageResource(R.drawable.banco_exterior)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
@@ -75,38 +75,38 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "provincial"){
+        if (otroBanco.nombre == "BBVA Provincial"){
             holder.imgLogo.setImageResource(R.drawable.banco_provincial_png)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "bnc"){
+        if (otroBanco.nombre == "Banco Nacional de Crédito BNC"){
             holder.imgLogo.setImageResource(R.drawable.banco_bnc_png)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "mercantil_banco"){
+        if (otroBanco.nombre == "Banco Mercantil"){
             holder.imgLogo.setImageResource(R.drawable.banco_mercantil_png)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
 
-        if (otroBanco.nombre == "banco_de_venezuela" ||otroBanco.nombre == "Banco de Venezuela"){
+        if (otroBanco.nombre == "Banco de Venezuela" ||otroBanco.nombre == "Banco de Venezuela"){
             holder.imgLogo.setImageResource(R.drawable.banco_venezuela_png)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "bvc"){
+        if (otroBanco.nombre == "Banco Venezolano de Crédito"){
             holder.imgLogo.setImageResource(R.drawable.banco_bvc)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "activo"){
+        if (otroBanco.nombre == "Banco Activo"){
             holder.imgLogo.setImageResource(R.drawable.banco_activo)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)
         }
-        if (otroBanco.nombre == "banplus"){
+        if (otroBanco.nombre == "Banplus"){
             holder.imgLogo.setImageResource(R.drawable.banplus)
             val color = otroBanco.Color
             mostrarFlecha(color,holder)

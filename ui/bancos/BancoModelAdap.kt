@@ -6,9 +6,9 @@ data class BancoModelAdap(
     val diferencia: String,
     val Color: String,
     val last_update: String,
-    val procentaje: String,
+    val porcentaje: String,
     val Simbol: String,
-    val titulo: String,
+    val title: String,
 
 
     )

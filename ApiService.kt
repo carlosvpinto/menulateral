@@ -11,28 +11,17 @@ import retrofit2.http.Query
 import retrofit2.http.Url
 
 interface ApiService {
-    @GET
-    suspend fun getBancos(@Url url: String): BancosModel
+//    @GET
+//    suspend fun getBancos(@Url url: String): BancosModel
 
-    // Nuevo método getDollar
-//    @GET("dollar")
-//    suspend fun getDollar(@Query("page") page: String): ApiConTokenResponse
-
-//    @GET("dollar")
-//    suspend fun getDollar(
-//        @Header("Authorization") token: String,
-//    ): ApiConTokenResponse
 
     @GET("dollar")
     suspend fun getDollar(): ApiConTokenResponse
 
-//    @GET("dollar")
-//    suspend fun getDollarcriptodolar(
-//        @Query("page") page: String
-//    ): Response<ApiConToken2>  // Usa el tipo de respuesta adecuado
-
     @GET("dollar")
     suspend fun getDollarcriptodolar(@Query("page") page: String): ApiModelResponseCripto
+    @GET("dollar")
+    suspend fun getDollarAlCambio(@Query("page") page: String): ApiModelResponseCripto
 
     @GET("dollar")
     suspend fun getDollarBancosBcv(@Query("page") page: String): ApiModelResponseBCV

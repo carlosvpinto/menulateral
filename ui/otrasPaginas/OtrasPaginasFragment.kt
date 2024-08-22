@@ -83,7 +83,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.enparalelovzla?.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "En_Paralelo",
+                            response.monitors.enparalelovzla.title,
                             response.monitors.enparalelovzla.price.toDouble(),
                             response.monitors.enparalelovzla.percent.toString(),
                             response.monitors.enparalelovzla.color,
@@ -98,7 +98,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.bcv?.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "BCV",
+                            response.monitors.bcv.title,
                             response.monitors.bcv.price.toDouble(),
                             response.monitors.bcv.percent.toString(),
                             response.monitors.bcv.color,
@@ -113,7 +113,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.binance?.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "binance",
+                            response.monitors.binance.title,
                             response.monitors.binance.price.toDouble(),
                             response.monitors.binance.percent.toString(),
                             response.monitors.binance.color,
@@ -129,7 +129,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.dolar_today.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "dolartoday",
+                            response.monitors.dolar_today.title,
                             response.monitors.dolar_today.price.toDouble(),
                             response.monitors.dolar_today.percent.toString(),
                             response.monitors.dolar_today.color,
@@ -146,7 +146,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.cripto_dolar?.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "cripto_dolar",
+                            response.monitors.cripto_dolar.title,
                             response.monitors.cripto_dolar.price.toDouble(),
                             response.monitors.cripto_dolar.percent.toString(),
                             response.monitors.cripto_dolar.color,
@@ -164,7 +164,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.paypal?.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "paypal",
+                            response.monitors.paypal.title,
                             response.monitors.paypal.price.toDouble(),
                             response.monitors.paypal.percent.toString(),
                             response.monitors.paypal.color,
@@ -180,7 +180,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.skrill?.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "skrill",
+                            response.monitors.skrill.title,
                             response.monitors.skrill.price.toDouble(),
                             response.monitors.skrill.percent.toString(),
                             response.monitors.skrill.color,
@@ -197,7 +197,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.amazon_gift_card?.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "amazon_gift_card",
+                            response.monitors.amazon_gift_card.title,
                             response.monitors.amazon_gift_card.price.toDouble(),
                             response.monitors.amazon_gift_card.percent.toString(),
                             response.monitors.amazon_gift_card.color,
@@ -214,7 +214,7 @@ class OtrasPaginasFragment : Fragment() {
                 if ( !verificarVacio( response.monitors.uphold?.price.toString())) {
                     bancosList.add(
                         OtrasPaginasModelAdap(
-                            "uphold",
+                            response.monitors.uphold.title,
                             response.monitors.uphold.price.toDouble(),
                             response.monitors.uphold.percent.toString(),
                             response.monitors.uphold.color,
@@ -231,10 +231,10 @@ class OtrasPaginasFragment : Fragment() {
             }
 
                     // Inicializar el adaptador si aún no se ha hecho
-                    if (adapter == null) {
+                   // if (adapter == null) {
                         adapter = OtrasPaginasAdapter(this@OtrasPaginasFragment, ArrayList())
                         binding.recyclerOtrasPaginas.adapter = adapter
-                    }
+                  //  }
 
 
                 // Actualizar los datos del adaptador

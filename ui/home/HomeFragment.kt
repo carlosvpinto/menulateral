@@ -981,15 +981,21 @@ class HomeFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val baseUrl = "http://pydolarve.org/api/v1/" // URL base corregida
+            val baseUrl = "https://pydolarve.org/api/v1/" // URL base corregida
 
 
             val client = OkHttpClient.Builder()
                 .addInterceptor { chain ->
                     val request = chain.request().newBuilder()
-                        .addHeader("Authorization", "Bearer 2x9Qjpxl5F8CoKK6T395KA") // Token añadido
+                        .addHeader("Authorization", "Bearer 2x9Qjpxl5F8CoKK6T395KA")
                         .build()
-                    chain.proceed(request)
+                    try {
+                        val response = chain.proceed(request)
+                        response
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error in interceptor: ${e.message}")
+                        throw e
+                    }
                 }
                 .build()
 
@@ -999,12 +1005,14 @@ class HomeFragment : Fragment() {
                 .client(client)
                 .build()
 
+            Log.d(TAG, "Request retrofit: ${retrofit}")
             val apiService = retrofit.create(ApiService::class.java)
 
             try {
                 // Realizar la solicitud a la API
                 val responseApinew = apiService.getDollar()
-
+                Log.d(TAG, "responseApinew: xxxxxxxxxxx $responseApinew")
+                Log.d(TAG, "responseApinew: xxxxxxxxxxx  responseApinew.monitors.bcv.last_update ${responseApinew.monitors.bcv.last_update}")
                 if (responseApinew != null) {
                     withContext(Dispatchers.Main) {
                         ApiResponseHolder.setResponseApiNew(responseApinew)
