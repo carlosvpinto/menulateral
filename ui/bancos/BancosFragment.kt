@@ -249,7 +249,6 @@ class BancosFragment : Fragment() {
     private fun verificarVacio(precio:String?):Boolean {
         var vacio = true
         if(precio!=null){
-            Log.d("RESPUESTA", "verificarVacio: precio $precio  ")
             vacio= false
         }
         return vacio

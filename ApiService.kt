@@ -3,6 +3,7 @@ package com.carlosv.dolaraldia
 import com.carlosv.dolaraldia.model.apicontoken.ApiConTokenResponse
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseCripto
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseBCV
+import com.carlosv.dolaraldia.model.history.HistoryModelResponse
 
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
 import retrofit2.http.GET
@@ -32,6 +33,14 @@ interface ApiService {
 
     @GET("http://pydolarve.org/api/v1/")
     suspend fun getDollarInfo(@Header("Authorization") authorization: String): ApiConTokenResponse
+
+    @GET("dollar/history")
+    suspend fun getDollarHistory(
+        @Query("page") page: String,
+        @Query("monitor") monitor: String,
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String
+    ): HistoryModelResponse
 
 
 }
