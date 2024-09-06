@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 //import com.carlosv.dolaraldia.databinding.FragmentHomeBinding
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -33,6 +34,7 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -237,46 +239,45 @@ class HomeFragment : Fragment() {
             calcularDiferencia()
             //showCustomSnackbar("nada")
         }
-        binding.switchDolar.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
 
-                val valorParalelo = binding.btnParalelo.text.toString()
-
-                val doubleValue = try {
-                    valorParalelo.toDouble()
-                } catch (e: NumberFormatException) {
-                    null // Si la conversión falla, asigna null
-                }
-
-                // Actualiza la multiplicación con el valor convertido o 0.0 si la conversión falla
-                actualzarMultiplicacion(doubleValue ?: 0.0)
-                bcvActivo = false
-                binding.btnBcv.isChecked = false
-                binding.btnParalelo.isChecked = true
-
-            } else {
-                val valorBcv = binding.btnBcv.text.toString()
-
-                val doubleValue = try {
-                    valorBcv.toDouble()
-                } catch (e: NumberFormatException) {
-                    null // Si la conversión falla, asigna null
-                }
-
-                // Actualiza la multiplicación con el valor convertido o 0.0 si la conversión falla
-                actualzarMultiplicacion(doubleValue ?: 0.0)
-                bcvActivo = true
-                binding.btnBcv.isChecked = true
-                binding.btnParalelo.isChecked = isChecked
-
-            }
-
-        }
         binding.btnBcv.setOnClickListener {
             activarBtnBcv()
+            val valorDolar = binding.btnBcv.text.toString()
+
+            val doubleValue = try {
+                valorDolar.toDouble()
+            } catch (e: NumberFormatException) {
+                null // Si la conversión falla, asigna null
+            }
+
+            // Actualiza la multiplicación con el valor convertido o 0.0 si la conversión falla
+            actualzarMultiplicacion(doubleValue ?: 0.0)
+
         }
         binding.btnParalelo.setOnClickListener {
             activarBtnParalelo()
+            val valorDolar = binding.btnParalelo.text.toString()
+
+            val doubleValue = try {
+                valorDolar.toDouble()
+            } catch (e: NumberFormatException) {
+                null // Si la conversión falla, asigna null
+            }
+
+            // Actualiza la multiplicación con el valor convertido o 0.0 si la conversión falla
+            actualzarMultiplicacion(doubleValue ?: 0.0)
+        }
+        binding.btnPromedio.setOnClickListener {
+            activarBtnPromedio()
+            val valorDolar = binding.btnPromedio.text.toString()
+            val doubleValue = try {
+                valorDolar.toDouble()
+            } catch (e: NumberFormatException) {
+                null // Si la conversión falla, asigna null
+            }
+
+            // Actualiza la multiplicación con el valor convertido o 0.0 si la conversión falla
+            actualzarMultiplicacion(doubleValue ?: 0.0)
         }
         binding.imgCopyDolar.setOnClickListener {
             copiarDolar()
@@ -919,7 +920,7 @@ class HomeFragment : Fragment() {
             val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
             var valorDolares = 0.0
             val inputPDolar = binding.inputDolares.text.toString()
-
+            Log.d(TAG, "actualzarMultiplicacion: valor valorActualDolar $valorActualDolar ultimoTecleado $ultimoTecleado")
             if (inputPDolar.isNotEmpty()) {
 
                 try {
@@ -944,7 +945,7 @@ class HomeFragment : Fragment() {
             var valorDolares = 0.0
             var diferenciaDolares = 0.0
             val inputText = binding.inputBolivares.text.toString()
-
+            Log.d(TAG, "actualzarMultiplicacion: valor valorActualDolar $valorActualDolar ultimoTecleado $ultimoTecleado")
             if (inputText.isNotEmpty()) {
 
                 try {
@@ -967,25 +968,62 @@ class HomeFragment : Fragment() {
 
     }
 
+    private fun activarBtnPromedio() {
+        if (binding.btnPromedio.isChecked == true) {
+
+            binding.btnParalelo.isChecked = false
+            binding.btnBcv.isChecked= false
+            binding.seekBar.progress = 1
+            deshabilitarSeekBar()
+
+        } else {
+            binding.btnPromedio.isChecked = true
+            binding.btnParalelo.isChecked = false
+            binding.btnBcv.isChecked= false
+            binding.seekBar.progress = 1
+            deshabilitarSeekBar()
+
+        }
+    }
+
     private fun activarBtnBcv() {
         if (binding.btnBcv.isChecked == true) {
+
             binding.btnParalelo.isChecked = false
             binding.switchDolar.isChecked = false
+            binding.btnPromedio.isChecked = false
+            binding.seekBar.progress = 0
+            deshabilitarSeekBar()
+
         } else {
-            binding.btnParalelo.isChecked = true
-            binding.switchDolar.isChecked = true
+            binding.btnBcv.isChecked = true
+            binding.btnPromedio.isChecked = false
+            binding.btnParalelo.isChecked= false
+            binding.seekBar.progress = 0
+            deshabilitarSeekBar()
+
         }
     }
 
     private fun activarBtnParalelo() {
         if (binding.btnParalelo.isChecked == true) {
-            binding.btnBcv.isChecked = true
-            binding.switchDolar.isChecked = true
-        } else {
+
             binding.btnBcv.isChecked = false
-            binding.switchDolar.isChecked = false
+            binding.btnPromedio.isChecked = false
+            binding.seekBar.progress = 2
+            deshabilitarSeekBar()
+        } else {
+            binding.btnParalelo.isChecked = true
+            binding.btnBcv.isChecked = false
+            binding.btnPromedio.isChecked= false
+            binding.seekBar.progress = 2
+            deshabilitarSeekBar()
         }
     }
+    private fun deshabilitarSeekBar() {
+        binding.seekBar.setOnTouchListener { _, _ -> true } // Bloquea la interacción
+    }
+
 
     //LLAMAR A LAS APIS*****************************************************************
 
@@ -998,6 +1036,7 @@ class HomeFragment : Fragment() {
                 valorActualParalelo = savedResponseDolar.monitors.enparalelovzla.price.toDouble()
                 llenarDolarNew(savedResponseDolar)
                 llenarCampoBCVNew(savedResponseDolar)
+                llenarCampoPromedio(savedResponseDolar)
                 multiplicaDolares()
                 dividirABolivares()
                 binding.swipeRefreshLayout.isRefreshing = false
@@ -1058,6 +1097,7 @@ class HomeFragment : Fragment() {
                         )
                         llenarDolarNew(responseApinew)
                         llenarCampoBCVNew(responseApinew)
+                        llenarCampoPromedio(responseApinew)
                         multiplicaDolares()
                         dividirABolivares()
                     }
@@ -1405,6 +1445,24 @@ class HomeFragment : Fragment() {
         }
 
     }
+    fun llenarCampoPromedio(response: ApiConTokenResponse) {
+
+        // Verificar si el precio no está vacío o nulo
+        if (!response.monitors.bcv.price.toString().isNullOrEmpty()) {
+            // Calcular el promedio con dos decimales
+            val promedio = ((response.monitors.bcv.price?.toDouble()
+                ?.plus(response.monitors.enparalelovzla.price))?.div(2))
+
+            // Formatear el promedio a dos decimales
+            val promedioConDosDecimales = String.format("%.2f", promedio)
+
+            // Asignar el texto al ToggleButton
+            binding.btnPromedio.text = promedioConDosDecimales
+            binding.btnPromedio.textOff = promedioConDosDecimales
+            binding.btnPromedio.textOn = promedioConDosDecimales
+        }
+    }
+
 
 
     fun llenarDolarNew(response: ApiConTokenResponse) {
@@ -1444,11 +1502,12 @@ class HomeFragment : Fragment() {
                 if (binding.inputDolares.isFocused) {
                     val dolarParalelo = binding.btnParalelo.text.toString().toDoubleOrNull()
                         ?: 0.0 //precio del paralelo
-                    val dolarBcv =
-                        binding.btnBcv.text.toString().toDoubleOrNull() ?: 0.0 //precio del paralelo
+                    val dolarBcv = binding.btnBcv.text.toString().toDoubleOrNull() ?: 0.0 //precio del paralelo
+                    val dolarPromedio = binding.btnPromedio.text.toString().toDoubleOrNull() ?: 0.0 //precio del paralelo
                     val entradaDolares = binding.inputDolares.text.toString()
                     if (entradaDolares.isNotEmpty()) {
-                        if (binding.switchDolar.isChecked) {
+                        if (binding.btnParalelo.isChecked) {
+                          
                             if (valorActualParalelo != null) {
                                 val cleanedText =
                                     entradaDolares.replace(
@@ -1461,7 +1520,8 @@ class HomeFragment : Fragment() {
                             }
                         }
 
-                        if (!binding.switchDolar.isChecked) {
+                        if (binding.btnBcv.isChecked) {
+                         
                             val cleanedText =
                                 entradaDolares.replace(
                                     "[,]".toRegex(),
@@ -1470,6 +1530,19 @@ class HomeFragment : Fragment() {
                             val parsedValue = cleanedText.toDoubleOrNull() ?: 0.0
                             if (dolarBcv != null) {
                                 valorDolares = parsedValue * dolarBcv!!.toDouble()
+                            }
+
+                        }
+                        if (binding.btnPromedio.isChecked) {
+                    
+                            val cleanedText =
+                                entradaDolares.replace(
+                                    "[,]".toRegex(),
+                                    ""
+                                ) // Elimina puntos y comas
+                            val parsedValue = cleanedText.toDoubleOrNull() ?: 0.0
+                            if (dolarPromedio != null) {
+                                valorDolares = parsedValue * dolarPromedio!!.toDouble()
                             }
 
                         }
@@ -1495,29 +1568,38 @@ class HomeFragment : Fragment() {
 
     private fun dividirABolivares() {
         val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-
+        Log.d(TAG, "dividirABolivares: DIVIDIRRR")
         binding.inputBolivares?.addTextChangedListener(object : TextWatcher {
 
             override fun afterTextChanged(s: Editable?) {
                 ultimoTecleado = 0
                 var valorDolares = 0.0
-
+                Log.d(TAG, "dividirABolivares: DIVIDIRRR ADENTROOOOOO")
                 if (binding.inputBolivares.isFocused) {
                     val inputText = binding.inputBolivares.text.toString()
                     val dolarParalelo = binding.btnParalelo.text.toString().toDoubleOrNull() ?: 0.0
                     val dolarBcv = binding.btnBcv.text.toString().toDoubleOrNull() ?: 0.0
+                    val dolarPromedio = binding.btnPromedio.text.toString().toDoubleOrNull() ?: 0.0
 
                     if (inputText.isNotEmpty()) {
                         val cleanedText =
                             inputText.replace("[,]".toRegex(), "").toDoubleOrNull() ?: 0.0
 
-                        valorDolares = if (binding.switchDolar.isChecked) {
+                        if (binding.btnParalelo.isChecked) {
                             // Dividir el valor en bolívares por el dólar paralelo
-                            cleanedText / dolarParalelo
-                        } else {
-                            // Convertir bolívares a dólares usando el paralelo o BCV dependiendo del estado del switch
-                            cleanedText / dolarBcv
+                            valorDolares = cleanedText / dolarParalelo
+
                         }
+                        if (binding.btnBcv.isChecked){
+                            // Convertir bolívares a dólares usando el paralelo o BCV dependiendo del estado del switch
+                            valorDolares = cleanedText / dolarBcv
+                        }
+                        if (binding.btnPromedio.isChecked){
+                            // Convertir bolívares a dólares usando el paralelo o BCV dependiendo del estado del switch
+                            valorDolares = cleanedText / dolarPromedio
+                        }
+
+
 
                         val formattedValorDolares = decimalFormat.format(valorDolares)
                         binding.inputDolares.setText(formattedValorDolares)
@@ -1679,16 +1761,19 @@ class HomeFragment : Fragment() {
 
 
 
-        if (binding.switchDolar.isChecked) {
+        if (!binding.btnBcv.isChecked) {
             mensaje = getString(R.string.mensaje_dolar)
             diferenciaBs = totalDolaresParalelo - totalDolaresBcv
             diferenciaDolares = (totalDolaresParalelo - totalDolaresBcv) / dolarBcv
-            diferenciaPorcentual = (100 - (dolarBcv * 100 / dolarParalelo))
+            val diferencia = Math.abs(dolarParalelo - dolarBcv)
+            diferenciaPorcentual= (diferencia / dolarBcv) * 100
         } else {
             mensaje = getString(R.string.mensaje_paralelo)
             diferenciaBs = totalDolaresBcv - totalDolaresParalelo
             diferenciaDolares = (totalDolaresBcv - totalDolaresParalelo) / dolarBcv
             diferenciaPorcentual = ((dolarBcv * 100 / dolarParalelo) - 100)
+            val diferencia = Math.abs(dolarParalelo - dolarBcv)
+            diferenciaPorcentual= (diferencia / dolarBcv) * 100
         }
 
         showCustomSnackbar(mensaje, diferenciaBs, diferenciaDolares, diferenciaPorcentual)
@@ -1713,7 +1798,7 @@ class HomeFragment : Fragment() {
         // Configurar el ícono y el texto
         val snackbarTextView: TextView = customView.findViewById(R.id.toast_text)
         snackbarTextView.text = "$mensaje:  ${decimalFormat.format(diferenciaPorcentual)}%"
-        snackbarTextView.textSize = 12f
+        snackbarTextView.textSize = 14f
         val textViewDifBs: TextView = customView.findViewById(R.id.txtToastDifBs)
         val textViewDifDolar: TextView = customView.findViewById(R.id.txtToastDifDolar)
         val formattDiferenciaBS = decimalFormat.format(diferenciaBolivares)

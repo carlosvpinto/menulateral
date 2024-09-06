@@ -67,6 +67,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.PackageManagerCompat.LOG_TAG
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.carlosv.dolaraldia.model.datosPMovil.DatosPMovilModel
@@ -842,6 +843,8 @@ class MainActivity : AppCompatActivity() {
         var inputTextoDolla = ""
         var bcv = ""
         var paralelo = ""
+        var promedio = ""
+        var tasa = ""
         val linkCorto = "https://bit.ly/dolaraldia"
 
 
@@ -853,9 +856,10 @@ class MainActivity : AppCompatActivity() {
         )
         //***********************************************
         val fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
+
         if (fragment != null && fragment.isAdded) {
             if (nombreFragmentAct == "Dolar al Dia") {
-
+                tasa=  verificarTasa(fragment)
                 val editTextInFragmentBs =
                     fragment.view?.findViewById<EditText>(R.id.inputBolivares)
                 val editTextInFragmentDolar =
@@ -868,22 +872,17 @@ class MainActivity : AppCompatActivity() {
                     if (enviarDatosPM) {
 
                         textoCapture =
-                            "Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
+                            "-Tasa: $tasa \n -Monto en Dolares: $inputTextoDolla \n -Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
                                 prefijo(pagoMovilListTrue?.cedula)
                             } ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
                     } else {
                         textoCapture =
-                            "Monto en Dolares: $inputTextoDolla Monto Bs: $inputTextoBs \n \n -Descarga la App $linkCorto"
+                            "-Tasa: $tasa \n -Monto en Dolares: $inputTextoDolla \n -Monto Bs: $inputTextoBs \n \n -Descarga la App $linkCorto"
                     }
 
 
                 } else {
-                    val btnTextInFragmentBcv =
-                        fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
-                    val btnTextInFragmentParalelo =
-                        fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
-                    bcv = btnTextInFragmentBcv?.text.toString()
-                    paralelo = btnTextInFragmentParalelo?.text.toString()
+
                     if (enviarDatosPM) {
                         textoCapture =
                             "-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
@@ -925,6 +924,7 @@ class MainActivity : AppCompatActivity() {
             val euro = btnTextInFragmentEuro?.text
             val totalBs = TextBsFragmentEuro?.text
             val totalEuro = TextEurosFragmentEuro?.text
+
             textoCapture =
                 "Precio del Euro: $euro total en Bs:$totalBs Total en Euro: $totalEuro \n -Descarga la App \n $linkCorto"
         }
@@ -953,6 +953,26 @@ class MainActivity : AppCompatActivity() {
         }
         Log.d("Capture", "crearTextoCapture: $textoCapture")
         return textoCapture
+    }
+
+    private fun verificarTasa(fragment: Fragment):String{
+        var tasa= ""
+        val botonBcv =fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
+        val botonParalelo =fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
+        val botonPromedio =fragment.view?.findViewById<ToggleButton>(R.id.btnPromedio)
+
+        if (botonBcv?.isChecked== true){
+            tasa = "BCV"
+        }
+
+        if (botonParalelo?.isChecked== true){
+            tasa = "Paralelo"
+        }
+
+        if (botonPromedio?.isChecked== true){
+            tasa = "Promedio"
+        }
+        return tasa
     }
 
     private fun prefijo(cedula: String?): String {
