@@ -5,30 +5,29 @@ import android.app.Application
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.appopen.AppOpenAd
-
-import android.widget.Toast
-import androidx.lifecycle.Lifecycle
-
-import androidx.lifecycle.OnLifecycleEvent
-import androidx.lifecycle.ProcessLifecycleOwner
+import com.google.android.gms.tasks.Task
 import com.google.firebase.crashlytics.BuildConfig
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
-
 import java.util.Date
 
+
 private const val LOG_TAG: String = "AppOpenAdManager"
-//private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
-private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
+private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+//private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 
@@ -40,6 +39,12 @@ class MyApplication :
 
     private lateinit var appOpenAdManager: AppOpenAdManager
     private var currentActivity: Activity? = null
+
+    private val PREFS_NAME = "MyAppPrefs"
+    private val TOPIC_SUBSCRIBED_KEY = "isSubscribedToTopic"
+
+    private val TOKEN_KEY = "fcmToken"
+
 
 
     override fun onCreate() {
@@ -54,7 +59,131 @@ class MyApplication :
         } else {
             FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
         }
+        getOrRequestToken()
+        //borrraTokenYcrear()
+        // Verificar si ya está suscrito antes de intentar suscribirse nuevamente
+        //checkAndSubscribeToTopic()
+    }
 
+//    private fun checkAndSubscribeToTopic() {
+//        val sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+//        val isSubscribed = sharedPreferences.getBoolean(TOPIC_SUBSCRIBED_KEY, false)
+//        var token : Void? = null
+//        if (!isSubscribed) {
+//            // Si no está suscrito, realiza la suscripción
+//            FirebaseMessaging.getInstance().subscribeToTopic("general")
+//                .addOnCompleteListener { task: Task<Void?> ->
+//                    var msg = "Suscripción exitosa"
+//                    if ((!task.isSuccessful))  {
+//                        msg = "Suscripción fallida"
+//                    } else {
+//                        // Guardar en SharedPreferences que ya está suscrito
+//                        sharedPreferences.edit().putBoolean(TOPIC_SUBSCRIBED_KEY, true).apply()
+//
+//                        // Obtener el token de registro FCM
+//                         token = task.result
+//                        Log.d("FirebaseTopic", "token: $token")
+//                        // Verificar que el token no sea nulo y guardarlo en Firestore
+//                        if (token != null) {
+//                            saveTokenToFirestore(token)
+//                        } else {
+//                            Log.w("FCM", "El token de registro FCM es nulo")
+//                        }
+//                    }
+//                    Log.d("FirebaseTopic", "$msg  token: $token")
+//                }
+//        } else {
+//            Log.d("FirebaseTopic", "El dispositivo ya está suscrito al tema.")
+//        }
+//    }
+
+    // Función para obtener el token solo si no se tiene uno o si es necesario solicitar uno nuevo
+    private fun getOrRequestToken() {
+        val savedToken = getSavedTokenFromPreferences(this) // Función para obtener el token almacenado localmente
+        if (savedToken != null) {
+            // Ya tienes el token guardado, no es necesario solicitar uno nuevo
+            Log.d("Firestore", "Token actual: $savedToken")
+        } else {
+            // No hay token guardado, solicita uno nuevo
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w("Firestore", "Error obteniendo token", task.exception)
+                    return@addOnCompleteListener
+                }
+
+                // Obtener el token de registro FCM
+                val token = task.result
+
+                //Crea El Tropic Para El Telefono
+                crearTopic()
+                // Guardar el token en Firestore o localmente
+                if (token != null) {
+                    Log.d("FCM", "Nuevo token: $token")
+                    saveTokenToFirestore(token)
+                    saveTokenToPreferences(this, token) // Guardar token localmente
+                } else {
+                    Log.w("Firestore", "El token de registro FCM es nulo")
+                }
+            }
+        }
+    }
+    // Función para obtener el token guardado en SharedPreferences
+    private fun getSavedTokenFromPreferences(context: Context): String? {
+        val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return sharedPreferences.getString(TOKEN_KEY, null) // Retorna null si no hay token guardado
+    }
+
+    // Función para guardar el token en SharedPreferences
+    private fun saveTokenToPreferences(context: Context, token: String) {
+        val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        with(sharedPreferences.edit()) {
+            putString(TOKEN_KEY, token)
+            apply() // O usar commit() para hacerlo de manera sincrónica
+        }
+    }
+
+
+    private fun borrraTokenYcrear(){
+        FirebaseMessaging.getInstance().deleteToken()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    FirebaseMessaging.getInstance().token
+                        .addOnCompleteListener { tokenTask ->
+                            if (tokenTask.isSuccessful) {
+                                val newToken = tokenTask.result
+                                Log.d("Firestore", "Nuevo token: $newToken")
+                                saveTokenToFirestore(newToken)
+                            }
+                        }
+                }
+            }
+
+    }
+
+    private fun saveTokenToFirestore(token: String?) {
+        val db = FirebaseFirestore.getInstance()
+        val userTokenMap = hashMapOf("token" to token)
+
+        db.collection("device_tokens")
+            .add(userTokenMap)
+            .addOnSuccessListener { documentReference ->
+                Log.d("Firestore", "Token registrado con ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore", "Error añadiendo token", e)
+            }
+    }
+
+
+    private fun crearTopic(){
+        FirebaseMessaging.getInstance().subscribeToTopic("general")
+            .addOnCompleteListener { task: Task<Void?> ->
+                var msg = "Suscripción exitosa"
+                if (!task.isSuccessful) {
+                    msg = "Suscripción fallida"
+                }
+                Log.d("FirebaseTopic", "Creacion de Topic $msg")
+            }
 
     }
 

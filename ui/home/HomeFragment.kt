@@ -129,7 +129,7 @@ class HomeFragment : Fragment() {
     private var bcvActivo: Boolean? = null
     private var valorActualParalelo: Double? = 0.0
     private var valorActualBcv: Double? = 0.0
-    private var ultimoTecleado: Int? = 2
+    private var ultimoTecleado: Int? = 0
     var numeroNoturno = 0
     lateinit var mAdView: AdView
 
@@ -348,23 +348,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    //    private fun irAlArticulo() {
-//        if(linkAfiliado.isNullOrEmpty()){
-//            // URL que quieres abrir cuando se hace clic en la imagen
-//            //  url = "https://www.ejemplo.com/tu_link_de_afiliado"
-//            Log.d(TAG, "irAlArticulo: URl: $url")
-//            // Crea un intent implícito para abrir la URL en un navegador web
-//            val intent = Intent(Intent.ACTION_VIEW)
-//            intent.data = Uri.parse(linkAfiliado)
-//            startActivity(intent)
-//            // Comprueba si hay aplicaciones que pueden manejar este intento
-//            if (intent.resolveActivity(requireActivity().packageManager) != null) {
-//                // Abre la URL en un navegador web
-//
-//            }
-//        }
-//
-//    }
+
     private fun irAlArticulo() {
         if (!linkAfiliado.isNullOrEmpty()) {
 
@@ -458,6 +442,26 @@ class HomeFragment : Fragment() {
         // Load an ad.
         (requireActivity().application as MyApplication).loadAd(context)
     }
+
+    //PUBLICIDAD INTERNA*****************************
+
+    //    private fun irAlArticulo() {
+//        if(linkAfiliado.isNullOrEmpty()){
+//            // URL que quieres abrir cuando se hace clic en la imagen
+//            //  url = "https://www.ejemplo.com/tu_link_de_afiliado"
+//            Log.d(TAG, "irAlArticulo: URl: $url")
+//            // Crea un intent implícito para abrir la URL en un navegador web
+//            val intent = Intent(Intent.ACTION_VIEW)
+//            intent.data = Uri.parse(linkAfiliado)
+//            startActivity(intent)
+//            // Comprueba si hay aplicaciones que pueden manejar este intento
+//            if (intent.resolveActivity(requireActivity().packageManager) != null) {
+//                // Abre la URL en un navegador web
+//
+//            }
+//        }
+//
+//    }
 
 //      ESCUCHA SI HAY UNA IMAGEN PARA PUBLICIDAD INTERNA
 //    private fun listenerImagenConfig() {
@@ -916,7 +920,8 @@ class HomeFragment : Fragment() {
 
 
     private fun actualzarMultiplicacion(valorActualDolar: Double?) {
-        if (ultimoTecleado == 0) {
+
+        if (ultimoTecleado == 0 ) {
             val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
             var valorDolares = 0.0
             val inputPDolar = binding.inputDolares.text.toString()
