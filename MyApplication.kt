@@ -26,8 +26,8 @@ import java.util.Date
 
 
 private const val LOG_TAG: String = "AppOpenAdManager"
-private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
-//private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
+//private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 
@@ -53,49 +53,51 @@ class MyApplication :
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         appOpenAdManager = AppOpenAdManager()
-
-        if (BuildConfig.DEBUG) {
-            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false)
-        } else {
-            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
+        //countDeviceTokens()
+        try {
+            // Configura Firebase Crashlytics
+            if (BuildConfig.DEBUG) {
+                FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false)
+            } else {
+                FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
+            }
+        } catch (e: Exception) {
+            // Maneja el error, por ejemplo, registrándolo localmente o mostrando un mensaje al usuario
+            Log.e("Crashlytics", "Error initializing Firebase Crashlytics mandado por la app", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+            // Opcional: notificar al usuario o enviar el error a otra herramienta de monitoreo
         }
-        getOrRequestToken()
-        //borrraTokenYcrear()
-        // Verificar si ya está suscrito antes de intentar suscribirse nuevamente
-        //checkAndSubscribeToTopic()
+
+        try {
+           // crearTopicPrueba()
+            getOrRequestToken()
+            // borraTokenYcrear()  // Si este método es necesario, asegúrate de manejar posibles errores dentro de él también
+            // checkAndSubscribeToTopic()  // Asegúrate de manejar los errores en este método si es necesario
+        } catch (e: Exception) {
+            // Maneja el error de inicialización de token o suscripción
+            Log.e("Initialization", "Error during initialization Mandado por la app", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
+
+
     }
 
-//    private fun checkAndSubscribeToTopic() {
-//        val sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-//        val isSubscribed = sharedPreferences.getBoolean(TOPIC_SUBSCRIBED_KEY, false)
-//        var token : Void? = null
-//        if (!isSubscribed) {
-//            // Si no está suscrito, realiza la suscripción
-//            FirebaseMessaging.getInstance().subscribeToTopic("general")
-//                .addOnCompleteListener { task: Task<Void?> ->
-//                    var msg = "Suscripción exitosa"
-//                    if ((!task.isSuccessful))  {
-//                        msg = "Suscripción fallida"
-//                    } else {
-//                        // Guardar en SharedPreferences que ya está suscrito
-//                        sharedPreferences.edit().putBoolean(TOPIC_SUBSCRIBED_KEY, true).apply()
-//
-//                        // Obtener el token de registro FCM
-//                         token = task.result
-//                        Log.d("FirebaseTopic", "token: $token")
-//                        // Verificar que el token no sea nulo y guardarlo en Firestore
-//                        if (token != null) {
-//                            saveTokenToFirestore(token)
-//                        } else {
-//                            Log.w("FCM", "El token de registro FCM es nulo")
-//                        }
-//                    }
-//                    Log.d("FirebaseTopic", "$msg  token: $token")
-//                }
-//        } else {
-//            Log.d("FirebaseTopic", "El dispositivo ya está suscrito al tema.")
-//        }
-//    }
+// excessive call to the Firestore database**********************************************************************
+    fun countDeviceTokens() {
+        val db = FirebaseFirestore.getInstance()
+        val tokensCollection = db.collection("device_tokens")
+
+        tokensCollection.get()
+            .addOnSuccessListener { snapshot ->
+                val tokenCount = snapshot.size()
+                Log.e("DeviceTokenCount", "Total de tokens guardados: $tokenCount")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("DeviceTokenCount", "Error al contar los tokens de dispositivos", exception)
+            }
+    }
+
+//********End funcion************************************************************************
 
     // Función para obtener el token solo si no se tiene uno o si es necesario solicitar uno nuevo
     private fun getOrRequestToken() {
@@ -164,28 +166,78 @@ class MyApplication :
         val db = FirebaseFirestore.getInstance()
         val userTokenMap = hashMapOf("token" to token)
 
-        db.collection("device_tokens")
-            .add(userTokenMap)
-            .addOnSuccessListener { documentReference ->
-                Log.d("Firestore", "Token registrado con ID: ${documentReference.id}")
-            }
-            .addOnFailureListener { e ->
-                Log.w("Firestore", "Error añadiendo token", e)
-            }
-    }
-
-
-    private fun crearTopic(){
-        FirebaseMessaging.getInstance().subscribeToTopic("general")
-            .addOnCompleteListener { task: Task<Void?> ->
-                var msg = "Suscripción exitosa"
-                if (!task.isSuccessful) {
-                    msg = "Suscripción fallida"
+        try {
+            db.collection("device_tokens")
+                .add(userTokenMap)
+                .addOnSuccessListener { documentReference ->
+                    Log.d("Firestore", "Token registrado con ID: ${documentReference.id}")
                 }
-                Log.d("FirebaseTopic", "Creacion de Topic $msg")
-            }
-
+                .addOnFailureListener { e ->
+                    Log.w("Firestore", "Error añadiendo token", e)
+                    // Opcional: Registrar el error en Crashlytics para análisis posterior
+                    FirebaseCrashlytics.getInstance().recordException(e)
+                }
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error inesperado al guardar el token Guardado por la app", e)
+            // Opcional: Registrar el error inesperado en Crashlytics
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
     }
+
+
+
+    private fun crearTopic() {
+        try {
+            FirebaseMessaging.getInstance().subscribeToTopic("general")
+                .addOnCompleteListener { task: Task<Void?> ->
+                    val msg = if (task.isSuccessful) {
+                        "Suscripción exitosa"
+                    } else {
+                        "Suscripción fallida"
+                    }
+                    Log.d("FirebaseTopic", "Creación de Topic: $msg")
+                }
+                .addOnFailureListener { e ->
+                    // Registra el error específico de suscripción
+                    Log.e("FirebaseTopic", "Error al suscribirse al Topic", e)
+                    // Opcional: Puedes enviar el error a Crashlytics o notificar al usuario
+                    FirebaseCrashlytics.getInstance().recordException(e)
+                }
+        } catch (e: Exception) {
+            // Maneja errores que puedan surgir fuera del proceso de suscripción
+            Log.e("FirebaseTopic", "Error inesperado al crear Topic Guardado por la app", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
+    }
+
+
+    // Para crear Yopic de Prueba de Notificaciones*********************
+/*
+    private fun crearTopicPrueba() {
+        try {
+            FirebaseMessaging.getInstance().subscribeToTopic("prueba")
+                .addOnCompleteListener { task: Task<Void?> ->
+                    val msg = if (task.isSuccessful) {
+                        "Suscripción exitosa Topic Prueba"
+                    } else {
+                        "Suscripción fallida Topic Prueba"
+                    }
+                    Log.d("FirebaseTopic", "Creación de Topic: $msg ")
+                }
+                .addOnFailureListener { e ->
+                    // Registra el error específico de suscripción
+                    Log.e("FirebaseTopic", "Error al suscribirse al Topic de Prueba", e)
+                    // Opcional: Puedes enviar el error a Crashlytics o notificar al usuario
+                    FirebaseCrashlytics.getInstance().recordException(e)
+                }
+        } catch (e: Exception) {
+            // Maneja errores que puedan surgir fuera del proceso de suscripción
+            Log.e("FirebaseTopic", "Error inesperado al crear Topic Guardado por la app", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
+    }
+*/
+    //******** final token de Prueba Notificaciones
 
     //Crea el Token de del dispoitivo para Firebase, Una sola vez se crea
 
@@ -263,38 +315,22 @@ class MyApplication :
 
     override fun onActivityDestroyed(activity: Activity) {}
 
-    /**
-     * Shows an app open ad.
-     *
-     * @param activity the activity that shows the app open ad
-     * @param onShowAdCompleteListener the listener to be notified when an app open ad is complete
-     */
     fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
         // Ajustamos el anuncio del programa si está disponible para exigir que otras clases solo interactúen con MiAplicación
         // clase.
         appOpenAdManager.showAdIfAvailable(activity, onShowAdCompleteListener)
     }
 
-    /**
-     * Load an app open ad.
-     *
-     * @param activity the activity that shows the app open ad
-     */
     fun loadAd(activity: Context) {
         // We wrap the loadAd to enforce that other classes only interact with MyApplication
         // class.
         appOpenAdManager.loadAd(activity)
     }
 
-    /**
-     * Interface definition for a callback to be invoked when an app open ad is complete (i.e.
-     * dismissed or fails to show).
-     */
     interface OnShowAdCompleteListener {
         fun onShowAdComplete()
     }
 
-    /** Inner class that loads and shows app open ads. */
     private inner class AppOpenAdManager {
 
         private var googleMobileAdsConsentManager: GoogleMobileAdsConsentManager =

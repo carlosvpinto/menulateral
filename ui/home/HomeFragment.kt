@@ -78,10 +78,23 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.carlosv.dolaraldia.AESCrypto
 import com.carlosv.dolaraldia.MyApplication
 import com.carlosv.dolaraldia.model.apicontoken.ApiConTokenResponse
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseCripto
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseBCV
+import com.carlosv.dolaraldia.model.apimercantil.ApiResponse
+
+import com.carlosv.dolaraldia.model.apimercantil.Mobile
+import com.carlosv.dolaraldia.model.apimercantil.MobilePayment
+import com.carlosv.dolaraldia.model.apimercantil.PaymentRequest
+import com.carlosv.dolaraldia.model.apimercantil.TransactionC2P
+import com.carlosv.dolaraldia.model.apimercantil.busqueda.MerchantIdentify
+import com.carlosv.dolaraldia.model.apimercantil.busqueda.MobileInfo
+import com.carlosv.dolaraldia.model.apimercantil.busqueda.MobilePaymentSearchRequest
+import com.carlosv.dolaraldia.model.apimercantil.busqueda.SearchBy
+import com.carlosv.dolaraldia.model.apimercantil.busqueda.ClientIdentify
+import com.carlosv.dolaraldia.model.apimercantil.busqueda.Location
 import com.carlosv.dolaraldia.model.clickAnuncios.ClickAnunicosModel
 import com.carlosv.dolaraldia.model.controlPublicidad.ConfigImagenModel
 import com.carlosv.dolaraldia.model.controlPublicidad.ImprecionesArtiModel
@@ -93,11 +106,16 @@ import com.denzcoskun.imageslider.ImageSlider
 import com.denzcoskun.imageslider.constants.ScaleTypes
 import com.denzcoskun.imageslider.models.SlideModel
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.Job
-import java.text.SimpleDateFormat
+//import okhttp3.Response
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.ArrayList
-import java.util.Calendar
 import java.util.concurrent.atomic.AtomicBoolean
+import okhttp3.*
+
 
 
 class HomeFragment : Fragment() {
@@ -173,6 +191,7 @@ class HomeFragment : Fragment() {
         llamarApiPaginaBCV()
 
 
+
         MobileAds.initialize(requireContext()) {}
         // cargarImagendelConfig()
 
@@ -181,8 +200,15 @@ class HomeFragment : Fragment() {
         layout = binding.linearLayout3
         mAdView = binding.adView
         // mAdView = findViewById(R.id.adView)
-        val adRequest = AdRequest.Builder().build()
-        mAdView.loadAd(adRequest)
+        try {
+            val adRequest = AdRequest.Builder().build()
+            mAdView?.loadAd(adRequest)
+
+        } catch (e: Exception) {
+            Log.e("AdMob", "Error al cargar el anuncio mandado por la app: ${e.localizedMessage}")
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
+
 //******************************************
 
         //initializeMobileAdsSdk(requireContext())
@@ -223,10 +249,19 @@ class HomeFragment : Fragment() {
 
             actualizarEuro()
 
+
             //PARA PUBLICIDAD INTERNA*******
             //listenerImagenConfig()
             //******************************
 
+        }
+        binding.btnprobar.setOnClickListener {
+            probarencryptado()
+           // realizarBusquedaMovil2()
+            realizarBusqueda2()
+
+           // llamdaApiMercantil()
+           // sendPaymentRequest()
         }
         binding.btnRefres.setOnClickListener {
 
@@ -1080,7 +1115,6 @@ class HomeFragment : Fragment() {
                 .build()
 
             val apiService = retrofit.create(ApiService::class.java)
-
             try {
                 // Realizar la solicitud a la API
                 val responseApinew = apiService.getDollar()
@@ -1855,5 +1889,242 @@ class HomeFragment : Fragment() {
             hideSnackbar()
         }, 5000) // Simular 5 segundos de retraso
     }
+
+    private fun probarencryptado(){
+        // Clave maestra (la que usas en tu sistema)
+        val masterKey = "A11103402525120190822HB01"
+
+        // Datos que deseas cifrar (por ejemplo, un número de teléfono)
+        val dataToEncrypt = "584148508980"
+        val dataToEncrypt2 = "584166227839"
+
+        // Cifrar los datos
+        val encryptedData = AESCrypto.encrypt(dataToEncrypt, masterKey)
+        println("Datos cifrados: $encryptedData")
+        Log.d("probarencryptado", "probarencryptado encryptedData: $encryptedData ")
+
+        val encryptedData2 = AESCrypto.encrypt(dataToEncrypt2, masterKey)
+        println("Datos cifrados: $encryptedData2")
+        Log.d("probarencryptado", "probarencryptado encryptedData2: $encryptedData2 ")
+
+        // Descifrar los datos
+        val decryptedData = AESCrypto.decrypt(encryptedData, masterKey)
+        println("Datos descifrados: $decryptedData")
+        Log.d("probarencryptado", "probarencryptado decryptedData: $decryptedData ")
+
+        val decryptedData2 = AESCrypto.decrypt(encryptedData2, masterKey)
+        println("Datos descifrados: $decryptedData2")
+        Log.d("probarencryptado", "probarencryptado decryptedData2: $decryptedData2 ")
+
+
+    }
+
+
+
+
+/*
+    fun sendPaymentRequest() {
+        Log.d("API_CALL", "entro a la funcion")
+        val baseUrl = "https://apimbu.mercantilbanco.com/"
+        val client = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .addHeader("X-IBM-Client-ID", "81188330-c768-46fe-a378-ff3ac9e88824")
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
+
+        val apiService = retrofit.create(ApiService::class.java)
+
+        val masterKey = "A11103402525120190822HB01"
+        val destinationIdEncrypted = AESCrypto.encrypt("destination_id_value", masterKey)
+        val destinationMobileEncrypted = AESCrypto.encrypt("04121234567", masterKey)
+        val twoFactorAuthEncrypted = AESCrypto.encrypt("123456", masterKey)
+
+        val paymentRequest = PaymentRequest(
+            merchant_identify = MerchantIdentify(31, 200284, "abcde"),
+            client_identify = ClientIdentify("127.0.0.1", "Chrome 18.1.3", Mobile("Samsung")),
+            transaction_c2p = TransactionC2P(
+                1.00,
+                "ves",
+                "",
+                destinationIdEncrypted,
+                destinationMobileEncrypted,
+                "04141234567",
+                "",
+                "compra",
+                "c2p",
+                "",
+                twoFactorAuthEncrypted
+            )
+        )
+        Log.d("API_CALL", "entro a la funcion Valor de paymentRequest: $paymentRequest ")
+        apiService.sendPaymentData(paymentRequest).enqueue(object : Callback<ApiResponse> {
+            override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
+                Log.d("API_CALL", "entro onResponse paymentRequest: $paymentRequest response: $response ")
+                if (response.isSuccessful) {
+                    Log.d("API_CALL", "Solicitud exitosa: ${response.body()}")
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+
+                    }
+                } else {
+                    Log.e("API_ERROR", "Error en la solicitud: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            }
+
+            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
+                Log.e("API_CALL", "Error: ${t.message}")
+            }
+        })
+    }
+
+*/
+
+/*
+    fun realizarBusquedaMovil() {
+
+        // Clave maestra (la que usas en tu sistema)
+        val masterKey = "A11103402525120190822HB01"
+
+        // Datos que deseas cifrar (por ejemplo, un número de teléfono)
+        val EncryptTlfDestino = "584166227839"
+        val EncryptTlfOrigen = "584148508980"
+
+        // Cuerpo de la solicitud con datos ya encriptados
+        val requestBody = MobilePaymentSearchRequest(
+            merchant_identify = MerchantIdentify(
+                integratorId = 31,
+                merchantId = 123456,
+                terminalId = "abcde"
+            ),
+            client_identify = ClientIdentify(
+                ipaddress = "127.0.0.1",
+                browser_agent = "Chrome 18.1.3",
+                mobile = MobileInfo(
+                    manufacturer = "Samsung"
+                )
+            ),
+            search_by = SearchBy(
+                amount = 1.00,
+                currency = "ves",
+                destinantion_mobile_number = AESCrypto.encrypt(EncryptTlfDestino, masterKey),
+                origin_mobile_number = AESCrypto.encrypt(EncryptTlfOrigen, masterKey),
+                payment_reference = "123",
+                trx_date = "23-10-2024"
+            )
+        )
+
+        // Realiza la solicitud POST con Retrofit
+        val call = RetrofitClient.apiService.buscarPagosMoviles(
+            clientId = "81188330-c768-46fe-a378-ff3ac9e88824",
+            request = requestBody
+        )
+
+        Log.e("Respuesta", "requestBody: $requestBody")
+        Log.e("Respuesta", "call: $call")
+        call.enqueue(object : Callback<ApiResponse> {
+            override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
+                if (response.isSuccessful) {
+                    val apiResponse = response.body()
+                    println("Respuesta JSON: ${apiResponse?.data}")
+                    Log.d("Respuesta", "Respuesta JSON: ${apiResponse?.data}")
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    println("Error en la respuesta: ${response.code()}")
+                    println("Cuerpo de error: $errorBody")
+                    Log.e("Respuesta", "Error en la respuesta: ${response.code()} response: $response")
+                }
+            }
+
+            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
+                println("Error: ${t.message}")
+                Log.e("Respuesta", "Error: ${t.message}")
+            }
+        })
+    }
+
+ */
+
+    private fun realizarBusqueda2(){
+        val merchantIdentify = MerchantIdentify(
+            integratorId = 31,
+            merchantId = 150332,
+            terminalId = "abcde"
+        )
+
+        val mobileInfo = MobileInfo(
+            manufacturer = "Samsung",
+            model = "S9",
+            os_version = "Oreo 9.1"
+        )
+
+        val location = Location(
+            lat = 0,
+            lng = 0
+        )
+
+        val clientIdentify = ClientIdentify(
+            ipaddress = "127.0.0.1",
+            browser_agent = "Chrome 18.1.3",
+            mobile = mobileInfo,
+            os_version = "Oreo 9.1",
+            location = location
+        )
+
+        val searchBy = SearchBy(
+            amount = 30.0,
+            currency = "ves",
+            origin_mobile_number = "0PbWVea/C/hyO37XjEoFaA==",  // Cifrado
+            destination_mobile_number = "mD9ROJSFzSpnLTOPGr7B7A==",  // Cifrado
+            payment_reference = "118060003823",
+            trx_date = "2024-10-04"
+        )
+
+        val request = MobilePaymentSearchRequest(
+            merchant_identify = merchantIdentify,
+            client_identify = clientIdentify,
+            search_by = searchBy
+        )
+
+// Realizamos la solicitud
+        val call = RetrofitClient.apiService.searchMobilePayment(request)
+
+        call.enqueue(object : Callback<ApiResponse> {
+            override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
+                if (response.isSuccessful) {
+                    println("Respuesta exitosa: ${response.body()}")
+                    Log.d("probarencryptado", "Respuesta exitosa: ${response.body()}")
+                } else {
+                    println("Error en la respuesta: ${response.code()} - ${response.errorBody()} response $response")
+                    Log.d("probarencryptado", "Error en la respuesta: ${response.code()} - ${response.errorBody()} response $response")
+                }
+            }
+
+            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
+                println("Error en la solicitud: ${t.message}")
+            }
+        })
+
+    }
+
+    object RetrofitClient {
+        private const val BASE_URL = "https://apimbu.mercantilbanco.com/mercantil-banco/sandbox/v1/"
+
+        val retrofit: Retrofit = Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val apiService: ApiService = retrofit.create(ApiService::class.java)
+    }
+
+
 
 }
