@@ -1,6 +1,5 @@
 package com.carlosv.dolaraldia
 
-import ShakeDetector
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -35,29 +34,24 @@ import java.util.*
 
 import android.Manifest
 import android.content.SharedPreferences
-import android.content.res.Resources
-import android.graphics.Typeface
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import android.text.Spanned
 import android.text.style.ImageSpan
-import android.text.style.StyleSpan
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.ToggleButton
 
@@ -65,7 +59,6 @@ import androidx.annotation.RequiresApi
 
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.core.content.PackageManagerCompat.LOG_TAG
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
@@ -75,17 +68,15 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.appopen.AppOpenAd
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.common.reflect.TypeToken
-import com.google.firebase.remoteconfig.BuildConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+
 import com.google.gson.Gson
 import java.text.DecimalFormat
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.log
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -96,7 +87,7 @@ class MainActivity : AppCompatActivity() {
     val miAplicacion = MyApplication()
     private val isMobileAdsInitializeCalled = AtomicBoolean(false)
     private val LOG_TAG: String = "AppOpenAdManager"
-    private val TAG: String = "MainPrincipal"
+    private val TAG: String = "PAYPALPRICE"
 
     private val AD_UNIT_ID: String? = "ca-app-pub-3940256099942544/9257395921"
 
@@ -131,8 +122,10 @@ class MainActivity : AppCompatActivity() {
         navController2 = navHostFragment.navController
         //**********************
 
+        //verificaciondeSuscripcion()// Verifica la suscripcion Con Work en segundo plano
         verificasiLeyoMsj()
         versionUltima()
+        movilidadPantalla()
 
         binding.navView
 
@@ -149,9 +142,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_acerca,
                 R.id.nav_Euros,
                 R.id.nav_history
+
             ), drawerLayout
         )
-
 
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
@@ -210,6 +203,10 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when (item.itemId) {
+//            R.id.action_premiun -> {
+//                navController2.navigate(R.id.nav_pago)
+//            }
+
             R.id.action_compartir -> {
                 showCustomSnackbarPM()
             }
@@ -226,8 +223,21 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+    private fun movilidadPantalla(){
+        if (isChromeOSDevice()) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        } else {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
 
-  //Verifica se es la Ultima version Autorizada por Config
+    }
+    private fun isChromeOSDevice(): Boolean {
+        return packageManager.hasSystemFeature("org.chromium.arc.device_management")
+    }
+
+
+
+    //Verifica se es la Ultima version Autorizada por Config
     private fun versionUltima() {
         val remoteConfig = FirebaseRemoteConfig.getInstance()
         // Duración de la caché en segundos (12 horas en este caso)
@@ -245,34 +255,41 @@ class MainActivity : AppCompatActivity() {
 
                             // Obtener PackageInfo y usar PackageInfoCompat para obtener versionCode
                             val packageInfo = packageManager.getPackageInfo(packageName, 0)
-                            val versionCodeActual = PackageInfoCompat.getLongVersionCode(packageInfo)
+                            val versionCodeActual =
+                                PackageInfoCompat.getLongVersionCode(packageInfo)
 
                             if (versionCodeActual < requiredVersionMinima) {
                                 // Mostrar un diálogo de actualización y redirigir a la Play Store.
                                 llamaElMsjActualizacion()
                             }
                         } else {
-                            Log.e("totalDolarConfig", "Error al activar la configuración remota")
+                          //  Log.e("totalDolarConfig", "Error al activar la configuración remota")
                         }
                     }
                 } else {
-                    Log.e("totalDolarConfig", "Error al obtener la configuración remota")
+                  //  Log.e("totalDolarConfig", "Error al obtener la configuración remota")
                 }
             }
     }
 
 
-
     private fun initializeMobileAdsSdk() {
-        if (isMobileAdsInitializeCalled.getAndSet(true)) {
-            return
+        val activado = isSubscriptionActive(this)
+        //Verifica si la suscripcion esta activa
+        if (!isSubscriptionActive(this)) {
+           // Log.d(TAG, "initializeMobileAdsSdk: isSubscriptionActive $activado ENTRO A PUBLICIDAD")
+            if (isMobileAdsInitializeCalled.getAndSet(true)) {
+                return
+            }
+
+            // Initialize the Mobile Ads SDK.
+            MobileAds.initialize(this) {}
+
+            // Load an ad.
+            (application as MyApplication).loadAd(this)
+
         }
 
-        // Initialize the Mobile Ads SDK.
-        MobileAds.initialize(this) {}
-
-        // Load an ad.
-        (application as MyApplication).loadAd(this)
     }
 
     private fun salirdelApp() {
@@ -405,104 +422,96 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(shareIntent, "Compartir texto"))
     }
 
-    //Crear un Texto con una imagen!!************************************
     private fun llamaElMsjActualizacion() {
-
         val rootView = findViewById<View>(android.R.id.content)
-        snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
-
+        val snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
 
         // Inflar el diseño personalizado
-        val snackbarLayout = snackbar?.view as Snackbar.SnackbarLayout
         val customView =
             LayoutInflater.from(this).inflate(R.layout.custom_toast_actualizacion, null)
 
         // Configurar el ícono y el texto
         val snackbarTextView: TextView = customView.findViewById(R.id.txtContenido)
-
         snackbarTextView.textSize = 16f
         snackbarTextView.text = obtenerTexoString(this)
-
 
         // Configurar el botón de Envio Pago movil
         val btnOkActualizar: Button = customView.findViewById(R.id.btnOkActualizar)
         btnOkActualizar.setOnClickListener {
-
             val intent = Intent(
                 Intent.ACTION_VIEW,
                 Uri.parse("https://play.google.com/store/apps/details?id=com.carlosv.menulateral")
             )
             startActivity(intent)
             finish() // O bloquea el acceso a la aplicación
-            snackbar?.dismiss()
-
+            snackbar.dismiss()
         }
 
-        // Agregar el diseño personalizado al Snackbar
-        snackbarLayout.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
-        snackbarLayout.addView(customView, 0)
+        // Obtener el ViewGroup del Snackbar para añadir la vista personalizada
+        val snackbarView = snackbar.view as ViewGroup
+        snackbarView.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
 
-        // Mostrar el Snackbar centrado
-        snackbar?.show()
+        // Agregar el diseño personalizado al Snackbar
+        snackbarView.addView(customView, 0)
+
+        // Mostrar el Snackbar
+        snackbar.show()
 
         // Ajustar la posición del Snackbar al centro de la pantalla
-        val params = snackbar?.view?.layoutParams as FrameLayout.LayoutParams
+        val params = snackbar.view.layoutParams as FrameLayout.LayoutParams
         params.gravity = Gravity.TOP // or Gravity.CENTER_HORIZONTAL
         val marginTop =
             250 // Cambia este valor según la separación que desees desde la parte superior
         params.setMargins(0, marginTop, 0, 0)
-        snackbar?.view?.layoutParams = params
+        snackbar.view.layoutParams = params
     }
 
 
-    //Crear un Texto con una imagen!!************************************
-    private fun llamaElMsj() {
-
+    // LLma alm uso del pago Movil
+    private fun llamaElMsjUsoPagoMovil() {
         val rootView = findViewById<View>(android.R.id.content)
-        snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
-
+        val snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
 
         // Inflar el diseño personalizado
-        val snackbarLayout = snackbar?.view as Snackbar.SnackbarLayout
         val customView = LayoutInflater.from(this).inflate(R.layout.custom_toast_informacion, null)
 
         // Configurar el ícono y el texto
         val snackbarTextView: TextView = customView.findViewById(R.id.txtContenido)
-
         snackbarTextView.textSize = 16f
         snackbarTextView.text = getCustomSpannableString(this)
-
 
         // Configurar el botón de cierre
         val btnRecordarDespues: Button = customView.findViewById(R.id.btnRecordarDespues)
         btnRecordarDespues.setOnClickListener {
-            snackbar?.dismiss()
+            snackbar.dismiss()
             initializeMobileAdsSdk()
         }
+
         // Configurar el botón de Envio Pago movil
         val btnOkEntendi: Button = customView.findViewById(R.id.btnOkEntendi)
         btnOkEntendi.setOnClickListener {
-            // Para guardar que el usuario ha leído el mensaje
+            // Guardar que el usuario ha leído el mensaje
             saveMessageReadState(this, true)
-            snackbar?.dismiss()
+            snackbar.dismiss()
             initializeMobileAdsSdk()
         }
 
-        // Agregar el diseño personalizado al Snackbar
-        snackbarLayout.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
-        snackbarLayout.addView(customView, 0)
+        // Obtener el ViewGroup del Snackbar y agregar el diseño personalizado
+        val snackbarView = snackbar.view as ViewGroup
+        snackbarView.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
+        snackbarView.addView(customView, 0)
 
-        // Mostrar el Snackbar centrado
-        snackbar?.show()
+        // Mostrar el Snackbar
+        snackbar.show()
 
         // Ajustar la posición del Snackbar al centro de la pantalla
-        val params = snackbar?.view?.layoutParams as FrameLayout.LayoutParams
+        val params = snackbar.view.layoutParams as FrameLayout.LayoutParams
         params.gravity = Gravity.TOP // or Gravity.CENTER_HORIZONTAL
-        val marginTop =
-            250 // Cambia este valor según la separación que desees desde la parte superior
+        val marginTop = 250 // Cambia este valor según la separación que desees desde la parte superior
         params.setMargins(0, marginTop, 0, 0)
-        snackbar?.view?.layoutParams = params
+        snackbar.view.layoutParams = params
     }
+
 
     private fun verificasiLeyoMsj() {
 
@@ -514,7 +523,7 @@ class MainActivity : AppCompatActivity() {
 
         } else {
             // El usuario no ha leído el mensaje
-            llamaElMsj()
+            llamaElMsjUsoPagoMovil()
 
         }
     }
@@ -601,21 +610,6 @@ class MainActivity : AppCompatActivity() {
         // Crear un ImageSpan con el Drawable
         val imageSpan = ImageSpan(drawable, ImageSpan.ALIGN_BASELINE)
 
-        // Encuentra la posición donde quieres insertar la imagen
-       // val position = text.indexOf("la aplicacion  ") + "la aplicacion ".length
-
-        // Añadir espacio en el texto donde la imagen será insertada
-      //  spannableStringBuilder.insert(position, " ")
-
-        // Añadir el ImageSpan al SpannableStringBuilder
-//        spannableStringBuilder.setSpan(
-//            imageSpan,
-//            position,
-//            position + 1,
-//            Spannable.SPAN_INCLUSIVE_EXCLUSIVE
-//        )
-
-        // Convertir SpannableStringBuilder a SpannableString y devolverlo
         return SpannableString(spannableStringBuilder)
     }
 
@@ -637,77 +631,73 @@ class MainActivity : AppCompatActivity() {
     //********************************************************************
 
 
-    //Abre el mensaje Snackbar Personalizado para Enviar Datos de Pago Movil
+    // Abre el mensaje Snackbar Personalizado para Enviar Datos de Pago Movil
     private fun showCustomSnackbarPM() {
         var botonPrecionado = 0
         val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
         val rootView = findViewById<View>(android.R.id.content)
-        snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
-
+        val snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
 
         // Inflar el diseño personalizado
-        val snackbarLayout = snackbar?.view as Snackbar.SnackbarLayout
         val customView = LayoutInflater.from(this).inflate(R.layout.custom_toast_pago_movil, null)
 
         // Configurar el ícono y el texto
         val snackbarTextView: TextView = customView.findViewById(R.id.toast_text)
-
         snackbarTextView.textSize = 12f
-
 
         val chechPagoMovil: CheckBox = customView.findViewById(R.id.checPagomovil)
         val pagoMovilListTrue = obtenerPagoMovilListTrue(this)
+
         if (pagoMovilListTrue?.seleccionado == null) {
             chechPagoMovil.isChecked = false
             chechPagoMovil.isEnabled = false
-
             chechPagoMovil.text = getString(R.string.sin_cuenta_seleccionada)
         } else {
-            // chechPagoMovil.isChecked= true
             chechPagoMovil.text = pagoMovilListTrue?.nombre
         }
 
         // Configurar el botón de cierre
         val closeButton: ImageButton = customView.findViewById(R.id.close_button)
         closeButton.setOnClickListener {
-            snackbar?.dismiss()
+            snackbar.dismiss()
             botonPrecionado = 1
         }
+
         // Configurar el botón de Envio Pago movil
         val enviareButton: ImageButton = customView.findViewById(R.id.btnEnviarPM)
         enviareButton.setOnClickListener {
             botonPrecionado = 0
-            snackbar?.dismiss()
-
+            snackbar.dismiss()
         }
+
         // Añadir el callback para escuchar cuando el Snackbar se cierra
-        snackbar?.addCallback(object : Snackbar.Callback() {
+        snackbar.addCallback(object : Snackbar.Callback() {
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                 // Se llama cuando el Snackbar se cierra
                 val enviarDatosPM = chechPagoMovil.isChecked
-
                 if (botonPrecionado == 0) {
                     captureScreen(enviarDatosPM, pagoMovilListTrue)
                 }
-
             }
         })
 
-        // Agregar el diseño personalizado al Snackbar
-        snackbarLayout.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
-        snackbarLayout.addView(customView, 0)
+        // Obtener el ViewGroup del Snackbar y agregar el diseño personalizado
+        val snackbarView = snackbar.view as ViewGroup
+        snackbarView.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
+        snackbarView.addView(customView, 0)
 
-        // Mostrar el Snackbar centrado
-        snackbar?.show()
+        // Mostrar el Snackbar
+        snackbar.show()
 
         // Ajustar la posición del Snackbar al centro de la pantalla
-        val params = snackbar?.view?.layoutParams as FrameLayout.LayoutParams
+        val params = snackbar.view.layoutParams as FrameLayout.LayoutParams
         params.gravity = Gravity.TOP // or Gravity.CENTER_HORIZONTAL
         val marginTop =
             250 // Cambia este valor según la separación que desees desde la parte superior
         params.setMargins(0, marginTop, 0, 0)
-        snackbar?.view?.layoutParams = params
+        snackbar.view.layoutParams = params
     }
+
 
     private fun obtenerPagoMovilList(context: Context): List<DatosPMovilModel> {
         val gson = Gson()
@@ -850,16 +840,20 @@ class MainActivity : AppCompatActivity() {
 
         //**************************
         val nombreFragmentAct = getCurrentFragmentTag()
-        Log.d(
-            "CAPTURA",
-            "crearTextoCapture: currentFragmentTag $nombreFragmentAct enviarDatosPM. $enviarDatosPM"
-        )
+
         //***********************************************
         val fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
+        val botonParalelo = fragment?.view?.findViewById<ToggleButton>(R.id.btnParalelo)
+        val botonPromedio = fragment?.view?.findViewById<ToggleButton>(R.id.btnPromedio)
+        val botonBcv = fragment?.view?.findViewById<ToggleButton>(R.id.btnBcv)
+
+        val paralelo2 = botonParalelo?.textOn.toString()
+        val  bcv2 = botonBcv?.textOn.toString()
+        val promedio2= botonPromedio?.textOn.toString()
 
         if (fragment != null && fragment.isAdded) {
             if (nombreFragmentAct == "Dolar al Dia") {
-                tasa=  verificarTasa(fragment)
+                tasa = verificarTasa(fragment)
                 val editTextInFragmentBs =
                     fragment.view?.findViewById<EditText>(R.id.inputBolivares)
                 val editTextInFragmentDolar =
@@ -868,7 +862,7 @@ class MainActivity : AppCompatActivity() {
                 inputTextoDolla = editTextInFragmentDolar?.text.toString()
                 if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
 
-                    //Verifica se el Usuario quiere enviar Datos
+                    //Verifica se el Usuario quiere enviar Datos de pago Movil
                     if (enviarDatosPM) {
 
                         textoCapture =
@@ -884,13 +878,15 @@ class MainActivity : AppCompatActivity() {
                 } else {
 
                     if (enviarDatosPM) {
+
+
                         textoCapture =
-                            "-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
+                            "-Dolar Bcv: $bcv2 \n -Precio del Paralelo: $paralelo2 \n  -Precio del Promedio: $promedio2 \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
                                 prefijo(pagoMovilListTrue?.cedula)
                             } ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
                     } else {
                         textoCapture =
-                            "-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Descarga la App \n $linkCorto"
+                            "-Dolar Bcv: $bcv2 \n -Precio del Paralelo: $paralelo2 \n  -Precio del Promedio: $promedio2 \n \n -Descarga la App \n $linkCorto"
                     }
 
                 }
@@ -901,7 +897,7 @@ class MainActivity : AppCompatActivity() {
 
             if (enviarDatosPM) {
                 textoCapture =
-                    "-Dolar Bcv: $bcv \n -Precio del Paralelo es: $paralelo \n \n -Descarga la App \n $linkCorto"
+                    "-Dolar Bcv: ${bcv2} \n -Precio del Paralelo es: $paralelo2 \n  -Precio del Paralelo es: $promedio2 \n \n -Descarga la App \n $linkCorto"
             } else {
                 textoCapture = "Precio del Dolar en Paginas Web\n \n -Descarga la App \n $linkCorto"
             }
@@ -951,25 +947,24 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
-        Log.d("Capture", "crearTextoCapture: $textoCapture")
         return textoCapture
     }
 
-    private fun verificarTasa(fragment: Fragment):String{
-        var tasa= ""
-        val botonBcv =fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
-        val botonParalelo =fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
-        val botonPromedio =fragment.view?.findViewById<ToggleButton>(R.id.btnPromedio)
+    private fun verificarTasa(fragment: Fragment): String {
+        var tasa = ""
+        val botonBcv = fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
+        val botonParalelo = fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
+        val botonPromedio = fragment.view?.findViewById<ToggleButton>(R.id.btnPromedio)
 
-        if (botonBcv?.isChecked== true){
+        if (botonBcv?.isChecked == true) {
             tasa = "BCV"
         }
 
-        if (botonParalelo?.isChecked== true){
+        if (botonParalelo?.isChecked == true) {
             tasa = "Paralelo"
         }
 
-        if (botonPromedio?.isChecked== true){
+        if (botonPromedio?.isChecked == true) {
             tasa = "Promedio"
         }
         return tasa
@@ -1032,6 +1027,66 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
             null
         }
+    }
+
+
+    //funcio para llamar a la Class SubsCripcionCkeckWorker para verificas si esta vencida la Suscripcion******
+//    fun verificaciondeSuscripcion() {
+//        // Crear un objeto Data para enviar parámetros al Worker
+//        val data = Data.Builder()
+//            .putString("param1", "valor1")  // Puedes añadir tantos parámetros como necesites
+//            .putInt("param2", 123)
+//            .build()
+//
+//// Crear el WorkRequest para que se ejecute todos los días, con los parámetros
+//        val subscriptionCheckRequest = PeriodicWorkRequestBuilder<SubscriptionCheckWorker>(
+//            1, TimeUnit.DAYS
+//        )
+//            .setInputData(data)  // Añadir los parámetros al WorkRequest
+//            .build()
+//
+//// Encolar el trabajo con WorkManager
+//        WorkManager.getInstance(this).enqueue(subscriptionCheckRequest)
+//    }
+
+    //***********final del usao del work
+
+    fun isSubscriptionActive(context: Context): Boolean {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("UserSubscription", Context.MODE_PRIVATE)
+
+        // Verificar si el usuario tiene una suscripción de por vida
+        val hasLifetimeSubscription = sharedPreferences.getBoolean("lifetime_subscription", false)
+
+        if (hasLifetimeSubscription) {
+            // Si tiene una suscripción de por vida, retorna false (es decir, sí tiene una suscripción activa)
+            return true
+        }
+
+        // Obtener la fecha actual
+        val currentDate = Calendar.getInstance().timeInMillis
+
+        // Obtener la fecha de expiración de la suscripción
+        val subscriptionExpiration = sharedPreferences.getLong("subscription_expiration", 0)
+
+
+
+        if (currentDate >= subscriptionExpiration) {
+
+            return false
+        } else {
+
+            return true
+        }
+
+    }
+
+    // Función auxiliar para convertir milisegundos a una fecha legible
+    fun convertMillisToDate(millis: Long): String {
+        val format = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = millis
+        return format.format(calendar.time)
     }
 
 

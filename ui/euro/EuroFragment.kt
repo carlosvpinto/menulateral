@@ -154,6 +154,7 @@ class EuroFragment : Fragment() {
             binding.txtFechaActualizacion.text = responseBCV.monitors.eur.last_update
             multiplicaDolares()
             dividirABolivares()
+            binding.swipeRefreshLayout.isRefreshing = false
 
         }else{
 

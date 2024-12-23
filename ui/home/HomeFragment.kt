@@ -1,6 +1,6 @@
 package com.carlosv.dolaraldia.ui.home
 
-import ShakeDetector
+import com.carlosv.dolaraldia.utils.ShakeDetector
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -15,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider
 //import com.carlosv.dolaraldia.databinding.FragmentHomeBinding
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -34,7 +33,6 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -85,10 +83,6 @@ import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseCripto
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseBCV
 import com.carlosv.dolaraldia.model.apimercantil.ApiResponse
 
-import com.carlosv.dolaraldia.model.apimercantil.Mobile
-import com.carlosv.dolaraldia.model.apimercantil.MobilePayment
-import com.carlosv.dolaraldia.model.apimercantil.PaymentRequest
-import com.carlosv.dolaraldia.model.apimercantil.TransactionC2P
 import com.carlosv.dolaraldia.model.apimercantil.busqueda.MerchantIdentify
 import com.carlosv.dolaraldia.model.apimercantil.busqueda.MobileInfo
 import com.carlosv.dolaraldia.model.apimercantil.busqueda.MobilePaymentSearchRequest
@@ -112,10 +106,10 @@ import kotlinx.coroutines.Job
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.text.DecimalFormatSymbols
 import java.util.ArrayList
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
-import okhttp3.*
-
 
 
 class HomeFragment : Fragment() {
@@ -1493,16 +1487,15 @@ class HomeFragment : Fragment() {
                 ?.plus(response.monitors.enparalelovzla.price))?.div(2))
 
             // Formatear el promedio a dos decimales
-            val promedioConDosDecimales = String.format("%.2f", promedio)
+            val promedioConDosDecimales = String.format(Locale.US, "%.2f", promedio)
 
             // Asignar el texto al ToggleButton
             binding.btnPromedio.text = promedioConDosDecimales
             binding.btnPromedio.textOff = promedioConDosDecimales
             binding.btnPromedio.textOn = promedioConDosDecimales
+
         }
     }
-
-
 
     fun llenarDolarNew(response: ApiConTokenResponse) {
         binding.btnParalelo.text = response.monitors.enparalelovzla.price.toString()

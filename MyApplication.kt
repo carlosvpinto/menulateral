@@ -22,6 +22,10 @@ import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.util.Date
 
 
@@ -82,7 +86,7 @@ class MyApplication :
 
     }
 
-// excessive call to the Firestore database**********************************************************************
+// excessive call to the Firestore database* NO ACTIVAR NUNCA SOLO RECUERDO!!*********************************************************************
     fun countDeviceTokens() {
         val db = FirebaseFirestore.getInstance()
         val tokensCollection = db.collection("device_tokens")
@@ -100,35 +104,23 @@ class MyApplication :
 //********End funcion************************************************************************
 
     // Función para obtener el token solo si no se tiene uno o si es necesario solicitar uno nuevo
-    private fun getOrRequestToken() {
-        val savedToken = getSavedTokenFromPreferences(this) // Función para obtener el token almacenado localmente
-        if (savedToken != null) {
-            // Ya tienes el token guardado, no es necesario solicitar uno nuevo
-            Log.d("Firestore", "Token actual: $savedToken")
-        } else {
-            // No hay token guardado, solicita uno nuevo
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    Log.w("Firestore", "Error obteniendo token", task.exception)
-                    return@addOnCompleteListener
-                }
+    // Usa coroutines para ejecutar tareas largas fuera del hilo principal
+    private fun getOrRequestToken() = CoroutineScope(Dispatchers.IO).launch {
+        val savedToken = getSavedTokenFromPreferences(this@MyApplication)
 
-                // Obtener el token de registro FCM
-                val token = task.result
-
-                //Crea El Tropic Para El Telefono
+        if (savedToken == null) {
+            try {
+                val token = FirebaseMessaging.getInstance().token.await()
+                saveTokenToPreferences(this@MyApplication, token)
+                saveTokenToFirestore(token)
                 crearTopic()
-                // Guardar el token en Firestore o localmente
-                if (token != null) {
-                    Log.d("FCM", "Nuevo token: $token")
-                    saveTokenToFirestore(token)
-                    saveTokenToPreferences(this, token) // Guardar token localmente
-                } else {
-                    Log.w("Firestore", "El token de registro FCM es nulo")
-                }
+            } catch (e: Exception) {
+                Log.e("Firestore", "Error obteniendo token", e)
+                FirebaseCrashlytics.getInstance().recordException(e)
             }
         }
     }
+
     // Función para obtener el token guardado en SharedPreferences
     private fun getSavedTokenFromPreferences(context: Context): String? {
         val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -170,10 +162,10 @@ class MyApplication :
             db.collection("device_tokens")
                 .add(userTokenMap)
                 .addOnSuccessListener { documentReference ->
-                    Log.d("Firestore", "Token registrado con ID: ${documentReference.id}")
+                   // Log.d("Firestore", "Token registrado con ID: ${documentReference.id}")
                 }
                 .addOnFailureListener { e ->
-                    Log.w("Firestore", "Error añadiendo token", e)
+                  //  Log.w("Firestore", "Error añadiendo token", e)
                     // Opcional: Registrar el error en Crashlytics para análisis posterior
                     FirebaseCrashlytics.getInstance().recordException(e)
                 }
@@ -195,11 +187,11 @@ class MyApplication :
                     } else {
                         "Suscripción fallida"
                     }
-                    Log.d("FirebaseTopic", "Creación de Topic: $msg")
+                  //  Log.d("FirebaseTopic", "Creación de Topic: $msg")
                 }
                 .addOnFailureListener { e ->
                     // Registra el error específico de suscripción
-                    Log.e("FirebaseTopic", "Error al suscribirse al Topic", e)
+                 //   Log.e("FirebaseTopic", "Error al suscribirse al Topic", e)
                     // Opcional: Puedes enviar el error a Crashlytics o notificar al usuario
                     FirebaseCrashlytics.getInstance().recordException(e)
                 }
@@ -369,7 +361,7 @@ class MyApplication :
                         appOpenAd = ad
                         isLoadingAd = false
                         loadTime = Date().time
-                        Log.d(LOG_TAG, "Cargado!!")
+                     //   Log.d(LOG_TAG, "Cargado!!")
                         // Toast.makeText(context, "Cargado!!", Toast.LENGTH_SHORT).show()
                         // Mostrar el anuncio automáticamente si no se ha mostrado antes
                         if (!hasAdBeenShown) {
@@ -406,11 +398,6 @@ class MyApplication :
             return appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
         }
 
-        /**
-         * Show the ad if one isn't already showing.
-         *
-         * @param activity the activity that shows the app open ad
-         */
         fun showAdIfAvailable(activity: Activity) {
             showAdIfAvailable(
                 activity,
@@ -422,12 +409,7 @@ class MyApplication :
             )
         }
 
-        /**
-         * Show the ad if one isn't already showing.
-         *
-         * @param activity the activity that shows the app open ad
-         * @param onShowAdCompleteListener the listener to be notified when an app open ad is complete
-         */
+
         fun showAdIfAvailable(
             activity: Activity,
             onShowAdCompleteListener: OnShowAdCompleteListener,
@@ -494,6 +476,8 @@ class MyApplication :
             isShowingAd = true
             appOpenAd?.show(activity)
             hasAdBeenShown = true  // Marcar que el anuncio ya se mostró
+
+
         }
     }
 }
