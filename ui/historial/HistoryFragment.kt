@@ -108,15 +108,15 @@ class HistoryFragment : Fragment() {
                     diasMenos = 7
                     llamarApiHistory(diasMenos)
                     binding.progressBar.visibility= View.VISIBLE
-                    Log.d(TAG, "onItemSelected: fechaInicio:$fechaInicio")
+                   
                 }
                 if (position==1){
                     diasMenos = 30
                     llamarApiHistory(diasMenos)
                     binding.progressBar.visibility= View.VISIBLE
-                    Log.d(TAG, "onItemSelected: fechaInicio:$fechaInicio")
                 }
                 fechaSeleccionada = parent.getItemAtPosition(position).toString()
+                Log.d(TAG, "onItemSelected: fechaSeleccionada $fechaSeleccionada")
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {

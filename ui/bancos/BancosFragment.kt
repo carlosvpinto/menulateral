@@ -219,7 +219,7 @@ class BancosFragment : Fragment() {
                         )
                     }
                 }
-                Log.d("llamarPrecioOtros", " ERROR DE RESPONSE adapter: $adapter ")
+                Log.d("llamarPrecioOtros", " ERROR DE RESPONSE adapterrrr: $adapter ")
                     // Inicializar el adaptador si aún no se ha hecho
                //     if (adapter == null) {
                         adapter = BancosAdapter(this@BancosFragment, ArrayList())

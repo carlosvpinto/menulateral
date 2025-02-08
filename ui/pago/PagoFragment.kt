@@ -80,7 +80,6 @@ class PagoFragment : Fragment() {
 
        // args.putFloat(Constants.ARG_PRICE, food.price)
         args.putFloat(Constants.ARG_PRICE, precio)
-        Log.d(TAG, "setupTexts: Price $precio y args: $args")
         findNavController().navigate(R.id.nav_payment, args)
     }
 

@@ -33,10 +33,13 @@ import java.util.Locale
 import java.util.*
 
 import android.Manifest
+import android.content.ContentValues
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Environment
+import android.provider.MediaStore
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -56,6 +59,7 @@ import android.widget.TextView
 import android.widget.ToggleButton
 
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -370,18 +374,21 @@ class MainActivity : AppCompatActivity() {
                 getExternalFilesDir(Environment.DIRECTORY_PICTURES)
             } else {
                 // For older versions
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                captureScreenVersionOld(enviarDatosPM, datosPMovilModel, fileName)
+                return
+                //Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
             }
             filePath = "$picturesDir/$fileName"
 
             // Create a File for the screenshot
             val file = File(filePath)
 
-            // Take the screenshot and save it to the file
+
+            // Toma la captura de pantalla
             val rootView = window.decorView.rootView
-            rootView.isDrawingCacheEnabled = true
-            val bitmap = Bitmap.createBitmap(rootView.drawingCache)
-            rootView.isDrawingCacheEnabled = false
+            val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            rootView.draw(canvas)
 
             val stream = FileOutputStream(file)
             bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
@@ -408,8 +415,53 @@ class MainActivity : AppCompatActivity() {
 
         } catch (e: IOException) {
             e.printStackTrace()
+            Log.d(TAG, "captureScreen: $e")
         }
     }
+
+
+    private fun captureScreenVersionOld(enviarDatosPM: Boolean, datosPMovilModel: DatosPMovilModel?,fileName: String) {
+        try {
+
+            // Toma la captura de pantalla
+            val rootView = window.decorView.rootView
+            val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            rootView.draw(canvas)
+
+
+            // Para Android 9 y versiones anteriores (sin permisos de almacenamiento)
+                val picturesDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES) // Directorio privado
+                filePath = "$picturesDir/$fileName"
+                val file = File(filePath)
+                val stream = FileOutputStream(file)
+                stream.use {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 90, it)
+                }
+
+
+            // Muestra un mensaje indicando la ubicación del archivo
+            Toast.makeText(this, "Enviando...: ", Toast.LENGTH_SHORT).show()
+
+            // Verifica si está en un fragmento para no hacer el capture
+            val nombreFragmentAct = getCurrentFragmentTag()
+            if (nombreFragmentAct == "Pago Movil") {
+                // Realiza la lógica específica del fragmento actual
+                shareText(crearTextoCapture(enviarDatosPM, datosPMovilModel))
+            } else {
+                // Llama a la función para compartir la imagen y el texto
+                shareImageWithText(filePath, crearTextoCapture(enviarDatosPM, datosPMovilModel))
+            }
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Log.d(TAG, "captureScreen: $e")
+        }
+    }
+
+
+
+
 
     //Solo Envia Texto
     private fun shareText(shareText: String) {
@@ -674,7 +726,9 @@ class MainActivity : AppCompatActivity() {
         snackbar.addCallback(object : Snackbar.Callback() {
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                 // Se llama cuando el Snackbar se cierra
+
                 val enviarDatosPM = chechPagoMovil.isChecked
+                Log.d(TAG, "onDismissed: snackbar  enviarDatosPM; $enviarDatosPM  botonPrecionado: $botonPrecionado")
                 if (botonPrecionado == 0) {
                     captureScreen(enviarDatosPM, pagoMovilListTrue)
                 }
@@ -749,7 +803,7 @@ class MainActivity : AppCompatActivity() {
     // Comparte imagen contexto************************
     private fun shareImageWithText(imagePath: String, shareText: String) {
         val imageFile = File(imagePath)
-
+        Log.d(TAG, "shareImageWithText: imageFile: $imageFile y imagePath: $imagePath")
         if (imageFile.exists()) {
             try {
                 // Guarda la imagen en el directorio de caché
@@ -785,12 +839,14 @@ class MainActivity : AppCompatActivity() {
                     "No se pudo compartir la imagen: Ruta no encontrada",
                     Toast.LENGTH_SHORT
                 ).show()
+
             } catch (e: IOException) {
                 e.printStackTrace()
                 Log.d(TAG, "IOException error: $e")
                 Toast.makeText(this, "No se pudo compartir la imagen", Toast.LENGTH_SHORT).show()
             }
         } else {
+            Log.d(TAG, "shareImageWithText:La imagen no existe: imageFile.exists() ${imageFile.exists()} ")
             Toast.makeText(this, "La imagen no existe en la ruta especificada", Toast.LENGTH_SHORT)
                 .show()
         }

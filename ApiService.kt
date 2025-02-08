@@ -29,7 +29,7 @@ interface ApiService {
     @GET("dollar")
     suspend fun getDollarcriptodolar(@Query("page") page: String): ApiModelResponseCripto
     @GET("dollar")
-    suspend fun getDollarAlCambio(@Query("page") page: String): ApiModelResponseCripto
+    suspend fun getDollarAlCambio(@Query("page") page: String): ApiConTokenResponse
 
     @GET("dollar")
     suspend fun getDollarBancosBcv(@Query("page") page: String): ApiModelResponseBCV

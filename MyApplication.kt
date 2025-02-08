@@ -67,7 +67,7 @@ class MyApplication :
             }
         } catch (e: Exception) {
             // Maneja el error, por ejemplo, registrándolo localmente o mostrando un mensaje al usuario
-            Log.e("Crashlytics", "Error initializing Firebase Crashlytics mandado por la app", e)
+            Log.e("Firestore", " Crashlity Error initializing Firebase Crashlytics mandado por la app", e)
             FirebaseCrashlytics.getInstance().recordException(e)
             // Opcional: notificar al usuario o enviar el error a otra herramienta de monitoreo
         }
@@ -79,7 +79,7 @@ class MyApplication :
             // checkAndSubscribeToTopic()  // Asegúrate de manejar los errores en este método si es necesario
         } catch (e: Exception) {
             // Maneja el error de inicialización de token o suscripción
-            Log.e("Initialization", "Error during initialization Mandado por la app", e)
+            Log.e("firestore", "Error during initialization Mandado por la app", e)
             FirebaseCrashlytics.getInstance().recordException(e)
         }
 
@@ -107,10 +107,11 @@ class MyApplication :
     // Usa coroutines para ejecutar tareas largas fuera del hilo principal
     private fun getOrRequestToken() = CoroutineScope(Dispatchers.IO).launch {
         val savedToken = getSavedTokenFromPreferences(this@MyApplication)
-
+        Log.d("Firestore", "getOrRequestToken: savedToken $savedToken")
         if (savedToken == null) {
             try {
                 val token = FirebaseMessaging.getInstance().token.await()
+                Log.d("Firestore", "getOrRequestToken: Obtener o salvar Token")
                 saveTokenToPreferences(this@MyApplication, token)
                 saveTokenToFirestore(token)
                 crearTopic()
@@ -130,6 +131,7 @@ class MyApplication :
     // Función para guardar el token en SharedPreferences
     private fun saveTokenToPreferences(context: Context, token: String) {
         val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        Log.d("firestore", "saveTokenToPreferences: ")
         with(sharedPreferences.edit()) {
             putString(TOKEN_KEY, token)
             apply() // O usar commit() para hacerlo de manera sincrónica
@@ -203,7 +205,7 @@ class MyApplication :
     }
 
 
-    // Para crear Yopic de Prueba de Notificaciones*********************
+    // Para crear Topic de Prueba de Notificaciones*********************
 /*
     private fun crearTopicPrueba() {
         try {

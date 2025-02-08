@@ -66,6 +66,7 @@ class MyFirebaseMessagingClient: FirebaseMessagingService() {
         }
         manager.notify(random.nextInt(), notificationBuilder.build())
     }
+
     companion object {
         const val CHANNEL_NAME = "FCM notification channel"
     }
