@@ -199,8 +199,9 @@ class HomeFragment : Fragment() {
         //  llamarDolarApiNew()
         llamarApiCriptoDolar()
         llamarApiPaginaBCV()
+
         //llama al end Points que actualiza el BCV a las 4pm
-        llamarApiBCVyDolarNuevo()
+        llamarDolarBcvAdelantado()
 
 
 
@@ -1233,7 +1234,10 @@ class HomeFragment : Fragment() {
         binding.seekBar.setOnTouchListener { _, _ -> true } // Bloquea la interacción
     }
 
-    private fun llamarApiBCVyDolarNuevo() {
+
+
+    //llamar a api Una sola vez desde create  para verifica fecha
+    fun llamarDolarBcvAdelantado() {
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val baseUrl = Constants.URL_BASE // URL base
@@ -1261,16 +1265,39 @@ class HomeFragment : Fragment() {
 
             val apiService = retrofit.create(ApiService::class.java)
             try {
-                val responseApiBcvNuevo = apiService.getDollar()
-                if (responseApiBcvNuevo != null) {
+                val responseApiBcvAdelantado = apiService.getDollar()
+                if (responseApiBcvAdelantado != null) {
                     withContext(Dispatchers.Main) {
-                        ApiResponseHolder.setResponseOriginal(responseApiBcvNuevo)
+
+                        ApiResponseHolder.setResponseOriginal(responseApiBcvAdelantado)
+
+                        val dateMayor = verificafechaActBcv(responseApiBcvAdelantado)
+                        if (dateMayor) {
+                            if (visibleLayoutProxBcv < 2) {
+                                visibleLayoutProxBcv += 1
+                                val slideIn = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_in)
+                                val layoutUltActBcv = binding.layoutUltActBcv
+                                layoutUltActBcv.startAnimation(slideIn)
+                                binding.layoutUltActBcv.visibility = View.VISIBLE
+                                ApiResponseHolder.setResponseOriginal(responseApiBcvAdelantado)
+                                val fechaSinHora = extraerFecha(responseApiBcvAdelantado.monitors.bcv.last_update)
+                                binding.txtUltActBcv.text = fechaSinHora
+                            }
+                        } else {
+                            binding.layoutUltActBcv.visibility = View.GONE
+                            binding.SwUtimaAct.isChecked = false
+                        }
 
 
+
+                        multiplicaDolares()
+                        dividirABolivares()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
+                    Log.e(TAG, "llamarDolarBcvAdelantado: $e", )
+
 
                 }
             }
@@ -1279,12 +1306,10 @@ class HomeFragment : Fragment() {
 
 
     //LLAMAR A LAS APIS*****************************************************************
-
-
     fun llamarDolarApiNew(callback: (Boolean) -> Unit) {
         val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
         val resposeGuardadoApiAdelantado = ApiResponseHolder.getResponseOriginal()
-        Log.d(TAG, "llamarDolarApiNew:resposeGuardadoApiAdelantado $resposeGuardadoApiAdelantado ")
+
         try {
             if (savedResponseDolar != null) {
                 ApiResponseHolder.setResponse(savedResponseDolar)
@@ -1292,12 +1317,10 @@ class HomeFragment : Fragment() {
                 llenarDolarParalelo(savedResponseDolar)
                 if (binding.SwUtimaAct.isChecked) {
                     if (resposeGuardadoApiAdelantado != null) {
-                        Log.d(TAG, "llamarDolarApiNew: ENTR ADELANTADO resposeGuardadoApiAdelantado $resposeGuardadoApiAdelantado")
                         llenarCampoBCVNew(resposeGuardadoApiAdelantado)
                         llenarCampoPromedio(resposeGuardadoApiAdelantado)
                     }
                 } else {
-                    Log.d(TAG, "llamarDolarApiNew: ENTRO A VIEJO savedResponseDolar $savedResponseDolar ")
                     llenarCampoBCVNew(savedResponseDolar)
                     llenarCampoPromedio(savedResponseDolar)
                 }
@@ -1339,7 +1362,7 @@ class HomeFragment : Fragment() {
 
             val apiService = retrofit.create(ApiService::class.java)
             try {
-                val responseApinew = apiService.getDollar()
+                val responseApiBcvAdelantado = ApiResponseHolder.getResponseOriginal()
                 val responseApiAlCambio = apiService.getDollarAlCambio("alcambio")
                 if (responseApiAlCambio != null) {
                     withContext(Dispatchers.Main) {
@@ -1358,9 +1381,9 @@ class HomeFragment : Fragment() {
                             )
                         )
                         if (binding.SwUtimaAct.isChecked) {
-                            if (responseApinew != null) {
-                                llenarCampoBCVNew(responseApinew)
-                                llenarCampoPromedio(responseApinew)
+                            if (responseApiBcvAdelantado != null) {
+                                llenarCampoBCVNew(responseApiBcvAdelantado)
+                                llenarCampoPromedio(responseApiBcvAdelantado)
                             }
                         } else {
                             if (responseApiAlCambio != null) {
@@ -1368,26 +1391,6 @@ class HomeFragment : Fragment() {
                                 llenarCampoPromedio(responseApiAlCambio)
                             }
                         }
-
-
-                        val dateMayor = verificafechaActBcv(responseApinew)
-                        if (dateMayor) {
-                            if (visibleLayoutProxBcv < 2) {
-                                visibleLayoutProxBcv += 1
-                                val slideIn = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_in)
-                                val layoutUltActBcv = binding.layoutUltActBcv
-                                layoutUltActBcv.startAnimation(slideIn)
-                                binding.layoutUltActBcv.visibility = View.VISIBLE
-                                ApiResponseHolder.setResponseOriginal(responseApinew)
-                                val fechaSinHora = extraerFecha(responseApinew.monitors.bcv.last_update)
-                                binding.txtUltActBcv.text = fechaSinHora
-                            }
-                        } else {
-                            binding.layoutUltActBcv.visibility = View.GONE
-                            binding.SwUtimaAct.isChecked = false
-                        }
-
-
 
                         multiplicaDolares()
                         dividirABolivares()
@@ -1419,44 +1422,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-
-    fun llamarDolarVerificacion(): ApiConTokenResponse {
-
-
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-
-
-            val baseUrl = Constants.URL_BASE // URL base
-
-
-            val client = OkHttpClient.Builder()
-                .addInterceptor { chain ->
-                    val request = chain.request().newBuilder()
-                        .addHeader("Authorization", Constants.BEARER_TOKEN)
-                        .build()
-                    try {
-                        val response = chain.proceed(request)
-                        response
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error in interceptor: ${e.message}")
-                        throw e
-                    }
-                }
-                .build()
-
-            val retrofit = Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build()
-
-            val apiService = retrofit.create(ApiService::class.java)
-
-            // Realizar la solicitud a la API
-            resposeVerificar = apiService.getDollar()
-        }
-        return resposeVerificar
-    }
 
     private fun llamarApiCriptoDolar() {
         //Recupera los datos de la memoria Preference del dispositivo******************************
