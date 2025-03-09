@@ -8,9 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
-import com.carlosv.menulateral.R
-import com.carlosv.menulateral.databinding.FragmentDatosPerBinding
+
 import com.carlosv.menulateral.databinding.FragmentNotificacionesBinding
 import com.google.firebase.messaging.FirebaseMessaging
 private var _binding: FragmentNotificacionesBinding? = null

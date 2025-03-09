@@ -74,7 +74,6 @@ class OtrasPaginasFragment : Fragment() {
 
         try {
             val response = HomeFragment.ApiResponseHolder.getResponseApiCripto()
-            Log.d("llamarPrecioOtros", " VALOR DEL RESPONSE llamarPaginasdelfragmen $response ")
             if (response != null) {
 
 
@@ -84,7 +83,7 @@ class OtrasPaginasFragment : Fragment() {
                     bancosList.add(
                         OtrasPaginasModelAdap(
                             response.monitors.enparalelovzla.title,
-                            response.monitors.enparalelovzla.price.toDouble(),
+                            response.monitors.enparalelovzla.price,
                             response.monitors.enparalelovzla.percent.toString(),
                             response.monitors.enparalelovzla.color,
                             response.monitors.enparalelovzla.last_update,

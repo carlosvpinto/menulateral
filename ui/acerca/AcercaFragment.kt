@@ -12,14 +12,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.carlosv.dolaraldia.ui.home.HomeViewModel
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentAcercaBinding
-import com.carlosv.menulateral.databinding.FragmentHomeBinding
-import com.google.android.material.bottomnavigation.BottomNavigationView
+
 
 
 class AcercaFragment : Fragment() {

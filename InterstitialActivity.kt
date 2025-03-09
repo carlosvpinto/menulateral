@@ -5,8 +5,7 @@ import android.os.Bundle
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.ActivityInterstitialBinding
 import com.carlosv.menulateral.databinding.ActivityMainBinding
-//import com.google.android.gms.ads.AdError
-//import com.google.android.gms.ads.AdRequest
+
 //import com.google.android.gms.ads.FullScreenContentCallback
 //import com.google.android.gms.ads.LoadAdError
 //import com.google.android.gms.ads.interstitial.InterstitialAd

@@ -260,7 +260,7 @@ class EuroFragment : Fragment() {
         if (!montoDolarCopy.isNullOrEmpty()) {
             //montoDolarCopy.toDouble()
             try {
-                copyToClipboard(requireContext(), montoDolarCopy.toString(), "$montoDolarCopy", "$")
+                copyToClipboard(requireContext(), montoDolarCopy, "$montoDolarCopy", "$")
             }catch (e:NumberFormatException){
                 Toast.makeText(requireContext(), "No se puedo guardar", Toast.LENGTH_SHORT).show()
             }

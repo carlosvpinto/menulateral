@@ -48,7 +48,7 @@ class OtrasPaginasAdapter(val context: Fragment, var otrosBancos: ArrayList<Otra
         holder.textViewFechaActu.text = otroBanco.last_update
         holder.textViewMontoBs.text = otroBanco.precio.toString()
         holder.textViewNombreBanco.text = otroBanco.nombre
-        holder.textViewVariacion.text = otroBanco.diferencia.toString()
+        holder.textViewVariacion.text = otroBanco.diferencia
         Log.d("RESPUESTA", "onBindViewHolder:position: $position  otroBanco.image ${otroBanco.image} ")
         Glide.with(context)
             .load(otroBanco.image)

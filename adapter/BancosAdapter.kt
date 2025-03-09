@@ -47,7 +47,7 @@ class BancosAdapter(val context: Fragment, var otrosBancos: ArrayList<BancoModel
         holder.textViewFechaActu.text = otroBanco.last_update
         holder.textViewMontoBs.text = otroBanco.precio.toString()
         holder.textViewNombreBanco.text = otroBanco.nombre
-        holder.textViewVariacion.text = otroBanco.diferencia.toString()
+        holder.textViewVariacion.text = otroBanco.diferencia
        // holder.imgflecha.setImageResource(R.drawable.ic_flechaverde)
         Log.d("ADAPTER", " otroBanco.nombre ${otroBanco.nombre} ")
 

@@ -119,6 +119,7 @@ import java.util.ArrayList
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.Calendar
+import java.time.LocalTime
 
 
 import com.google.firebase.messaging.RemoteMessage
@@ -299,14 +300,7 @@ class HomeFragment : Fragment() {
 
             actualizarEuro()
 
-            // Opcional: Usar un retraso mínimo antes de habilitar el botón nuevamente
-            Handler(Looper.getMainLooper()).postDelayed({
-                // Rehabilitar el botón
-                binding.btnRefres.isEnabled = true
 
-                // Ocultar indicador de carga
-                // binding.progressBar.visibility = View.GONE
-            }, 2000) // Retraso de 2 segundos, ajusta según tu necesidad
         }
 
         binding.imgVerDifBs.setOnClickListener {
@@ -450,7 +444,6 @@ class HomeFragment : Fragment() {
 
 
     fun finalizarCarga() {
-        Log.d(TAG, "finalizarCarga: ")
         // Habilitar el botón nuevamente
         binding.btnRefres.isEnabled = true
         binding.btnRefres.visibility= View.VISIBLE
@@ -459,7 +452,6 @@ class HomeFragment : Fragment() {
     }
 
     fun comenzarCarga() {
-        Log.d(TAG, "comenzarCarga: ")
         // Habilitar el botón nuevamente
         binding.btnRefres.isEnabled = false
         binding.btnRefres.visibility= View.GONE
@@ -1155,7 +1147,6 @@ class HomeFragment : Fragment() {
             var valorDolares = 0.0
             var diferenciaDolares = 0.0
             val inputText = binding.inputBolivares.text.toString()
-            Log.d(TAG, "actualzarMultiplicacion: valor valorActualDolar $valorActualDolar ultimoTecleado $ultimoTecleado")
             if (inputText.isNotEmpty()) {
 
                 try {
@@ -1306,14 +1297,16 @@ class HomeFragment : Fragment() {
 
 
     //LLAMAR A LAS APIS*****************************************************************
+
     fun llamarDolarApiNew(callback: (Boolean) -> Unit) {
         val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
+        Log.d(TAG, "llamarDolarApiNew: savedResponseDolar $savedResponseDolar")
         val resposeGuardadoApiAdelantado = ApiResponseHolder.getResponseOriginal()
 
         try {
             if (savedResponseDolar != null) {
                 ApiResponseHolder.setResponse(savedResponseDolar)
-                valorActualParalelo = savedResponseDolar.monitors.enparalelovzla.price.toDouble()
+                valorActualParalelo = savedResponseDolar.monitors.enparalelovzla.price
                 llenarDolarParalelo(savedResponseDolar)
                 if (binding.SwUtimaAct.isChecked) {
                     if (resposeGuardadoApiAdelantado != null) {
@@ -1363,12 +1356,14 @@ class HomeFragment : Fragment() {
             val apiService = retrofit.create(ApiService::class.java)
             try {
                 val responseApiBcvAdelantado = ApiResponseHolder.getResponseOriginal()
-                val responseApiAlCambio = apiService.getDollarAlCambio("alcambio")
-                if (responseApiAlCambio != null) {
+               // val responseApiAlCambio = apiService.getDollarAlCambio("alcambio")
+                val apiResponse = obtenerRespuestaApi(apiService)
+                Log.d(TAG, "llamarDolarApiNew: apiResponse $apiResponse")
+                if (apiResponse != null) {
                     withContext(Dispatchers.Main) {
-                        ApiResponseHolder.setResponseApiAlCambio(responseApiAlCambio)
-                        valorActualParalelo = responseApiAlCambio.monitors.enparalelovzla.price
-                        guardarResponse(requireContext(), responseApiAlCambio)
+                        ApiResponseHolder.setResponseApiAlCambio(apiResponse)
+                        valorActualParalelo = apiResponse.monitors.enparalelovzla.price
+                        guardarResponse(requireContext(), apiResponse)
                         animacionCrecerTexto(
                             binding.txtFechaActualizacionPara,
                             binding.txtFechaActualizacionBcv
@@ -1386,9 +1381,9 @@ class HomeFragment : Fragment() {
                                 llenarCampoPromedio(responseApiBcvAdelantado)
                             }
                         } else {
-                            if (responseApiAlCambio != null) {
-                                llenarCampoBCVNew(responseApiAlCambio)
-                                llenarCampoPromedio(responseApiAlCambio)
+                            if (apiResponse != null) {
+                                llenarCampoBCVNew(apiResponse)
+                                llenarCampoPromedio(apiResponse)
                             }
                         }
 
@@ -1553,6 +1548,37 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+
+
+    suspend fun obtenerRespuestaApi(apiService: ApiService): ApiConTokenResponse? {
+        // Obtén la hora actual
+        val horaActual = LocalTime.now()
+
+        // Define los intervalos de tiempo
+        val inicioPrimeraConsulta = LocalTime.MIDNIGHT // 12:00 AM
+        val finPrimeraConsulta = LocalTime.of(15, 0) // 3:00 PM
+        val inicioSegundaConsulta = LocalTime.of(15, 1) // 3:01 PM
+        val finSegundaConsulta = LocalTime.MAX // 11:59 PM
+
+        // Retorna la solicitud a la API según el intervalo
+        return when {
+            horaActual in inicioPrimeraConsulta..finPrimeraConsulta -> {
+                // Llamar a la API BCV y retornar la respuesta
+                apiService.getDollar() // Llamada a la API BCV
+            }
+
+            horaActual in inicioSegundaConsulta..finSegundaConsulta -> {
+                // Llamar a la API AlCambio y retornar la respuesta
+                apiService.getDollarAlCambio("alcambio") // Llamada a la API AlCambio
+            }
+
+            else -> {
+                null // O puedes retornar un valor de error si prefieres
+            }
+        }
+    }
+
 
 
 
@@ -1833,8 +1859,8 @@ class HomeFragment : Fragment() {
         // Verificar si el precio no está vacío o nulo
         if (!response.monitors.bcv.price.toString().isNullOrEmpty()) {
             // Calcular el promedio con dos decimales
-            val promedio = ((response.monitors.bcv.price?.toDouble()
-                ?.plus(response.monitors.enparalelovzla.price))?.div(2))
+            val promedio = ((response.monitors.bcv.price
+                .plus(response.monitors.enparalelovzla.price))?.div(2))
 
             // Formatear el promedio a dos decimales
             val promedioConDosDecimales = String.format(Locale.US, "%.2f", promedio)
@@ -2006,7 +2032,7 @@ class HomeFragment : Fragment() {
             val montoDolarCopy = binding.inputDolares.text.toString()
             if (!montoDolarCopy.isNullOrEmpty()) {
                 //montoDolarCopy.toDouble()
-                copyToClipboard(requireContext(), montoDolarCopy.toString(), "$montoDolarCopy", "$")
+                copyToClipboard(requireContext(), montoDolarCopy, "$montoDolarCopy", "$")
             } else {
                 Toast.makeText(requireContext(), "Campo vacio", Toast.LENGTH_SHORT).show()
             }
@@ -2027,10 +2053,10 @@ class HomeFragment : Fragment() {
                 val cadenaLimpia = cadenaNumerica.replace(",", "")
                 montoBolivarCopyLimpio = cadenaLimpia.toDouble()
 
-                montoBolivarCopyLimpio.toDouble()
+                montoBolivarCopyLimpio
                 copyToClipboard(
                     requireContext(),
-                    montoBolivarCopy.toString(),
+                    montoBolivarCopy,
                     "$montoBolivarCopy",
                     "Bs."
                 )
@@ -2119,7 +2145,7 @@ class HomeFragment : Fragment() {
             }
         }
 
-        shakeDetector.start()
+       // shakeDetector.start()
 
     }
 
