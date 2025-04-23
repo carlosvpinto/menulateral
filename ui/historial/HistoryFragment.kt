@@ -37,6 +37,7 @@ import com.carlosv.dolaraldia.model.history.History
 import com.carlosv.dolaraldia.model.history.HistoryModelResponse
 import com.carlosv.dolaraldia.ui.bancos.BancoModelAdap
 import com.carlosv.dolaraldia.ui.home.HomeFragment
+import com.carlosv.dolaraldia.utils.Constants.URL_BASE
 
 import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.components.XAxis
@@ -269,7 +270,7 @@ class HistoryFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             Log.d(TAG, "llamarApiHistory: dentro de viewLifecycleOwner")
-            val baseUrl = "https://pydolarve.org/api/v1/"
+            val baseUrl = URL_BASE
             val client = OkHttpClient.Builder()
                 .addInterceptor { chain ->
                     val request = chain.request().newBuilder()

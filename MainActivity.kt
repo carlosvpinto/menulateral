@@ -279,7 +279,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeMobileAdsSdk() {
         val activado = isSubscriptionActive(this)
-        //Verifica si la suscripcion esta activa
+        //Verifica si la suscripcion esta activa CAMBIALLLOOOO PRODUCCION
         if (!isSubscriptionActive(this)) {
            // Log.d(TAG, "initializeMobileAdsSdk: isSubscriptionActive $activado ENTRO A PUBLICIDAD")
             if (isMobileAdsInitializeCalled.getAndSet(true)) {

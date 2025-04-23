@@ -19,7 +19,8 @@ object Constants {
     const val PAYPAL_URL = "https://carlosvicentep.sg-host.com/"
     const val STATUS_SUCCESS= "21"
     const val JS_ANDROID = "Android"
-    const val URL_BASE = "https://pydolarve.org/api/v1/"
+    const val URL_BASE = "https://api.dolaraldiavzla.com/api/v1/"
+    const val URL_BASEOLD = "https://pydolarve.org/api/v1/"
     const val BEARER_TOKEN = "Bearer 2x9Qjpxl5F8CoKK6T395KA"
     const val TOKEN_AS21 = "ccNt36cjSi2uOxgIMJxvt7:APA91bHqmTKTBF1pNWVLoBMJcH6ll43eeUuhS74PXIHxk7GbQ4l5-BKKoEMDJxjdOKQWEQ50Wc2AVxD8f2RHr47ELqiuw7_k4VuvxYCgZkeD6wQUGZgkVt4"
 

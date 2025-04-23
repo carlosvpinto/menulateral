@@ -120,6 +120,8 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.Calendar
 import java.time.LocalTime
+import java.time.LocalDate
+import java.time.DayOfWeek
 
 
 import com.google.firebase.messaging.RemoteMessage
@@ -138,7 +140,6 @@ class HomeFragment : Fragment() {
     private lateinit var shakeDetector: ShakeDetector
     private var snackbar: Snackbar? = null
     private var snackbarInfo: Snackbar? = null
-
 
 
     var url: String? = null
@@ -174,8 +175,8 @@ class HomeFragment : Fragment() {
 
     lateinit var navigation: BottomNavigationView
 
-    lateinit var ResponseDelBCv : ApiConTokenResponse
-    lateinit var resposeVerificar : ApiConTokenResponse
+    lateinit var ResponseDelBCv: ApiConTokenResponse
+    lateinit var resposeVerificar: ApiConTokenResponse
     private var visibleLayoutProxBcv = 0
 
     private val notificationProvider = NotificationProvider()
@@ -262,7 +263,7 @@ class HomeFragment : Fragment() {
                 // Solo habilitar el botón si ambas APIs responden
                 if (isSuccessful) {
                     finalizarCarga()
-                }else{
+                } else {
                     finalizarCarga()
                 }
             }
@@ -276,12 +277,12 @@ class HomeFragment : Fragment() {
 
         }
         binding.btnprobar.setOnClickListener {
-           // probarencryptado()
-           // realizarBusquedaMovil2()
-           // realizarBusqueda2()
+            // probarencryptado()
+            // realizarBusquedaMovil2()
+            // realizarBusqueda2()
 
-           // llamdaApiMercantil()
-           // sendPaymentRequest()
+            // llamdaApiMercantil()
+            // sendPaymentRequest()
 
             sendNotification()
 
@@ -292,8 +293,8 @@ class HomeFragment : Fragment() {
 
                 // Solo habilitar el botón si ambas APIs responden
                 if (isSuccessful) {
-                   finalizarCarga()
-                }else{
+                    finalizarCarga()
+                } else {
                     finalizarCarga()
                 }
             }
@@ -367,7 +368,7 @@ class HomeFragment : Fragment() {
             // binding.layoutCerraAnun.visibility= View.GONE
             binding.LnerPubliImagen.visibility = View.GONE
         }
-       binding.SwUtimaAct.setOnCheckedChangeListener { _, isChecked ->
+        binding.SwUtimaAct.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 val resposeGuardadoApiAdelantado = ApiResponseHolder.getResponseOriginal()
                 cambioSwictValor(resposeGuardadoApiAdelantado)
@@ -397,17 +398,16 @@ class HomeFragment : Fragment() {
     }
 
 
-
-
     //NOTIFICACIONES PUSH
     private fun sendNotification() {
         val map = HashMap<String, String>()
         map.put("title", "SOLICITUD DE VIAJE")
         map.put(
             "body",
-            "Un cliente esta solicitando un viaje a ")
+            "Un cliente esta solicitando un viaje a "
+        )
 
-        map.put("token",Constants.TOKEN_AS21)
+        map.put("token", Constants.TOKEN_AS21)
 
         val body = FCMBody(
             to = Constants.TOKEN_AS21,
@@ -418,20 +418,30 @@ class HomeFragment : Fragment() {
 
         Log.d(TAG, "sendNotification:body: $body map $map ")
 
-        notificationProvider.sendNotification(body).enqueue(object: Callback<FCMResponse> {
+        notificationProvider.sendNotification(body).enqueue(object : Callback<FCMResponse> {
             override fun onResponse(call: Call<FCMResponse>, response: Response<FCMResponse>) {
                 Log.d(TAG, "onResponse: $response response.body(): ${response.body()} ")
                 if (response.body() != null) {
 
                     if (response.body()!!.success == 1) {
-                        Toast.makeText(requireContext(), "Se envio la notificacion", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Se envio la notificacion",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "No se pudo enviar la notificacion",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
-                    else {
-                        Toast.makeText(requireContext(), "No se pudo enviar la notificacion", Toast.LENGTH_LONG).show()
-                    }
-                }
-                else {
-                    Toast.makeText(requireContext(), "hubo un error enviando la notificacion", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "hubo un error enviando la notificacion",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
 
@@ -446,7 +456,7 @@ class HomeFragment : Fragment() {
     fun finalizarCarga() {
         // Habilitar el botón nuevamente
         binding.btnRefres.isEnabled = true
-        binding.btnRefres.visibility= View.VISIBLE
+        binding.btnRefres.visibility = View.VISIBLE
         // Ocultar el ProgressBar
         binding.progressBarBoton.visibility = View.GONE
     }
@@ -454,21 +464,25 @@ class HomeFragment : Fragment() {
     fun comenzarCarga() {
         // Habilitar el botón nuevamente
         binding.btnRefres.isEnabled = false
-        binding.btnRefres.visibility= View.GONE
+        binding.btnRefres.visibility = View.GONE
 
         // Ocultar el ProgressBar
         binding.progressBarBoton.visibility = View.VISIBLE
     }
 
     //Muestra el reposense segun seal el Swict
-    private fun cambioSwictValor(responseMostrar: ApiConTokenResponse?){
+    private fun cambioSwictValor(responseMostrar: ApiConTokenResponse?) {
 
-        if (responseMostrar!=null) {
+        if (responseMostrar != null) {
             llenarCampoBCVNew(responseMostrar)
             llenarCampoPromedio(responseMostrar)
             val valorDolar = valorBotonActivo()
             // Actualiza la multiplicación con el valor
-            animacionCrecerBoton(binding.btnBcv, binding.btnPromedio, binding.txtFechaActualizacionBcv)
+            animacionCrecerBoton(
+                binding.btnBcv,
+                binding.btnPromedio,
+                binding.txtFechaActualizacionBcv
+            )
             actualzarMultiplicacion(valorDolar)
         }
 
@@ -853,6 +867,7 @@ class HomeFragment : Fragment() {
         fun getResponse(): ApiConTokenResponse? {
             return responseApiNew
         }
+
         fun getResponseOriginal(): ApiConTokenResponse? {
             return responseApiOriginal
         }
@@ -863,10 +878,10 @@ class HomeFragment : Fragment() {
         }
 
 
-
         fun setResponse(newResponse: ApiConTokenResponse) {
             responseApiNew = newResponse
         }
+
         fun setResponseOriginal(newResponse: ApiConTokenResponse) {
             responseApiOriginal = newResponse
         }
@@ -898,6 +913,7 @@ class HomeFragment : Fragment() {
         fun setResponseHistoryBcv(ResponseHistory: HistoryModelResponse) {
             responseHistoryBcv = ResponseHistory
         }
+
         fun setResponseHistoryParalelo(ResponseHistory: HistoryModelResponse) {
             responseHistoryParalelo = ResponseHistory
         }
@@ -905,6 +921,7 @@ class HomeFragment : Fragment() {
         fun getResponseHistoryBcv(): HistoryModelResponse? {
             return responseHistoryBcv
         }
+
         fun getResponseHistoryParalelo(): HistoryModelResponse? {
             return responseHistoryParalelo
         }
@@ -1118,11 +1135,14 @@ class HomeFragment : Fragment() {
 
     private fun actualzarMultiplicacion(valorActualDolar: Double?) {
 
-        if (ultimoTecleado == 0 ) {
+        if (ultimoTecleado == 0) {
             val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
             var valorDolares = 0.0
             val inputPDolar = binding.inputDolares.text.toString()
-            Log.d(TAG, "actualzarMultiplicacion: valor valorActualDolar $valorActualDolar ultimoTecleado $ultimoTecleado")
+            Log.d(
+                TAG,
+                "actualzarMultiplicacion: valor valorActualDolar $valorActualDolar ultimoTecleado $ultimoTecleado"
+            )
             if (inputPDolar.isNotEmpty()) {
 
                 try {
@@ -1173,14 +1193,14 @@ class HomeFragment : Fragment() {
         if (binding.btnPromedio.isChecked == true) {
 
             binding.btnParalelo.isChecked = false
-            binding.btnBcv.isChecked= false
+            binding.btnBcv.isChecked = false
             binding.seekBar.progress = 1
             deshabilitarSeekBar()
 
         } else {
             binding.btnPromedio.isChecked = true
             binding.btnParalelo.isChecked = false
-            binding.btnBcv.isChecked= false
+            binding.btnBcv.isChecked = false
             binding.seekBar.progress = 1
             deshabilitarSeekBar()
 
@@ -1199,7 +1219,7 @@ class HomeFragment : Fragment() {
         } else {
             binding.btnBcv.isChecked = true
             binding.btnPromedio.isChecked = false
-            binding.btnParalelo.isChecked= false
+            binding.btnParalelo.isChecked = false
             binding.seekBar.progress = 0
             deshabilitarSeekBar()
 
@@ -1216,83 +1236,103 @@ class HomeFragment : Fragment() {
         } else {
             binding.btnParalelo.isChecked = true
             binding.btnBcv.isChecked = false
-            binding.btnPromedio.isChecked= false
+            binding.btnPromedio.isChecked = false
             binding.seekBar.progress = 2
             deshabilitarSeekBar()
         }
     }
+
     private fun deshabilitarSeekBar() {
         binding.seekBar.setOnTouchListener { _, _ -> true } // Bloquea la interacción
     }
 
 
-
     //llamar a api Una sola vez desde create  para verifica fecha
     fun llamarDolarBcvAdelantado() {
+        // Obtén la hora actual
+        val horaActual = LocalTime.now()
 
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val baseUrl = Constants.URL_BASE // URL base
+        // Obtén el día actual
+        val diaActual = LocalDate.now().dayOfWeek
 
-            val client = OkHttpClient.Builder()
-                .addInterceptor { chain ->
-                    val request = chain.request().newBuilder()
-                        .addHeader("Authorization", Constants.BEARER_TOKEN)
-                        .build()
-                    try {
-                        val response = chain.proceed(request)
-                        response
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error in interceptor: ${e.message}")
-                        throw e
-                    }
-                }
-                .build()
+        // Verifica si es fin de semana
+        val esFinDeSemana = diaActual == DayOfWeek.SATURDAY || diaActual == DayOfWeek.SUNDAY
 
-            val retrofit = Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build()
+        // Define los intervalos de tiempo
+        val inicioSegundaConsulta = LocalTime.of(15, 1) // 3:01 PM
+        val finSegundaConsulta = LocalTime.MAX // 11:59 PM
 
-            val apiService = retrofit.create(ApiService::class.java)
-            try {
-                val responseApiBcvAdelantado = apiService.getDollar()
-                if (responseApiBcvAdelantado != null) {
-                    withContext(Dispatchers.Main) {
+        // Si es fin de semana o está dentro del segundo intervalo de tiempo (3:01 PM - 11:59 PM)
+        if (esFinDeSemana || horaActual in inicioSegundaConsulta..finSegundaConsulta) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                val baseUrl = Constants.URL_BASE // URL base
 
-                        ApiResponseHolder.setResponseOriginal(responseApiBcvAdelantado)
-
-                        val dateMayor = verificafechaActBcv(responseApiBcvAdelantado)
-                        if (dateMayor) {
-                            if (visibleLayoutProxBcv < 2) {
-                                visibleLayoutProxBcv += 1
-                                val slideIn = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_in)
-                                val layoutUltActBcv = binding.layoutUltActBcv
-                                layoutUltActBcv.startAnimation(slideIn)
-                                binding.layoutUltActBcv.visibility = View.VISIBLE
-                                ApiResponseHolder.setResponseOriginal(responseApiBcvAdelantado)
-                                val fechaSinHora = extraerFecha(responseApiBcvAdelantado.monitors.bcv.last_update)
-                                binding.txtUltActBcv.text = fechaSinHora
-                            }
-                        } else {
-                            binding.layoutUltActBcv.visibility = View.GONE
-                            binding.SwUtimaAct.isChecked = false
+                val client = OkHttpClient.Builder()
+                    .addInterceptor { chain ->
+                        val request = chain.request().newBuilder()
+                            .addHeader("Authorization", Constants.BEARER_TOKEN)
+                            .build()
+                        try {
+                            val response = chain.proceed(request)
+                            response
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error in interceptor: ${e.message}")
+                            throw e
                         }
-
-
-
-                        multiplicaDolares()
-                        dividirABolivares()
                     }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.e(TAG, "llamarDolarBcvAdelantado: $e", )
+                    .build()
+
+                val retrofit = Retrofit.Builder()
+                    .baseUrl(baseUrl)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .client(client)
+                    .build()
+
+                val apiService = retrofit.create(ApiService::class.java)
+                try {
+                    val responseApiBcvAdelantado = apiService.getDollar()
+                    if (responseApiBcvAdelantado != null) {
+                        withContext(Dispatchers.Main) {
+
+                            ApiResponseHolder.setResponseOriginal(responseApiBcvAdelantado)
+                            guardarResponseAdelantado(requireContext(), responseApiBcvAdelantado )
+                            val dateMayor = verificafechaActBcv(responseApiBcvAdelantado)
+                            if (dateMayor) {
+                                if (visibleLayoutProxBcv < 2) {
+                                    visibleLayoutProxBcv += 1
+                                    val slideIn = AnimationUtils.loadAnimation(
+                                        requireContext(),
+                                        R.anim.slide_in
+                                    )
+                                    val layoutUltActBcv = binding.layoutUltActBcv
+                                    layoutUltActBcv.startAnimation(slideIn)
+                                    binding.layoutUltActBcv.visibility = View.VISIBLE
+                                    ApiResponseHolder.setResponseOriginal(responseApiBcvAdelantado)
+                                    val fechaSinHora =
+                                        extraerFecha(responseApiBcvAdelantado.monitors.bcv.last_update)
+                                    binding.txtUltActBcv.text = fechaSinHora
+                                }
+                            } else {
+                                binding.layoutUltActBcv.visibility = View.GONE
+                                binding.SwUtimaAct.isChecked = false
+                            }
 
 
+
+                            multiplicaDolares()
+                            dividirABolivares()
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Log.e(TAG, "llamarDolarBcvAdelantado: $e",)
+
+
+                    }
                 }
             }
         }
+
     }
 
 
@@ -1300,8 +1340,8 @@ class HomeFragment : Fragment() {
 
     fun llamarDolarApiNew(callback: (Boolean) -> Unit) {
         val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
-        Log.d(TAG, "llamarDolarApiNew: savedResponseDolar $savedResponseDolar")
-        val resposeGuardadoApiAdelantado = ApiResponseHolder.getResponseOriginal()
+
+        val resposeGuardadoApiAdelantado = getResponseFromSharedPreferencesAdelantado(requireContext())
 
         try {
             if (savedResponseDolar != null) {
@@ -1330,7 +1370,20 @@ class HomeFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val baseUrl = Constants.URL_BASE // URL base
+
+            val baseUrl: String
+
+            if (binding.swSeleccionApi.isChecked) {
+                baseUrl = Constants.URL_BASE // URL base
+                binding.swSeleccionApi.text = "Api Nueva"
+            } else {
+                baseUrl = Constants.URL_BASEOLD // URL base
+                binding.swSeleccionApi.text = "Api Vieja"
+            }
+
+// Ahora puedes usar la variable baseUrl aquí
+            println("La URL base seleccionada es: $baseUrl")
+          //  val baseUrl = Constants.URL_BASE // URL base
 
             val client = OkHttpClient.Builder()
                 .addInterceptor { chain ->
@@ -1355,7 +1408,7 @@ class HomeFragment : Fragment() {
 
             val apiService = retrofit.create(ApiService::class.java)
             try {
-                val responseApiBcvAdelantado = ApiResponseHolder.getResponseOriginal()
+                val responseApiBcvAdelantado = getResponseFromSharedPreferencesAdelantado(requireContext())
                // val responseApiAlCambio = apiService.getDollarAlCambio("alcambio")
                 val apiResponse = obtenerRespuestaApi(apiService)
                 Log.d(TAG, "llamarDolarApiNew: apiResponse $apiResponse")
@@ -1379,11 +1432,13 @@ class HomeFragment : Fragment() {
                             if (responseApiBcvAdelantado != null) {
                                 llenarCampoBCVNew(responseApiBcvAdelantado)
                                 llenarCampoPromedio(responseApiBcvAdelantado)
+                                llenarDolarParalelo(responseApiBcvAdelantado)
                             }
                         } else {
                             if (apiResponse != null) {
                                 llenarCampoBCVNew(apiResponse)
                                 llenarCampoPromedio(apiResponse)
+                                llenarDolarParalelo(apiResponse)
                             }
                         }
 
@@ -1551,9 +1606,17 @@ class HomeFragment : Fragment() {
 
 
 
+
+    //Funcion para verificar si lla al Ap al Cambio o la principal
     suspend fun obtenerRespuestaApi(apiService: ApiService): ApiConTokenResponse? {
         // Obtén la hora actual
         val horaActual = LocalTime.now()
+
+        // Obtén el día actual
+        val diaActual = LocalDate.now().dayOfWeek
+
+        // Verifica si es fin de semana
+        val esFinDeSemana = diaActual == DayOfWeek.SATURDAY || diaActual == DayOfWeek.SUNDAY
 
         // Define los intervalos de tiempo
         val inicioPrimeraConsulta = LocalTime.MIDNIGHT // 12:00 AM
@@ -1561,23 +1624,16 @@ class HomeFragment : Fragment() {
         val inicioSegundaConsulta = LocalTime.of(15, 1) // 3:01 PM
         val finSegundaConsulta = LocalTime.MAX // 11:59 PM
 
-        // Retorna la solicitud a la API según el intervalo
-        return when {
-            horaActual in inicioPrimeraConsulta..finPrimeraConsulta -> {
-                // Llamar a la API BCV y retornar la respuesta
-                apiService.getDollar() // Llamada a la API BCV
-            }
-
-            horaActual in inicioSegundaConsulta..finSegundaConsulta -> {
-                // Llamar a la API AlCambio y retornar la respuesta
-                apiService.getDollarAlCambio("alcambio") // Llamada a la API AlCambio
-            }
-
-            else -> {
-                null // O puedes retornar un valor de error si prefieres
-            }
+        // Si es fin de semana o está dentro del segundo intervalo de tiempo (3:01 PM - 11:59 PM)
+        return if (esFinDeSemana || horaActual in inicioSegundaConsulta..finSegundaConsulta) {
+            // Llamar a la API AlCambio
+            apiService.getDollarAlCambio("alcambio")
+        } else {
+            // Llamar a la API BCV
+            apiService.getDollar()
         }
     }
+
 
 
 
@@ -1703,6 +1759,19 @@ class HomeFragment : Fragment() {
         editor.apply()
     }
 
+    //Guarda en SharePreference los Respose de cada solicitud al API ADEKANTADO
+    private fun guardarResponseAdelantado(context: Context, responseBCV: ApiConTokenResponse) {
+        val gson = Gson()
+        val responseJson = gson.toJson(responseBCV)
+
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("dolarBCVAdelantado", responseJson)
+        editor.apply()
+    }
+
+
     private fun guardarResponseCripto(context: Context, responseBCV: ApiModelResponseCripto) {
         val gson = Gson()
         val responseJson = gson.toJson(responseBCV)
@@ -1735,6 +1804,20 @@ class HomeFragment : Fragment() {
         val sharedPreferences: SharedPreferences =
             context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
         val responseJson = sharedPreferences.getString("dolarBCVResponse", null)
+
+        if (responseJson != null) {
+            val gson = Gson()
+
+            return gson.fromJson(responseJson, ApiConTokenResponse::class.java)
+        }
+
+        return null // Retorna null si no se encontró la respuesta en SharedPreferences
+    }
+
+    private fun getResponseFromSharedPreferencesAdelantado(context: Context): ApiConTokenResponse? {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+        val responseJson = sharedPreferences.getString("dolarBCVAdelantado", null)
 
         if (responseJson != null) {
             val gson = Gson()
@@ -2071,18 +2154,35 @@ class HomeFragment : Fragment() {
     }
 
     //FUNCION PARA COPIAR AL PORTA PAPEL
+//    fun copyToClipboard(context: Context, text: String, titulo: String, unidad: String) {
+//        // Obtener el servicio del portapapeles
+//        val clipboardManager =
+//            context.getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager
+//
+//        // Crear un objeto ClipData para guardar el texto
+//        val clipData = ClipData.newPlainText("text", text)
+//
+//        // Copiar el objeto ClipData al portapapeles
+//        clipboardManager.setPrimaryClip(clipData)
+//        Toast.makeText(requireContext(), "Monto Copiado: $titulo $unidad", Toast.LENGTH_SHORT)
+//            .show()
+//    }
+
+    // FUNCIÓN PARA COPIAR AL PORTA PAPELES
     fun copyToClipboard(context: Context, text: String, titulo: String, unidad: String) {
+        // Reemplazar comas por puntos y puntos por comas
+        val modifiedText = text.replace(",", "temp").replace(".", ",").replace("temp", ".")
+
         // Obtener el servicio del portapapeles
         val clipboardManager =
             context.getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager
 
-        // Crear un objeto ClipData para guardar el texto
-        val clipData = ClipData.newPlainText("text", text)
-
+        // Crear un objeto ClipData para guardar el texto modificado
+        val clipData = ClipData.newPlainText("text", modifiedText)
+        Log.d(TAG, "copyToClipboard: modifiedText $modifiedText ")
         // Copiar el objeto ClipData al portapapeles
         clipboardManager.setPrimaryClip(clipData)
-        Toast.makeText(requireContext(), "Monto Copiado: $titulo $unidad", Toast.LENGTH_SHORT)
-            .show()
+        Toast.makeText(context, "Monto Copiado: $modifiedText $unidad", Toast.LENGTH_SHORT).show()
     }
 
     private fun animarSwipe() {
@@ -2131,7 +2231,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (binding.progressBar.visibility != View.VISIBLE) binding.swipeRefreshLayout.isRefreshing = true
+     //   if (binding.progressBar.visibility != View.VISIBLE) binding.swipeRefreshLayout.isRefreshing = true
         comenzarCarga()
         llamarDolarApiNew { isSuccessful ->
 
