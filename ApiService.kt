@@ -9,6 +9,7 @@ import com.carlosv.dolaraldia.model.apimercantil.busqueda.MobilePaymentSearchReq
 import com.carlosv.dolaraldia.model.history.HistoryModelResponse
 
 import com.carlosv.dolaraldia.ui.bancos.BancosModel
+import com.carlosv.dolaraldia.utils.Constants.URL_BASE
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -38,7 +39,7 @@ interface ApiService {
     suspend fun getEuro(@Query("page") page: String): ApiConTokenResponse
 
 
-    @GET("http://pydolarve.org/api/v1/")
+    @GET(URL_BASE)
     suspend fun getDollarInfo(@Header("Authorization") authorization: String): ApiConTokenResponse
 
     @GET("dollar/history")
