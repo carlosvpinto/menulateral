@@ -937,12 +937,12 @@ class MainActivity : AppCompatActivity() {
 
 
                         textoCapture =
-                            "-Dolar Bcv: $bcv2 \n -Precio del Paralelo: $paralelo2 \n  -Precio del Promedio: $promedio2 \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
+                            "-Dolar Bcv: $bcv2 \n  \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
                                 prefijo(pagoMovilListTrue?.cedula)
                             } ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
                     } else {
                         textoCapture =
-                            "-Dolar Bcv: $bcv2 \n -Precio del Paralelo: $paralelo2 \n  -Precio del Promedio: $promedio2 \n \n -Descarga la App \n $linkCorto"
+                            "-Dolar Bcv: $bcv2 \n  \n -Descarga la App \n $linkCorto"
                     }
 
                 }
@@ -953,7 +953,7 @@ class MainActivity : AppCompatActivity() {
 
             if (enviarDatosPM) {
                 textoCapture =
-                    "-Dolar Bcv: ${bcv2} \n -Precio del Paralelo es: $paralelo2 \n  -Precio del Paralelo es: $promedio2 \n \n -Descarga la App \n $linkCorto"
+                    "-Dolar Bcv: ${bcv2} \n  \n -Descarga la App \n $linkCorto"
             } else {
                 textoCapture = "Precio del Dolar en Paginas Web\n \n -Descarga la App \n $linkCorto"
             }

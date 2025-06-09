@@ -1888,6 +1888,10 @@ class HomeFragment : Fragment() {
 
             binding.txtVariacionBcv.text = response.monitors.bcv.percent.toString()
 
+            //PARA USAR EL CAMBIO EN BS
+            //binding.txtVariacionBcvBs.text = response.monitors.bcv.change.toString()
+           // binding.txtVariacionBcvBs.text = "${response.monitors.bcv.change} Bs"
+
 
 
         }
