@@ -899,7 +899,7 @@ class MainActivity : AppCompatActivity() {
 
         //***********************************************
         val fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
-        val botonParalelo = fragment?.view?.findViewById<ToggleButton>(R.id.btnParalelo)
+        val botonParalelo = fragment?.view?.findViewById<ToggleButton>(R.id.btnEuroP)
         val botonPromedio = fragment?.view?.findViewById<ToggleButton>(R.id.btnPromedio)
         val botonBcv = fragment?.view?.findViewById<ToggleButton>(R.id.btnBcv)
 
@@ -1009,7 +1009,7 @@ class MainActivity : AppCompatActivity() {
     private fun verificarTasa(fragment: Fragment): String {
         var tasa = ""
         val botonBcv = fragment.view?.findViewById<ToggleButton>(R.id.btnBcv)
-        val botonParalelo = fragment.view?.findViewById<ToggleButton>(R.id.btnParalelo)
+        val botonParalelo = fragment.view?.findViewById<ToggleButton>(R.id.btnEuroP)
         val botonPromedio = fragment.view?.findViewById<ToggleButton>(R.id.btnPromedio)
 
         if (botonBcv?.isChecked == true) {

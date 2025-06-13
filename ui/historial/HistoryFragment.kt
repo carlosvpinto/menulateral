@@ -32,6 +32,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.carlosv.dolaraldia.ApiService
 import com.carlosv.dolaraldia.adapter.BancosAdapter
+import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiEuroTipoCambio
+import com.carlosv.dolaraldia.model.apiBcvEuro.ApiBcvEuroResponse
 import com.carlosv.dolaraldia.model.apicontoken.ApiConTokenResponse
 import com.carlosv.dolaraldia.model.history.History
 import com.carlosv.dolaraldia.model.history.HistoryModelResponse
@@ -143,9 +145,9 @@ class HistoryFragment : Fragment() {
             Entry(index.toFloat(), value)
         }
 
-        val entriesParallel = dolarParaloValues.mapIndexed { index, value ->
-            Entry(index.toFloat(), value)
-        }
+//        val entriesParallel = dolarParaloValues.mapIndexed { index, value ->
+//            Entry(index.toFloat(), value)
+//        }
 
         val dataSetBcv = LineDataSet(entriesBcv, "Dólar BCV").apply {
             color = Color.BLUE
@@ -154,14 +156,14 @@ class HistoryFragment : Fragment() {
             lineWidth = 3f
         }
 
-        val dataSetParallel = LineDataSet(entriesParallel, "Dólar Paralelo").apply {
-            color = Color.RED
-            valueTextColor = primaryTextColor
-            valueTextSize = 14f
-            lineWidth = 3f
-        }
+//        val dataSetParallel = LineDataSet(entriesParallel, "Dólar Paralelo").apply {
+//            color = Color.RED
+//            valueTextColor = primaryTextColor
+//            valueTextSize = 14f
+//            lineWidth = 3f
+//        }
 
-        val lineData = LineData(dataSetBcv, dataSetParallel)
+        val lineData = LineData(dataSetBcv) // , dataSetParallel para colocar la linea del paralelo va dentro del parentesis
         binding.lineChart.fitScreen()
         binding.lineChart.data = lineData
 
@@ -306,7 +308,7 @@ class HistoryFragment : Fragment() {
                 // Restar 7 días
                 calendar.add(Calendar.DAY_OF_YEAR, -diasMenos)
                 val fechaInicial = dateFormat.format(calendar.time)
-
+                Log.d(TAG, "llamarApiHistory:fechaInicial: ${fechaInicial}")
                 // Realizar las dos solicitudes a la API para obtener enparalelovzla y bcv
                 val responseEnParaleloVzla = apiService.getDollarHistory(
                     page = "enparalelovzla",
@@ -453,7 +455,7 @@ class HistoryFragment : Fragment() {
         return retorno
     }
 
-    private fun getResponseFromSharedPreferences(context: Context): ApiConTokenResponse? {
+    private fun getResponseFromSharedPreferences(context: Context): ApiEuroTipoCambio? {
         val sharedPreferences: SharedPreferences =
             context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
         val responseJson = sharedPreferences.getString("dolarBCVResponse", null)
@@ -461,7 +463,7 @@ class HistoryFragment : Fragment() {
         if (responseJson != null) {
             val gson = Gson()
 
-            return gson.fromJson(responseJson, ApiConTokenResponse::class.java)
+            return gson.fromJson(responseJson, ApiEuroTipoCambio::class.java)
         }
 
         return null // Retorna null si no se encontró la respuesta en SharedPreferences
@@ -478,8 +480,4 @@ class HistoryFragment : Fragment() {
         editor.apply()
     }
 
-
-    companion object {
-
-    }
 }
