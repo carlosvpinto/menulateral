@@ -324,8 +324,6 @@ class HistoryFragment : Fragment() {
                     endDate = diaDeHoy // Fecha de hoy
                 )
 
-                Log.d(TAG, "llamarApiHistory: Response enparalelovzla: ${responseEnParaleloVzla.history}")
-                Log.d(TAG, "llamarApiHistory: Response bcv: ${responseBcv.history}")
 
                 if (responseEnParaleloVzla != null && responseBcv != null) {
                     withContext(Dispatchers.Main) {

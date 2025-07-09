@@ -2,7 +2,12 @@ package com.carlosv.dolaraldia.ui.home
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings.Global.putString
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -18,9 +23,12 @@ import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.exifinterface.media.ExifInterface
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.adapter.PagoMovilAdapter
 
 import com.carlosv.dolaraldia.model.datosPMovil.DatosPMovilModel
@@ -29,9 +37,13 @@ import com.carlosv.menulateral.databinding.FragmentDatosPerBinding
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
+import java.io.File
+import java.io.FileOutputStream
 import java.text.DecimalFormat
 import java.util.Date
 import java.util.Locale
+
+
 
 private var _binding: FragmentDatosPerBinding? = null
 private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
@@ -47,12 +59,16 @@ private var posicion : Int?=null
 private var pagosMovils= ArrayList<DatosPMovilModel>()
 private val TAG = "PERSONAL"
 
+private lateinit var sharedPref: SharedPreferences
+
 class DatosPerFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
     private lateinit var spBancos: Spinner
     private var bancoSeleccionado= ""
     private var isExpanded = false
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +88,9 @@ class DatosPerFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_datos_per, container, false)
         val linearLayoutManager = LinearLayoutManager(requireContext())
         binding.recyPagoMovil.layoutManager = linearLayoutManager
+
+
+        sharedPref =  requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
         // Obtener el array de bancos desde los recursos
         val listaBancos = resources.getStringArray(R.array.lista_bancos)
@@ -514,4 +533,8 @@ class DatosPerFragment : Fragment() {
                 }
             }
     }
+
+
+
+
 }

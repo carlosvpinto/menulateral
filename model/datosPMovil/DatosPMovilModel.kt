@@ -11,6 +11,7 @@ class DatosPMovilModel(
     val cedula: String? = null,
     val banco: String? = null,
     val fecha: String? = null,
+    var imagen: String? = null // <-- campo para la ruta de la imagen
 
     ) {
 
