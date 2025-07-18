@@ -7,185 +7,428 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings.Global.putString
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.Spinner
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
-import androidx.exifinterface.media.ExifInterface
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.adapter.PagoMovilAdapter
-
 import com.carlosv.dolaraldia.model.datosPMovil.DatosPMovilModel
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentDatosPerBinding
-import com.carlosv.menulateral.databinding.FragmentHomeBinding
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.text.DecimalFormat
 import java.util.Date
 import java.util.Locale
 
-
-
-private var _binding: FragmentDatosPerBinding? = null
-private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
-
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-private var spBancos: Spinner? = null
-private  var adapterPM: PagoMovilAdapter?=null
-private var pagomovilActivo: DatosPMovilModel?= null
-private var pagomovilActivoList: MutableList<DatosPMovilModel?> = mutableListOf()
-private var posicion : Int?=null
-
-private var pagosMovils= ArrayList<DatosPMovilModel>()
-private val TAG = "PERSONAL"
-
-private lateinit var sharedPref: SharedPreferences
-
 class DatosPerFragment : Fragment() {
-    private var param1: String? = null
-    private var param2: String? = null
-    private lateinit var spBancos: Spinner
-    private var bancoSeleccionado= ""
-    private var isExpanded = false
+    private var _binding: FragmentDatosPerBinding? = null
+    private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
 
+    private lateinit var sharedPref: SharedPreferences
+    private var bancoSeleccionado = ""
+    private var posicion: Int? = null
+    private var pagosMovils = ArrayList<DatosPMovilModel>()
+    private var adapterPM: PagoMovilAdapter? = null
+    private var rutaImagenSeleccionada: String? = null
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    // Launcher para seleccionar imágenes
+    private val pickImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            convertToJpgAndStore(it)
         }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ):  View? {
-
+    ): View? {
         _binding = FragmentDatosPerBinding.inflate(inflater, container, false)
         val root: View = binding.root
-        val view = inflater.inflate(R.layout.fragment_datos_per, container, false)
-        val linearLayoutManager = LinearLayoutManager(requireContext())
-        binding.recyPagoMovil.layoutManager = linearLayoutManager
 
+        sharedPref = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        binding.recyPagoMovil.layoutManager = LinearLayoutManager(requireContext())
 
-        sharedPref =  requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-
-        // Obtener el array de bancos desde los recursos
-        val listaBancos = resources.getStringArray(R.array.lista_bancos)
-
-        val listaLetras = resources.getStringArray(R.array.lista_letras)
         llamarPagoMovil()
 
         binding.btnCancelar.setOnClickListener {
-            binding.btnGuardar.text= "Agregar"
-            binding.btnCancelar.visibility= View.GONE
+            binding.btnGuardar.text = "Agregar"
+            binding.btnCancelar.visibility = View.GONE
             binding.linearLayoutDatosInfo.visibility = View.GONE
-            binding.recyPagoMovil.visibility= View.VISIBLE
+            binding.recyPagoMovil.visibility = View.VISIBLE
+            rutaImagenSeleccionada = null
+        }
+
+        binding.imgLogoPersona.setOnClickListener {
+            pickImageLauncher.launch("image/*")
         }
 
         binding.btnGuardar.setOnClickListener {
-            if (binding.btnGuardar.text== "Agregar"){
-
-                binding.linearLayoutDatosInfo.visibility = View.VISIBLE
-                limpiarDatosLinearLayout()
-                binding.btnGuardar.text= "Guardar"
-                binding.btnCancelar.visibility= View.GONE
-                binding.btnCancelar.visibility= View.VISIBLE
-                binding.recyPagoMovil.visibility= View.GONE
-                return@setOnClickListener
+            when (binding.btnGuardar.text) {
+                "Agregar" -> {
+                    binding.linearLayoutDatosInfo.visibility = View.VISIBLE
+                    limpiarDatosLinearLayout()
+                    binding.btnGuardar.text = "Guardar"
+                    binding.btnCancelar.visibility = View.VISIBLE
+                    binding.recyPagoMovil.visibility = View.GONE
+                    rutaImagenSeleccionada = null
+                }
+                "Guardar" -> {
+                    guardarPagoMovil(requireContext())
+                    llamarPagoMovil()
+                }
+                "Actualizar" -> {
+                    editarPagoMovil()
+                    llamarPagoMovil()
+                }
             }
+        }
 
+        val listaBancos = resources.getStringArray(R.array.lista_bancos)
+        val listaLetras = resources.getStringArray(R.array.lista_letras)
 
-            if(binding.btnGuardar.text== "Guardar" ){
-
-                Log.d(TAG, "onCreateView: Guardar")
-                guardarPagoMovil(requireContext())
-                llamarPagoMovil()
-                return@setOnClickListener
-
-            }
-            if (binding.btnGuardar.text=="Actualizar"){
-
-                editarPagoMovil()
-                llamarPagoMovil()
-                return@setOnClickListener
-            }
-            }
-
-
-        val adaptadorSp: ArrayAdapter<String> = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            listaBancos
-        )
-        val adaptadorLetras: ArrayAdapter<String> = ArrayAdapter(
+        binding.spinnerLetra.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
             listaLetras
         )
+        binding.spinnerBanco.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            listaBancos
+        )
 
-        binding.spinnerLetra.adapter = adaptadorLetras
-
-        binding.spinnerBanco.adapter = adaptadorSp
-
-        // Establecer un listener para manejar la selección del spinner
         binding.spinnerBanco.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
-                parent: AdapterView<*>,
-                view: View?,
-                position: Int,
-                id: Long
+                parent: AdapterView<*>, view: View?, position: Int, id: Long
             ) {
                 bancoSeleccionado = parent.getItemAtPosition(position).toString()
             }
-
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-                Toast.makeText(requireContext(), "Debe selecionar el banco", Toast.LENGTH_SHORT).show()
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                Toast.makeText(requireContext(), "Debe seleccionar el banco", Toast.LENGTH_SHORT).show()
             }
         }
 
-            return root
+        return root
     }
-    private fun chequeaLenguajeSistema(): String {
-        val currentLocale = Locale.getDefault()
-        return when (currentLocale.language) {
-            "en" -> "Select Bank"
-            "es" -> "Seleccione el Banco"
-            "fr" -> "Sélectionner une banque"
-            // Puedes agregar más casos según sea necesario
-            else -> "El sistema está en otro idioma: ${currentLocale.displayLanguage}"
+
+    private fun llamarPagoMovil() {
+        val pagoMovilList = obtenerPagoMovilList(requireContext())
+        pagosMovils.clear()
+        if (!pagoMovilList.isNullOrEmpty()) {
+            pagosMovils.addAll(pagoMovilList)
+        }
+        adapterPM = PagoMovilAdapter(
+            this@DatosPerFragment,
+            pagosMovils,
+            ::mostrarDatosaEditar,
+            ::borrarPagoMovil,
+            ::actualizarPredeterminado
+        )
+        binding.recyPagoMovil.adapter = adapterPM
+        adapterPM?.updatePrecioBancos(pagoMovilList)
+    }
+
+    private fun guardarPagoMovil(context: Context) {
+        val (isValid, errorMessage) = validarDatos()
+        if (isValid) {
+            val tipo = when {
+                binding.rdioPagoMovil.isChecked -> binding.rdioPagoMovil.text.toString()
+                binding.rdioTransferencia.isChecked -> binding.rdioTransferencia.text.toString()
+                else -> ""
+            }
+            val pagoMovil = DatosPMovilModel(
+                seleccionado = true,
+                tipo = tipo,
+                nombre = binding.txtNombre.text.toString(),
+                tlf = binding.txtTlf.text.toString(),
+                cedula = binding.spinnerLetra.selectedItem.toString() + binding.txtCedula.text.toString(),
+                banco = bancoSeleccionado,
+                fecha = Date().toString(),
+                imagen = rutaImagenSeleccionada
+            )
+            val gson = Gson()
+            val sharedPreferences: SharedPreferences =
+                context.getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
+            val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
+            val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
+                gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
+            } else {
+                mutableListOf()
+            }
+            for (i in pagoMovilList.indices) {
+                pagoMovilList[i].seleccionado = false
+            }
+            pagoMovilList.add(pagoMovil)
+            val pagoMovilListJson = gson.toJson(pagoMovilList)
+            val editor = sharedPreferences.edit()
+            editor.putString("datosPMovilList", pagoMovilListJson)
+            editor.apply()
+            binding.btnGuardar.text = "Agregar"
+            binding.linearLayoutDatosInfo.visibility = View.GONE
+            binding.btnCancelar.visibility = View.GONE
+            binding.recyPagoMovil.visibility = View.VISIBLE
+            ocultarTeclado(binding.btnGuardar, requireContext())
+            rutaImagenSeleccionada = null
+        } else {
+            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun editarPagoMovil() {
+        val (isValid, errorMessage) = validarDatos()
+        if (isValid) {
+            val gson = Gson()
+            val sharedPreferences: SharedPreferences =
+                requireContext().getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
+            val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
+            val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
+                gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
+            } else {
+                mutableListOf()
+            }
+            val pagoMovil = DatosPMovilModel(
+                seleccionado = binding.rdioPagoMovil.isChecked,
+                tipo = binding.rdioPagoMovil.text.toString(),
+                nombre = binding.txtNombre.text.toString(),
+                tlf = binding.txtTlf.text.toString(),
+                cedula = binding.spinnerLetra.selectedItem.toString() + binding.txtCedula.text.toString(),
+                banco = binding.spinnerBanco.selectedItem.toString(),
+                fecha = Date().toString(),
+                imagen = rutaImagenSeleccionada // Si el usuario no cambia la imagen, conserva la anterior
+            )
+            pagoMovilList[posicion!!] = pagoMovil
+            val pagoMovilListJson = gson.toJson(pagoMovilList)
+            val editor = sharedPreferences.edit()
+            editor.putString("datosPMovilList", pagoMovilListJson)
+            editor.apply()
+            binding.btnGuardar.text = "Agregar"
+            binding.linearLayoutDatosInfo.visibility = View.GONE
+            binding.recyPagoMovil.visibility = View.VISIBLE
+            llamarPagoMovil()
+            ocultarTeclado(binding.btnGuardar, requireContext())
+            rutaImagenSeleccionada = null
+        } else {
+            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun actualizarPredeterminado(position: Int) {
+        val gson = Gson()
+        val sharedPreferences: SharedPreferences =
+            requireContext().getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
+        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
+        val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
+            gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
+        } else {
+            mutableListOf()
+        }
+        for (i in pagoMovilList.indices) {
+            pagoMovilList[i].seleccionado = false
+        }
+        pagoMovilList[position].seleccionado = true
+        val pagoMovilListJson = gson.toJson(pagoMovilList)
+        val editor = sharedPreferences.edit()
+        editor.putString("datosPMovilList", pagoMovilListJson)
+        editor.apply()
+        llamarPagoMovil()
+    }
+
+    private fun borrarPagoMovil(position: Int) {
+        val gson = Gson()
+        val sharedPreferences: SharedPreferences =
+            requireContext().getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
+        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
+        val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
+            gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
+        } else {
+            mutableListOf()
+        }
+        if (position >= 0 && position < pagoMovilList.size) {
+            pagoMovilList.removeAt(position)
+            val pagoMovilListJson = gson.toJson(pagoMovilList)
+            val editor = sharedPreferences.edit()
+            editor.putString("datosPMovilList", pagoMovilListJson)
+            editor.commit()
+            llamarPagoMovil()
+        }
+    }
+
+    private fun mostrarDatosaEditar(pagomovil: DatosPMovilModel, position: Int) {
+        binding.linearLayoutDatosInfo.visibility = View.VISIBLE
+        binding.recyPagoMovil.visibility = View.GONE
+        binding.btnGuardar.text = "Actualizar"
+        binding.txtNombre.setText(pagomovil.nombre)
+        binding.txtTlf.setText(pagomovil.tlf)
+        binding.txtCedula.setText(pagomovil.cedula!!.substring(1))
+        rutaImagenSeleccionada = pagomovil.imagen
+        if (!pagomovil.imagen.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(File(pagomovil.imagen))
+                .placeholder(R.drawable.ic_agregar_imagen)
+                .into(binding.imgLogoPersona)
+        } else {
+            binding.imgLogoPersona.setImageResource(R.drawable.ic_agregar_imagen)
+        }
+        posicion = position
+
+        val listaBancos = resources.getStringArray(R.array.lista_bancos)
+        val listaPrefijo = resources.getStringArray(R.array.lista_letras)
+        val prefijo = pagomovil.cedula.first().toString()
+        val prefijoCedula = listaPrefijo.indexOf(prefijo)
+        val bancoPosition = listaBancos.indexOf(pagomovil.banco)
+        if (prefijoCedula >= 0) binding.spinnerLetra.setSelection(prefijoCedula)
+        if (bancoPosition >= 0) binding.spinnerBanco.setSelection(bancoPosition)
+    }
+
+    private fun obtenerPagoMovilList(context: Context): List<DatosPMovilModel> {
+        val gson = Gson()
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
+        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
+        return if (pagoMovilJson != null) {
+            gson.fromJson(pagoMovilJson, object : TypeToken<List<DatosPMovilModel>>() {}.type)
+        } else {
+            emptyList()
+        }
+    }
+
+    private fun limpiarDatosLinearLayout() {
+        binding.txtNombre.text?.clear()
+        binding.txtTlf.text?.clear()
+        binding.txtCedula.text?.clear()
+        binding.spinnerBanco.setSelection(0)
+        binding.spinnerLetra.setSelection(0)
+        binding.imgLogoPersona.setImageResource(R.drawable.ic_agregar_imagen)
+    }
+
+    private fun ocultarTeclado(view: View, context: Context) {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    // Conversión y guardado de la imagen seleccionada, corrigiendo orientación
+    private fun convertToJpgAndStore(imageUri: Uri) {
+        // Es seguro acceder al binding aquí ya que estamos en el hilo principal
+        // y la función se llamará cuando el fragmento esté activo.
+        binding.apply {
+            // Asegúrate de que estos IDs existan en tu layout
+            // progresImagen.visibility = View.VISIBLE
+            // imgLogoPersona.visibility = View.INVISIBLE
+            btnGuardar.isEnabled = false
+            btnCancelar.isEnabled = false
+        }
+
+        // Iniciar una corrutina en el lifecycleScope del fragmento.
+        // Esto asegura que la operación se cancelará si la vista del fragmento se destruye,
+        // evitando intentar actualizar la UI de un fragmento que ya no existe.
+        lifecycleScope.launch {
+            try {
+                // Realizar operaciones que bloquean o son intensivas en I/O en un hilo de fondo (Dispatchers.IO)
+                val bitmap = withContext(Dispatchers.IO) {
+                    getCorrectlyOrientedBitmap(imageUri)
+                } ?: throw Exception("No se pudo decodificar la imagen o está corrupta.")
+
+                val jpgFile = withContext(Dispatchers.IO) {
+                    createJpgFromBitmap(bitmap)
+                }
+
+                // Actualizar la ruta solo si todo fue exitoso
+                rutaImagenSeleccionada = jpgFile.absolutePath
+
+                // Volver al hilo principal (Dispatchers.Main) para actualizar la UI.
+                // Gracias a lifecycleScope, esto solo se ejecutará si la vista del fragmento es válida.
+                withContext(Dispatchers.Main) {
+                    binding.apply {
+                        // Asegúrate de que estos IDs existan en tu layout
+                        // progresImagen.visibility = View.GONE
+                        // imgLogoPersona.visibility = View.VISIBLE
+                        btnGuardar.isEnabled = true
+                        btnCancelar.isEnabled = true
+
+                        Glide.with(this@DatosPerFragment) // Usar 'this@DatosPerFragment' para el contexto del fragmento
+                            .load(jpgFile)
+                            .into(imgLogoPersona)
+                    }
+                    Toast.makeText(requireContext(), "Imagen convertida y guardada exitosamente.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                // Volver al hilo principal para mostrar el Toast en caso de error.
+                withContext(Dispatchers.Main) {
+                    binding.apply {
+                        // Asegúrate de que estos IDs existan en tu layout
+                        // progresImagen.visibility = View.GONE
+                        btnGuardar.isEnabled = true // Habilitar botones de nuevo en caso de error
+                        btnCancelar.isEnabled = true
+                    }
+                    Log.e("DatosPerFragment", "Error al procesar la imagen: ${e.message}", e)
+                    Toast.makeText(requireContext(), "Error al procesar imagen: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
 
+    private fun getCorrectlyOrientedBitmap(uri: Uri): Bitmap? {
+        val contentResolver = requireContext().contentResolver
+        val inputStream = contentResolver.openInputStream(uri)
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream?.close()
+        if (bitmap == null) return null
+        val exifInputStream = contentResolver.openInputStream(uri)
+        val exif = androidx.exifinterface.media.ExifInterface(exifInputStream!!)
+        val orientation = exif.getAttributeInt(
+            androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
+        )
+        exifInputStream.close()
+        val matrix = Matrix()
+        when (orientation) {
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+        }
+        return Bitmap.createBitmap(
+            bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+        )
+    }
+
+    private fun createJpgFromBitmap(bitmap: Bitmap): File {
+        val cacheDir = requireContext().cacheDir
+        val jpgFile = File.createTempFile("converted_", ".jpg", cacheDir)
+        FileOutputStream(jpgFile).use { outputStream ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            outputStream.flush()
+        }
+        return jpgFile
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
     private fun validarDatos(): Pair<Boolean, String> {
         val nombre = binding.txtNombre.text.toString().trim()
         val cedula = binding.txtCedula.text.toString().trim()
         val tlf = binding.txtTlf.text.toString().trim()
         val banco = binding.spinnerBanco.selectedItem.toString()
-        Log.d(TAG, "validarDatos: obtenerLenguajeSistema ${chequeaLenguajeSistema()}")
+       // Log.d(TAG, "validarDatos: obtenerLenguajeSistema ${chequeaLenguajeSistema()}")
         return when {
             nombre.isEmpty() -> {
                 binding.txtNombre.error = "El nombre no puede estar vacío"
@@ -200,341 +443,17 @@ class DatosPerFragment : Fragment() {
                 Pair(false, "El teléfono no puede estar vacío")
             }
             banco.isEmpty() -> {
-               // binding.spinnerBanco.error = "El teléfono no puede estar vacío"
+                // binding.spinnerBanco.error = "El teléfono no puede estar vacío"
                 Pair(false, "El Banco no puede estar vacío")
             }
-            banco == chequeaLenguajeSistema() -> {
-                Pair(false, chequeaLenguajeSistema())
-            }
+//            banco == chequeaLenguajeSistema() -> {
+//                Pair(false, chequeaLenguajeSistema())
+//            }
             else -> Pair(true, "")
         }
     }
-
-
-
-    private fun llamarPagoMovil() {
-        val pagoMovilList = obtenerPagoMovilList(requireContext())
-        pagosMovils.clear()
-
-        if (!pagoMovilList.isNullOrEmpty()) {
-            pagosMovils.addAll(pagoMovilList)
-        }
-
-        adapterPM = PagoMovilAdapter(this@DatosPerFragment, pagosMovils, ::mostrarDatosaEditar, ::borrarPagoMovil, ::actualizarPredeterminado)
-        binding.recyPagoMovil.adapter = adapterPM
-        adapterPM?.updatePrecioBancos(pagoMovilList)
-
-        Log.d(TAG, "onCreateView: VACIO!!  pagoMovilList $pagoMovilList")
-    }
-
-
-    private fun guardarPagoMovil(context: Context) {
-        var tipo = ""
-
-        val (isValid, errorMessage) = validarDatos()
-        if (isValid) {
-            binding.btnGuardar.text= "Agregar"
-            // Datos válidos, continuar con el procesamiento
-            if (binding.rdioPagoMovil.isChecked) {
-                tipo = binding.rdioPagoMovil.text.toString()
-            }
-            if (binding.rdioTransferencia.isChecked) {
-                tipo = binding.rdioTransferencia.text.toString()
-            }
-
-            val pagoMovil = DatosPMovilModel(
-                seleccionado = true,
-                tipo = tipo,
-                nombre = binding.txtNombre.text.toString(),
-                tlf = binding.txtTlf.text.toString(),
-                cedula = binding.spinnerLetra.selectedItem.toString()+ binding.txtCedula.text.toString(),
-                banco = bancoSeleccionado,
-                fecha = Date().toString()
-            )
-
-            val gson = Gson()
-            val sharedPreferences: SharedPreferences =
-                context.getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
-
-            // Leer la lista existente de pagoMovil desde SharedPreferences
-            val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
-            val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
-                gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
-            } else {
-                mutableListOf()
-            }
-
-            // Desactivar el campo seleccionado en todos los elementos existentes
-            for (i in pagoMovilList.indices) {
-                pagoMovilList[i].seleccionado = false
-            }
-
-            // Agregar el nuevo pagoMovil a la lista
-            pagoMovilList.add(pagoMovil)
-
-            // Serializar la lista actualizada a JSON
-            val pagoMovilListJson = gson.toJson(pagoMovilList)
-
-            // Guardar la lista actualizada en SharedPreferences
-            val editor = sharedPreferences.edit()
-            editor.putString("datosPMovilList", pagoMovilListJson)
-            editor.apply()
-            binding.btnGuardar.text= "Agregar"
-            binding.linearLayoutDatosInfo.visibility = View.GONE
-            binding.btnCancelar.visibility= View.GONE
-            binding.recyPagoMovil.visibility= View.VISIBLE
-            ocultarTeclado(binding.btnGuardar, requireContext())
-        } else {
-            // Datos inválidos, mostrar el error
-            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
-        }
-
-
-    }
-
-
-    private fun actualizarPredeterminado(position: Int) {
-        val gson = Gson()
-        val sharedPreferences: SharedPreferences =
-            requireContext().getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
-
-        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
-        val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
-            gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
-        } else {
-            mutableListOf()
-        }
-
-        // Desactivar todos los elementos
-        for (i in pagoMovilList.indices) {
-            pagoMovilList[i].seleccionado = false
-        }
-
-        // Activar solo el seleccionado
-        pagoMovilList[position].seleccionado = true
-
-        // Guardar la lista actualizada en SharedPreferences
-        val pagoMovilListJson = gson.toJson(pagoMovilList)
-        val editor = sharedPreferences.edit()
-        editor.putString("datosPMovilList", pagoMovilListJson)
-        editor.apply()
-
-        // Actualizar la lista en la UI
-        llamarPagoMovil()
-    }
-
-    // Función para editar un pagoMovil
-    private fun editarPagoMovil() {
-
-        val (isValid, errorMessage) = validarDatos()
-        if (isValid) {
-            // Datos válidos, continuar con el procesamiento
-
-            binding.btnGuardar.text= "Agregar"
-            binding.linearLayoutDatosInfo.visibility= View.GONE
-            binding.recyPagoMovil.visibility= View.VISIBLE
-            val gson = Gson()
-            val sharedPreferences: SharedPreferences =
-                requireContext().getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
-
-            // Leer la lista existente de pagoMovil desde SharedPreferences
-            val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
-            val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
-                gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
-            } else {
-                mutableListOf()
-            }
-            val pagoMovil = pagoMovilActivado()
-            // Editar el pagoMovil en la lista
-            pagoMovilList[posicion!!] = pagoMovil
-
-            // Serializar la lista actualizada a JSON
-            val pagoMovilListJson = gson.toJson(pagoMovilList)
-
-            // Guardar la lista actualizada en SharedPreferences
-            val editor = sharedPreferences.edit()
-            editor.putString("datosPMovilList", pagoMovilListJson)
-            editor.apply()
-
-            // Actualizar la lista en la UI
-            llamarPagoMovil()
-            ocultarTeclado(binding.btnGuardar, requireContext())
-
-        }else{
-            // Datos inválidos, mostrar el error
-            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
-
-        }
-
-    }
-
-    private fun actualiazarPagoMovil(){
-        val gson = Gson()
-        val sharedPreferences: SharedPreferences =
-            requireContext().getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
-
-        // Leer la lista existente de pagoMovil desde SharedPreferences
-        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
-        val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
-            gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
-        } else {
-            mutableListOf()
-        }
-
-        // Editar el pagoMovil en la lista
-        pagoMovilList[posicion!!] = pagoMovilActivado()
-
-        // Serializar la lista actualizada a JSON
-        val pagoMovilListJson = gson.toJson(pagomovilActivoList)
-
-        // Guardar la lista actualizada en SharedPreferences
-        val editor = sharedPreferences.edit()
-        editor.putString("datosPMovilList", pagoMovilListJson)
-        editor.apply()
-
-        // Actualizar la lista en la UI
-        llamarPagoMovil()
-    }
-
-    private fun pagoMovilActivado():DatosPMovilModel{
-
-        return DatosPMovilModel(
-            seleccionado = binding.rdioPagoMovil.isChecked,
-            tipo =binding.rdioPagoMovil.text.toString(),
-            nombre = binding.txtNombre.text.toString(),
-            tlf =  binding.txtTlf.text.toString(),
-            cedula = binding.spinnerLetra.selectedItem.toString()+binding.txtCedula.text.toString(),
-            banco = binding.spinnerBanco.selectedItem.toString(),
-            fecha = Date().toString()
-        )
-    }
-
-    private fun mostrarDatosaEditar(pagomovil: DatosPMovilModel, position: Int) {
-        binding.linearLayoutDatosInfo.visibility = View.VISIBLE
-        binding.recyPagoMovil.visibility = View.GONE
-        binding.btnGuardar.text = "Actualizar"
-        binding.txtNombre.setText(pagomovil.nombre)
-        binding.txtTlf.setText(pagomovil.tlf)
-        // Verifica si texto en Pagomovul.cedula tiene una letra en su primer caracter
-        val cedula = pagomovil.cedula
-        if (cedula!!.isNotEmpty() && cedula[0].isLetter()) {
-            binding.txtCedula.setText(cedula.substring(1))
-        } else {
-            binding.txtCedula.setText(cedula)
-        }
-        binding.txtCedula.setText(pagomovil.cedula.substring(1))
-        pagomovilActivo = pagomovil
-        posicion = position
-
-
-        // Obtener el array de bancos desde los recursos
-        val listaBancos = resources.getStringArray(R.array.lista_bancos)
-        val listaPrefijo = resources.getStringArray(R.array.lista_letras)
-        val prefijo = pagomovil.cedula!!.first().toString()
-
-        // Encontrar la posición del valor en el Spinner
-        val prefijoCedula= listaPrefijo.indexOf(prefijo)
-        val bancoPosition = listaBancos.indexOf(pagomovil.banco)
-
-        if (prefijoCedula>=0){
-            binding.spinnerLetra.setSelection(prefijoCedula)
-        }
-
-        if (bancoPosition >= 0) {
-            binding.spinnerBanco.setSelection(bancoPosition)
-        } else {
-            // Valor no encontrado, puedes manejar esto como prefieras
-            Log.d(TAG, "mostrarDatosaEditar: Banco no encontrado en el Spinner")
-        }
-    }
-
-
-    // Función para borrar un pagoMovil
-    private fun borrarPagoMovil(position: Int) {
-        val gson = Gson()
-        val sharedPreferences: SharedPreferences =
-            requireContext().getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
-
-        // Leer la lista existente de pagoMovil desde SharedPreferences
-        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
-        val pagoMovilList: MutableList<DatosPMovilModel> = if (pagoMovilJson != null) {
-            gson.fromJson(pagoMovilJson, object : TypeToken<MutableList<DatosPMovilModel>>() {}.type)
-        } else {
-            mutableListOf()
-        }
-
-        // Validar que el índice está dentro de los límites de la lista
-        if (position >= 0 && position < pagoMovilList.size) {
-            // Borrar el pagoMovil de la lista
-            pagoMovilList.removeAt(position)
-
-            // Serializar la lista actualizada a JSON
-            val pagoMovilListJson = gson.toJson(pagoMovilList)
-
-            // Guardar la lista actualizada en SharedPreferences
-            val editor = sharedPreferences.edit()
-            editor.putString("datosPMovilList", pagoMovilListJson)
-
-            // Usar commit() en lugar de apply() para esperar a que los datos se guarden
-            val success = editor.commit()
-
-            if (success) {
-                // Actualizar la lista en la UI
-                llamarPagoMovil()
-            } else {
-                // Manejar el error en caso de que la operación de guardado falle
-                Log.e("borrarPagoMovil", "Error al guardar los datos actualizados en SharedPreferences")
-            }
-        } else {
-            // Manejar el caso donde el índice está fuera de los límites de la lista
-            Log.e("borrarPagoMovil", "Índice fuera de los límites: $position, tamaño de la lista: ${pagoMovilList.size}")
-        }
-    }
-
-
-
-    // Define una función para recuperar la respuesta de SharedPreferences
-    private fun obtenerPagoMovilList(context: Context): List<DatosPMovilModel> {
-        val gson = Gson()
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
-
-        // Leer la lista existente de pagoMovil desde SharedPreferences
-        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
-        return if (pagoMovilJson != null) {
-            gson.fromJson(pagoMovilJson, object : TypeToken<List<DatosPMovilModel>>() {}.type)
-        } else {
-            emptyList()
-        }
-    }
-
-    private fun limpiarDatosLinearLayout() {
-
-        binding.txtNombre.text?.clear()
-        binding.txtTlf.text?.clear()
-        binding.txtCedula.text?.clear()
-        binding.spinnerBanco.setSelection(0)
-    }
-    private fun ocultarTeclado(view: View, context: Context) {
-        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(view.windowToken, 0)
-    }
-
-
-
-    companion object {
-
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            DatosPerFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
-
-
-
-
 }
+
+
+
+

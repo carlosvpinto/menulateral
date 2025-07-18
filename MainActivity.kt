@@ -28,21 +28,26 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.*
 
 import android.Manifest
+import android.app.Activity
 
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Typeface
+
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Environment
+import android.text.Editable
 
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
+import android.text.TextWatcher
 import android.text.style.ImageSpan
 import android.util.Log
 import android.util.TypedValue
@@ -50,6 +55,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -57,8 +63,7 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.ToggleButton
-
-import androidx.annotation.RequiresApi
+import androidx.annotation.OptIn
 
 
 import androidx.core.content.ContextCompat
@@ -72,15 +77,18 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.appopen.AppOpenAd
+import com.google.android.material.badge.BadgeDrawable
+import com.google.android.material.badge.BadgeUtils
+import com.google.android.material.badge.ExperimentalBadgeUtils
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.common.reflect.TypeToken
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 
 import com.google.gson.Gson
-import java.text.DecimalFormat
 import java.util.concurrent.atomic.AtomicBoolean
-
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.checkbox.MaterialCheckBox
 
 
 class MainActivity : AppCompatActivity() {
@@ -88,19 +96,23 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appOpenAdManager: AppOpenAdManager
     private lateinit var navController2: NavController
 
-    val miAplicacion = MyApplication()
+
     private val isMobileAdsInitializeCalled = AtomicBoolean(false)
     private val LOG_TAG: String = "AppOpenAdManager"
-    private val TAG: String = "PAYPALPRICE"
+    private val TAG: String = "MAINACTIVITY"
 
-    private val AD_UNIT_ID: String? = "ca-app-pub-3940256099942544/9257395921"
+    private val AD_UNIT_ID: String = "ca-app-pub-3940256099942544/9257395921"
 
-    private var snackbar: Snackbar? = null
+
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private val PERMISSION_REQUEST_CODE = 123
-    var filePath = ""
+
+
+    private var pagoMovilListTrue: DatosPMovilModel? = null
+
+    private var personalBadge: BadgeDrawable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -155,6 +167,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+
     inner class AppOpenAdManager {
         private var appOpenAd: AppOpenAd? = null
         private var isLoadingAd = false
@@ -193,9 +206,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+//        // Inflar el menú; esto agrega elementos a la barra de acciones si está presente.
+//        menuInflater.inflate(R.menu.main, menu)
+//        return true
+//    }
+
+    // 2. MODIFICA TU MÉTODO 'onCreateOptionsMenu'
+    @OptIn(ExperimentalBadgeUtils::class)
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflar el menú; esto agrega elementos a la barra de acciones si está presente.
+        // Inflar el menú (esto ya lo tenías bien)
         menuInflater.inflate(R.menu.main, menu)
+
+        // --- LÓGICA PARA CREAR Y ADJUNTAR EL BADGE ---
+
+        // Crea una instancia del BadgeDrawable. Lo asignamos a nuestra variable de clase.
+        personalBadge = BadgeDrawable.create(this)
+
+        // Configura el badge. Por ejemplo, para mostrar el número 1.
+        // Si no quieres número y solo un punto, simplemente no llames a .number
+        personalBadge?.number = 1
+        personalBadge?.isVisible = true // ¡Importante hacerlo visible!
+
+        // Adjunta el Badge al ítem de menú usando BadgeUtils.
+        // Usamos tu 'binding' para obtener el Toolbar de forma segura.
+        // El '!!' es seguro aquí porque acabamos de crear el badge.
+        BadgeUtils.attachBadgeDrawable(personalBadge!!, binding.appBarMain.toolbar, R.id.action_personal)
+
         return true
     }
 
@@ -212,11 +249,14 @@ class MainActivity : AppCompatActivity() {
 //            }
 
             R.id.action_compartir -> {
-                showCustomSnackbarPM()
+                //showCustomSnackbarPM()
+
+                showCustomDialogPM()
             }
 
             R.id.action_personal -> {
                 navController2.navigate(R.id.nav_Personal)
+                ocultarBadgePersonal()
             }
 
             R.id.action_salir -> {
@@ -237,6 +277,25 @@ class MainActivity : AppCompatActivity() {
     }
     private fun isChromeOSDevice(): Boolean {
         return packageManager.hasSystemFeature("org.chromium.arc.device_management")
+    }
+
+    fun mostrarBadgePersonal(contador: Int) {
+        personalBadge?.let {
+            if (contador > 0) {
+                it.number = contador
+                it.isVisible = true
+            } else {
+                // Si el contador es 0 o menos, simplemente lo ocultamos
+                it.isVisible = false
+            }
+        }
+    }
+
+    /**
+     * Oculta el badge del ícono de Pago Móvil.
+     */
+    fun ocultarBadgePersonal() {
+        personalBadge?.isVisible = false
     }
 
 
@@ -308,19 +367,6 @@ class MainActivity : AppCompatActivity() {
         builder.show()
     }
 
-    private fun requestPermissionsIfNecessary() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!checkPermission()) {
-                requestPermissions(
-                    arrayOf(
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        Manifest.permission.READ_EXTERNAL_STORAGE
-                    ),
-                    PERMISSION_REQUEST_CODE
-                )
-            }
-        }
-    }
 
     private fun checkPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -350,7 +396,8 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (checkPermission()) {
                 // If permissions are granted, take the screenshot
-                showCustomSnackbarPM()
+                //showCustomSnackbarPM()
+                showCustomDialogPM()
                 // captureScreen(false, null)
             } else {
                 // If permissions are denied, show a message to the user
@@ -363,116 +410,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun captureScreen(enviarDatosPM: Boolean, datosPMovilModel: DatosPMovilModel?) {
-        try {
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val fileName = "screenshot_$timestamp.png"
-            val picturesDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // For Android 10 and above
-                getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-            } else {
-                // For older versions
-                captureScreenVersionOld(enviarDatosPM, datosPMovilModel, fileName)
-                return
-                //Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-            }
-            filePath = "$picturesDir/$fileName"
-
-            // Create a File for the screenshot
-            val file = File(filePath)
-
-
-            // Toma la captura de pantalla
-            val rootView = window.decorView.rootView
-            val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            rootView.draw(canvas)
-
-            val stream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
-            stream.flush()
-            stream.close()
-
-            // Show a message indicating the file location
-            Toast.makeText(
-                this,
-                "Enviando...: ",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            //veridica si esta en Fragmento para no hacer el Capture
-            val nombreFragmentAct = getCurrentFragmentTag()
-            if (nombreFragmentAct == "Pago Movil") {
-
-                // Realiza la lógica específica del fragmento actual
-                shareText(crearTextoCapture(enviarDatosPM, datosPMovilModel))
-            } else {
-                // Call the share function
-                shareImageWithText(filePath, crearTextoCapture(enviarDatosPM, datosPMovilModel))
-            }
-
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Log.d(TAG, "captureScreen: $e")
-        }
-    }
-
-
-    private fun captureScreenVersionOld(enviarDatosPM: Boolean, datosPMovilModel: DatosPMovilModel?,fileName: String) {
-        try {
-
-            // Toma la captura de pantalla
-            val rootView = window.decorView.rootView
-            val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            rootView.draw(canvas)
-
-
-            // Para Android 9 y versiones anteriores (sin permisos de almacenamiento)
-                val picturesDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES) // Directorio privado
-                filePath = "$picturesDir/$fileName"
-                val file = File(filePath)
-                val stream = FileOutputStream(file)
-                stream.use {
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 90, it)
-                }
-
-
-            // Muestra un mensaje indicando la ubicación del archivo
-            Toast.makeText(this, "Enviando...: ", Toast.LENGTH_SHORT).show()
-
-            // Verifica si está en un fragmento para no hacer el capture
-            val nombreFragmentAct = getCurrentFragmentTag()
-            if (nombreFragmentAct == "Pago Movil") {
-                // Realiza la lógica específica del fragmento actual
-                shareText(crearTextoCapture(enviarDatosPM, datosPMovilModel))
-            } else {
-                // Llama a la función para compartir la imagen y el texto
-                shareImageWithText(filePath, crearTextoCapture(enviarDatosPM, datosPMovilModel))
-            }
-
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Log.d(TAG, "captureScreen: $e")
-        }
-    }
-
-
-
-
-
-    //Solo Envia Texto
-    private fun shareText(shareText: String) {
-        // Crear un intent para compartir
-        val shareIntent = Intent(Intent.ACTION_SEND)
-        shareIntent.type = "text/plain"
-        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
-
-        // Iniciar la actividad de compartir
-        startActivity(Intent.createChooser(shareIntent, "Compartir texto"))
-    }
 
     private fun llamaElMsjActualizacion() {
         val rootView = findViewById<View>(android.R.id.content)
@@ -575,7 +512,7 @@ class MainActivity : AppCompatActivity() {
 
         } else {
             // El usuario no ha leído el mensaje
-            llamaElMsjUsoPagoMovil()
+         //   llamaElMsjUsoPagoMovil()
 
         }
     }
@@ -683,89 +620,288 @@ class MainActivity : AppCompatActivity() {
     //********************************************************************
 
 
-    // Abre el mensaje Snackbar Personalizado para Enviar Datos de Pago Movil
-    private fun showCustomSnackbarPM() {
-        var botonPrecionado = 0
-        val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-        val rootView = findViewById<View>(android.R.id.content)
-        val snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
-
-        // Inflar el diseño personalizado
+    private fun showCustomDialogPM() {
         val customView = LayoutInflater.from(this).inflate(R.layout.custom_toast_pago_movil, null)
 
-        // Configurar el ícono y el texto
-        val snackbarTextView: TextView = customView.findViewById(R.id.toast_text)
-        snackbarTextView.textSize = 12f
+        val builder = AlertDialog.Builder(this)
+        builder.setView(customView)
+        val dialog = builder.create()
 
-        val chechPagoMovil: CheckBox = customView.findViewById(R.id.checPagomovil)
-        val pagoMovilListTrue = obtenerPagoMovilListTrue(this)
+        // Establece el fondo transparente ANTES de mostrar.
+        val window = dialog.window
+        window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
+        // ENCONTRAR VISTAS Y CONFIGURAR LISTENERS
+        val chechPagoMovil: MaterialCheckBox = customView.findViewById(R.id.checPagomovil)
+        val chechImagenPersonalizada: MaterialCheckBox = customView.findViewById(R.id.checImagenpersonalizada)
+        val closeButton: ImageButton = customView.findViewById(R.id.close_button)
+        val enviareButton: MaterialButton = customView.findViewById(R.id.btnEnviarPM)
+        val chekMontoPersonalizado: MaterialCheckBox = customView.findViewById(R.id.checkMontoPerso)
+        val montoPersonalizado: EditText = customView.findViewById(R.id.editMontoPersonalizado)
+
+        // ¡Aquí aplicamos la magia de la validación a nuestro EditText!
+        setupDecimalInputValidation(montoPersonalizado)
+
+        pagoMovilListTrue = obtenerPagoMovilListTrue(this)
         if (pagoMovilListTrue?.seleccionado == null) {
-            chechPagoMovil.isChecked = false
-            chechPagoMovil.isEnabled = false
-            chechPagoMovil.text = getString(R.string.sin_cuenta_seleccionada)
+
+            inabilitarCheck(chechPagoMovil, getString(R.string.sin_cuenta_seleccionada))
+            inabilitarCheck(chechImagenPersonalizada,getString(R.string.imagen_personalizada) )
+
         } else {
             chechPagoMovil.text = pagoMovilListTrue?.nombre
-        }
+            habilitarCheck(chechPagoMovil,pagoMovilListTrue?.nombre.toString() )
 
-        // Configurar el botón de cierre
-        val closeButton: ImageButton = customView.findViewById(R.id.close_button)
-        closeButton.setOnClickListener {
-            snackbar.dismiss()
-            botonPrecionado = 1
-        }
+            if (pagoMovilListTrue?.imagen !== null){
+               habilitarCheck(chechImagenPersonalizada,getString(R.string.imagen_personalizada))
 
-        // Configurar el botón de Envio Pago movil
-        val enviareButton: ImageButton = customView.findViewById(R.id.btnEnviarPM)
-        enviareButton.setOnClickListener {
-            botonPrecionado = 0
-            snackbar.dismiss()
-        }
+            }else{
+                inabilitarCheck(chechImagenPersonalizada,getString(R.string.sin_imagen_personalizada))
 
-        // Añadir el callback para escuchar cuando el Snackbar se cierra
-        snackbar.addCallback(object : Snackbar.Callback() {
-            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                // Se llama cuando el Snackbar se cierra
-
-                val enviarDatosPM = chechPagoMovil.isChecked
-                Log.d(TAG, "onDismissed: snackbar  enviarDatosPM; $enviarDatosPM  botonPrecionado: $botonPrecionado")
-                if (botonPrecionado == 0) {
-                    captureScreen(enviarDatosPM, pagoMovilListTrue)
-                }
             }
-        })
+        }
 
-        // Obtener el ViewGroup del Snackbar y agregar el diseño personalizado
-        val snackbarView = snackbar.view as ViewGroup
-        snackbarView.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
-        snackbarView.addView(customView, 0)
+// Configura UN SOLO listener para manejar todos los cambios del CheckBox
+        chekMontoPersonalizado.setOnCheckedChangeListener { _, isChecked ->
 
-        // Mostrar el Snackbar
-        snackbar.show()
+            // La variable 'isChecked' nos dice el nuevo estado del CheckBox
+            if (isChecked) {
+                // --- ACCIONES CUANDO EL CHECKBOX SE MARCA ---
 
-        // Ajustar la posición del Snackbar al centro de la pantalla
-        val params = snackbar.view.layoutParams as FrameLayout.LayoutParams
-        params.gravity = Gravity.TOP // or Gravity.CENTER_HORIZONTAL
-        val marginTop =
-            250 // Cambia este valor según la separación que desees desde la parte superior
-        params.setMargins(0, marginTop, 0, 0)
-        snackbar.view.layoutParams = params
-    }
+                // 1. Actualizar la UI
+                chekMontoPersonalizado.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                montoPersonalizado.visibility = View.VISIBLE
+
+                // 2. Mover el foco y mostrar el teclado
+                montoPersonalizado.requestFocus()
+                showKeyboard(montoPersonalizado)
+
+            } else {
+                // --- ACCIONES CUANDO EL CHECKBOX SE DESMARCA ---
+
+                // 1. Restaurar la UI
+                chekMontoPersonalizado.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                montoPersonalizado.visibility = View.GONE
+
+                // 2. Ocultar el teclado y limpiar el foco
+                hideKeyboard(montoPersonalizado)
+                montoPersonalizado.clearFocus()
+            }
+        }
 
 
-    private fun obtenerPagoMovilList(context: Context): List<DatosPMovilModel> {
-        val gson = Gson()
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferencesPMovil", AppCompatActivity.MODE_PRIVATE)
+        closeButton.setOnClickListener {
+            dialog.dismiss()
+        }
 
-        // Leer la lista existente de pagoMovil desde SharedPreferences
-        val pagoMovilJson = sharedPreferences.getString("datosPMovilList", null)
-        return if (pagoMovilJson != null) {
-            gson.fromJson(pagoMovilJson, object : TypeToken<List<DatosPMovilModel>>() {}.type)
-        } else {
-            emptyList()
+        enviareButton.setOnClickListener {
+
+            val textoMonto = montoPersonalizado.text.toString() // Obtiene el texto del EditText como String
+
+            // Intenta convertir el texto a Float. Si es nulo (vacío o no es un número válido), usa 0.0f
+            val montoFloat: Float = textoMonto.toFloatOrNull() ?: 0.0f
+            shareLogic(chechPagoMovil.isChecked,chechImagenPersonalizada.isChecked,chekMontoPersonalizado.isChecked, montoFloat)
+            dialog.dismiss()
+        }
+
+        // --- INICIO: CÓDIGO PARA POSICIONAR EL DIÁLOGO ---
+        if (window != null) {
+            // 1. Establece la gravedad a la parte superior y centrado horizontalmente.
+            window.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
+
+            // 2. Añade un margen superior para que no se pegue al status bar.
+            val params = window.attributes
+            // La distancia en píxeles desde el borde superior. Puedes ajustar este valor.
+            params.y = 140
+            window.attributes = params
+        }
+
+
+        // Muestra el diálogo.
+        dialog.show()
+
+        // Aplica el desenfoque DESPUÉS de mostrar.
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window?.setBackgroundBlurRadius(90)
+                Log.d("DialogBlur", "showCustomDialogPM: realiz el efecto burt")
+            }
+        } catch (e: Exception) {
+            Log.e("DialogBlur", "Failed to set background blur", e)
         }
     }
+
+    // Función auxiliar para mostrar el teclado
+    private fun showKeyboard(view: View) {
+        if (view.requestFocus()) {
+            val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
+    // Función auxiliar para ocultar el teclado
+    private fun hideKeyboard(view: View) {
+        val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    //Inabilita el CheckBox que le envien
+    private fun inabilitarCheck(checkInvilitar: CheckBox, text:String){
+        checkInvilitar.isChecked = false
+        checkInvilitar.isEnabled = false
+        checkInvilitar.setTypeface(null, Typeface.ITALIC)
+        checkInvilitar.text = text
+        checkInvilitar.alpha = 0.5f
+
+    }
+
+    //Habilita el CheckBox que le envien
+    private fun habilitarCheck(checkInvilitar: CheckBox, text: String){
+        checkInvilitar.isChecked = true
+        checkInvilitar.isEnabled = true
+        checkInvilitar.setTypeface(null, Typeface.NORMAL)
+        checkInvilitar.text = text
+        checkInvilitar.alpha = 1.0f
+
+    }
+
+
+    private fun setupDecimalInputValidation(editText: EditText) {
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No es necesario hacer nada aquí
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // No es necesario hacer nada aquí
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                val originalString = s.toString()
+                if (originalString.isEmpty()) return
+
+                // Para evitar bucles infinitos al modificar el texto, quitamos el watcher temporalmente.
+                editText.removeTextChangedListener(this)
+
+                var correctedString = originalString
+
+                // 1. Reemplazar comas por puntos para estandarizar.
+                if (correctedString.contains(',')) {
+                    correctedString = correctedString.replace(',', '.')
+                }
+
+                // 2. Asegurarse de que no haya más de un punto.
+                val firstDotIndex = correctedString.indexOf('.')
+                if (firstDotIndex != -1) { // Si hay un punto
+                    // Si hay más puntos después del primero, los eliminamos.
+                    if (correctedString.lastIndexOf('.') != firstDotIndex) {
+                        // Conservamos solo hasta el último carácter válido antes del segundo punto.
+                        val lastValidCharIndex = correctedString.length - 1
+                        correctedString = correctedString.substring(0, lastValidCharIndex)
+                    }
+                }
+
+                // 3. Limitar a dos dígitos después del punto.
+                val dotIndex = correctedString.indexOf('.')
+                if (dotIndex != -1) {
+                    val decimalPart = correctedString.substring(dotIndex + 1)
+                    if (decimalPart.length > 2) {
+                        correctedString = correctedString.substring(0, dotIndex + 3) // 0-based index + dot + 2 digits
+                    }
+                }
+
+                // Si hemos corregido la cadena, la actualizamos en el EditText.
+                if (originalString != correctedString) {
+                    editText.setText(correctedString)
+                    // Movemos el cursor al final del texto.
+                    editText.setSelection(correctedString.length)
+                }
+
+                // Volvemos a añadir el watcher.
+                editText.addTextChangedListener(this)
+            }
+        }
+
+        editText.addTextChangedListener(textWatcher)
+    }
+
+
+
+
+//Logica para Compartr el pago movil con el texto y la imagen
+    private fun shareLogic(
+    enviarDatosPM: Boolean,
+    enviarImagenP: Boolean,
+    enviarMontoP: Boolean,
+    montoPersonalizado: Float,
+) {
+        pagoMovilListTrue = obtenerPagoMovilListTrue(this@MainActivity)
+        Log.d(TAG, "Decidiendo lógica para: DatosPM=$enviarDatosPM, ImagenP=$enviarImagenP, MontoP=$enviarMontoP")
+
+        // Usamos una expresión 'when' sobre una Triple para evaluar todas las combinaciones.
+        // El formato es (enviarDatosPM, enviarImagenP, enviarMontoP)
+        when (Triple(enviarDatosPM, enviarImagenP, enviarMontoP)) {
+
+
+
+
+            Triple(true, true, true) -> {
+                // CASO 1:
+                val texto = crearTextoCapture(enviarDatosPM, enviarMontoP,enviarImagenP,  pagoMovilListTrue, montoPersonalizado)
+                shareImageWithText(pagoMovilListTrue!!.imagen!!, texto)
+            }
+
+            // CASO 2: Datos + Imagen (true, true, false)
+            Triple(true, true, false) -> {
+
+                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP  , pagoMovilListTrue, montoPersonalizado)
+                shareImageWithText(pagoMovilListTrue!!.imagen!!, texto)
+            }
+
+            // CASO 3: Datos + Monto (true, false, true)
+            Triple(true, false, true) -> {
+                val texto = crearTextoCapture(enviarDatosPM,enviarImagenP, enviarMontoP,  pagoMovilListTrue, montoPersonalizado)
+                shareImageWithText(capturarPantalla()!!, texto) // Ejemplo de llamada a otra función
+            }
+
+            // CASO 4: Solo Datos (true, false, false)
+            Triple(true, false, false) -> {
+                Log.d(TAG, "CASO 4: Solo Datos")
+                // Reemplaza esto con la función que desees
+                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP, pagoMovilListTrue, montoPersonalizado)
+                shareImageWithText(capturarPantalla()!!, texto)
+            }
+
+            // CASO 5: Imagen + Monto (false, true, true)
+            Triple(false, true, true) -> {
+                // Reemplaza esto con la función que desees
+                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP, pagoMovilListTrue, montoPersonalizado)
+                shareImageWithText(pagoMovilListTrue!!.imagen!!, texto)
+            }
+
+            // CASO 6: Solo Imagen (false, true, false)
+            Triple(false, true, false) -> {
+                // Reemplaza esto con la función que desees
+                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP, pagoMovilListTrue, montoPersonalizado)// Texto podría ser vacío o un título
+                shareImageWithText(pagoMovilListTrue!!.imagen!!, texto)
+            }
+
+            // CASO 7: Solo Monto (false, false, true)
+            Triple(false, false, true) -> {
+                // Reemplaza esto con la función que desees
+                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP,  pagoMovilListTrue, montoPersonalizado)// Texto podría ser vacío o un título
+                shareImageWithText(capturarPantalla()!!, texto)
+            }
+
+            // CASO 8: NADA seleccionado (false, false, false)
+            Triple(false, false, false) -> {
+                // Reemplaza esto con la función que desees
+                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP,  pagoMovilListTrue, montoPersonalizado)// Texto podría ser vacío o un título
+                shareImageWithText(capturarPantalla()!!, texto)
+            }
+        }
+    }
+
 
     //Obtiene el pago Movil Activo
     private fun obtenerPagoMovilListTrue(context: Context): DatosPMovilModel? {
@@ -800,57 +936,101 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
     // Comparte imagen contexto************************
-    private fun shareImageWithText(imagePath: String, shareText: String) {
-        val imageFile = File(imagePath)
+    private fun shareImageWithText(imagePath: String?, shareText: String) {
+        val imageFile = imagePath?.let { File(it) }
         Log.d(TAG, "shareImageWithText: imageFile: $imageFile y imagePath: $imagePath")
-        if (imageFile.exists()) {
-            try {
-                // Guarda la imagen en el directorio de caché
-                val cachePath = File(applicationContext.cacheDir, "images").apply { mkdirs() }
-                val tempFile = File(cachePath, "shared_image.jpg").apply {
-                    // Copia el contenido del archivo original al archivo temporal
-                    imageFile.copyTo(this, overwrite = true)
+        if (imageFile != null) {
+            if (imageFile.exists()) {
+                try {
+                    // Guarda la imagen en el directorio de caché
+                    val cachePath = File(applicationContext.cacheDir, "images").apply { mkdirs() }
+                    val tempFile = File(cachePath, "shared_image.jpg").apply {
+                        // Copia el contenido del archivo original al archivo temporal
+                        imageFile.copyTo(this, overwrite = true)
+                    }
+
+                    // Obtener la Uri segura utilizando FileProvider
+                    val uri = FileProvider.getUriForFile(
+                        this,
+                        "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
+                        tempFile
+                    )
+
+                    val nombreFragmentAct = getCurrentFragmentTag()
+                    val customView = LayoutInflater.from(this).inflate(R.layout.custom_toast_pago_movil, null)
+                    val chechImagenPersonalizada: MaterialCheckBox = customView.findViewById(R.id.checImagenpersonalizada)
+
+                    // Crear un intent para compartir
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "image/*"
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                        if (nombreFragmentAct != "Pago Movil" || !chechImagenPersonalizada.isChecked){
+                            Log.d(TAG, "shareImageWithText: ENTRO AL INTEN URI $nombreFragmentAct")
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                        }
+
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+
+                    // Iniciar la actividad de compartir
+                    startActivity(Intent.createChooser(shareIntent, "Compartir imagen"))
+
+
+
+                } catch (e: IllegalArgumentException) {
+                    e.printStackTrace()
+                    Log.d(TAG, "IllegalArgumentException error: $e")
+                    Toast.makeText(
+                        this,
+                        "No se pudo compartir la imagen: Ruta no encontrada",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    Log.d(TAG, "IOException error: $e")
+                    Toast.makeText(this, "No se pudo compartir la imagen", Toast.LENGTH_SHORT).show()
                 }
-
-                // Obtener la Uri segura utilizando FileProvider
-                val uri = FileProvider.getUriForFile(
-                    this,
-                    "com.carlosv.menulateral.fileprovider",  // Reemplaza con el nombre de tu paquete
-                    tempFile
-                )
-
-                // Crear un intent para compartir
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "image/*"
-                    putExtra(Intent.EXTRA_TEXT, shareText)
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-
-                // Iniciar la actividad de compartir
-                startActivity(Intent.createChooser(shareIntent, "Compartir imagen"))
-
-            } catch (e: IllegalArgumentException) {
-                e.printStackTrace()
-                Log.d(TAG, "IllegalArgumentException error: $e")
-                Toast.makeText(
-                    this,
-                    "No se pudo compartir la imagen: Ruta no encontrada",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-            } catch (e: IOException) {
-                e.printStackTrace()
-                Log.d(TAG, "IOException error: $e")
-                Toast.makeText(this, "No se pudo compartir la imagen", Toast.LENGTH_SHORT).show()
+            } else {
+                Log.d(TAG, "shareImageWithText:La imagen no existe: imageFile.exists() ${imageFile.exists()} ")
+                Toast.makeText(this, "La imagen no existe en la ruta especificada", Toast.LENGTH_SHORT)
+                    .show()
             }
-        } else {
-            Log.d(TAG, "shareImageWithText:La imagen no existe: imageFile.exists() ${imageFile.exists()} ")
-            Toast.makeText(this, "La imagen no existe en la ruta especificada", Toast.LENGTH_SHORT)
-                .show()
         }
     }
+
+    fun Activity.capturarPantalla(): String? {
+        return try {
+            // Captura la vista raíz de la actividad
+            val rootView: View = window.decorView.rootView
+            val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            rootView.draw(canvas)
+
+            // Guarda el bitmap en un archivo temporal en el caché
+            val imageFile = File(cacheDir, "captura_pantalla.png")
+            FileOutputStream(imageFile).use { fos ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+            }
+            imageFile.absolutePath // Devuelve la ruta absoluta del archivo
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+    //Solo Envia Texto
+    private fun shareText(shareText: String) {
+        // Crear un intent para compartir
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "text/plain"
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
+
+        // Iniciar la actividad de compartir
+        startActivity(Intent.createChooser(shareIntent, "Compartir texto"))
+    }
+
 
 
     override fun onRestart() {
@@ -859,30 +1039,13 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    @Throws(IOException::class)
-    private fun createTempImageFile(): File {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val imageFileName = "temp_image_$timeStamp"
-        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return File.createTempFile(imageFileName, ".jpg", storageDir)
-    }
-
-    @Throws(IOException::class)
-    private fun copyFile(sourceFile: File, destFile: File) {
-        val source = sourceFile.inputStream()
-        val destination = FileOutputStream(destFile)
-
-        source.use { input ->
-            destination.use { output ->
-                input.copyTo(output)
-            }
-        }
-    }
-
     //Crea el Texto que va a ir junto con el Capture
     private fun crearTextoCapture(
         enviarDatosPM: Boolean,
+        enviarImagenPM: Boolean,
+        enviarMontoPM: Boolean,
         pagoMovilListTrue: DatosPMovilModel?,
+        montoPersonalizado: Float,
     ): String {
         var textoCapture = ""
         var inputTextoBs = ""
@@ -899,11 +1062,11 @@ class MainActivity : AppCompatActivity() {
 
         //***********************************************
         val fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
-        val botonParalelo = fragment?.view?.findViewById<ToggleButton>(R.id.btnEuroP)
+        val botonEuro = fragment?.view?.findViewById<ToggleButton>(R.id.btnEuroP)
         val botonPromedio = fragment?.view?.findViewById<ToggleButton>(R.id.btnPromedio)
         val botonBcv = fragment?.view?.findViewById<ToggleButton>(R.id.btnBcv)
 
-        val paralelo2 = botonParalelo?.textOn.toString()
+        val euroBcv = botonEuro?.textOn.toString()
         val  bcv2 = botonBcv?.textOn.toString()
         val promedio2= botonPromedio?.textOn.toString()
 
@@ -916,34 +1079,66 @@ class MainActivity : AppCompatActivity() {
                     fragment.view?.findViewById<EditText>(R.id.inputDolares)
                 inputTextoBs = editTextInFragmentBs?.text.toString()
                 inputTextoDolla = editTextInFragmentDolar?.text.toString()
+
+
                 if (editTextInFragmentBs != null && !inputTextoBs.isNullOrEmpty()) {
 
                     //Verifica se el Usuario quiere enviar Datos de pago Movil
-                    if (enviarDatosPM) {
+                    if (enviarDatosPM && enviarMontoPM) {
 
-                        textoCapture =
-                            "-Tasa: $tasa \n -Monto en Dolares: $inputTextoDolla \n -Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
+                        textoCapture=  "-Monto Bs: $montoPersonalizado \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
+                            prefijo(pagoMovilListTrue?.cedula)
+                        } ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+
+                    }
+
+                    if (enviarDatosPM &&  !enviarMontoPM){
+                        textoCapture = "-Tasa: $tasa \n -Monto en Dolares: $inputTextoDolla \n -Monto Bs: $inputTextoBs \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
                                 prefijo(pagoMovilListTrue?.cedula)
                             } ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
-                    } else {
-                        textoCapture =
-                            "-Tasa: $tasa \n -Monto en Dolares: $inputTextoDolla \n -Monto Bs: $inputTextoBs \n \n -Descarga la App $linkCorto"
+                    }
+
+                    if (!enviarDatosPM &&  !enviarMontoPM){
+                        textoCapture = "-Tasa: $tasa \n -Monto en Bs: $inputTextoBs  \n -Monto en Dolares: $inputTextoDolla  \n \n -Descarga la App \n $linkCorto"
+                    }
+
+                    if (!enviarDatosPM &&  enviarMontoPM){
+                        textoCapture = "-Monto Bs: $montoPersonalizado \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
+                            prefijo(pagoMovilListTrue?.cedula)
+                        } ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
                     }
 
 
                 } else {
 
-                    if (enviarDatosPM) {
+                    if (enviarDatosPM && enviarMontoPM) {
 
+                        textoCapture=  "-Monto Bs: $montoPersonalizado \n \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
+                            prefijo(pagoMovilListTrue?.cedula)
+                        } ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
 
-                        textoCapture =
-                            "-Dolar Bcv: $bcv2 \n  \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${
-                                prefijo(pagoMovilListTrue?.cedula)
-                            } ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
-                    } else {
-                        textoCapture =
-                            "-Dolar Bcv: $bcv2 \n  \n -Descarga la App \n $linkCorto"
                     }
+
+                    if (!enviarDatosPM && enviarMontoPM) {
+
+                        textoCapture=
+                            "-Dolar Bcv: $bcv2 \n -Euro Bcv: $euroBcv \n \n-Monto Bs: $montoPersonalizado \n \n -Descarga la App \n $linkCorto"
+
+                    }
+
+                     if (enviarDatosPM && !enviarMontoPM){
+                         textoCapture =
+                             "-Dolar Bcv: $bcv2 \n -Euro Bcv: $euroBcv \n" +
+                                     " \n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n-${prefijo(pagoMovilListTrue?.cedula)} ${pagoMovilListTrue?.cedula}  \n" +
+                                     " -Banco: ${pagoMovilListTrue?.banco}\n\n" +
+                                     " -Descarga la App \n $linkCorto"
+                     }
+
+                    if (!enviarDatosPM &&  !enviarMontoPM){
+                        textoCapture = "-Tasa: $tasa \n -Dolar Bcv: $bcv2 \n-Euro Bcv: $euroBcv  \n" +
+                                " \n -Descarga la App \n $linkCorto"
+                    }
+
 
                 }
 
@@ -969,13 +1164,13 @@ class MainActivity : AppCompatActivity() {
 
         if (nombreFragmentAct == "Precio del Euro") {
             val btnTextInFragmentEuro = fragment?.view?.findViewById<Button>(R.id.btnEuro)
-            val TextBsFragmentEuro =
+            val textBsFragmentEuro =
                 fragment?.view?.findViewById<TextInputEditText>(R.id.inputBolivares)
-            val TextEurosFragmentEuro =
+            val textEurosFragmentEuro =
                 fragment?.view?.findViewById<TextInputEditText>(R.id.inputEuros)
             val euro = btnTextInFragmentEuro?.text
-            val totalBs = TextBsFragmentEuro?.text
-            val totalEuro = TextEurosFragmentEuro?.text
+            val totalBs = textBsFragmentEuro?.text
+            val totalEuro = textEurosFragmentEuro?.text
 
             textoCapture =
                 "Precio del Euro: $euro total en Bs:$totalBs Total en Euro: $totalEuro \n -Descarga la App \n $linkCorto"
@@ -987,8 +1182,10 @@ class MainActivity : AppCompatActivity() {
 
                 textoCapture =
                     "-Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${prefijo(pagoMovilListTrue?.cedula)} ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
-            } else {
-                textoCapture = "-Descarga la App $linkCorto"
+            }
+
+            if (enviarDatosPM && enviarMontoPM){
+                textoCapture = "-Monto en bs:$montoPersonalizado \n\n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${prefijo(pagoMovilListTrue?.cedula)} ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
             }
 
         }
@@ -1017,7 +1214,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (botonParalelo?.isChecked == true) {
-            tasa = "Paralelo"
+            tasa = "Euro"
         }
 
         if (botonPromedio?.isChecked == true) {
@@ -1028,7 +1225,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun prefijo(cedula: String?): String {
         var letra = ""
-        if (cedula!!.isNotEmpty()) {
+        if (!cedula.isNullOrEmpty()){
+        //if (cedula!!.isNotEmpty()) {
             when (cedula.first()) {
                 'V', 'E' -> {
                     // Acción para cuando la primera letra es 'V'
@@ -1055,10 +1253,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } else {
-            println("La variable está vacía")
+            letra = "CI:"
+            return letra
+           // println("La variable está vacía")
         }
 
-        return letra
+       // return letra
     }
 
 
