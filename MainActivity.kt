@@ -89,6 +89,7 @@ import com.google.gson.Gson
 import java.util.concurrent.atomic.AtomicBoolean
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 
 class MainActivity : AppCompatActivity() {
@@ -124,6 +125,9 @@ class MainActivity : AppCompatActivity() {
         MobileAds.initialize(this) {}
         appOpenAdManager = AppOpenAdManager()
         setSupportActionBar(binding.appBarMain.toolbar)
+
+        // Inicializa nuestra clase de preferencias.
+        AppPreferences.init(this)
 
 
         //adOpen*********************
@@ -215,23 +219,18 @@ class MainActivity : AppCompatActivity() {
     // 2. MODIFICA TU MÉTODO 'onCreateOptionsMenu'
     @OptIn(ExperimentalBadgeUtils::class)
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflar el menú (esto ya lo tenías bien)
         menuInflater.inflate(R.menu.main, menu)
 
-        // --- LÓGICA PARA CREAR Y ADJUNTAR EL BADGE ---
+        // --- LÓGICA DEL BADGE CONDICIONAL ---
 
-        // Crea una instancia del BadgeDrawable. Lo asignamos a nuestra variable de clase.
-        personalBadge = BadgeDrawable.create(this)
-
-        // Configura el badge. Por ejemplo, para mostrar el número 1.
-        // Si no quieres número y solo un punto, simplemente no llames a .number
-        personalBadge?.number = 1
-        personalBadge?.isVisible = true // ¡Importante hacerlo visible!
-
-        // Adjunta el Badge al ítem de menú usando BadgeUtils.
-        // Usamos tu 'binding' para obtener el Toolbar de forma segura.
-        // El '!!' es seguro aquí porque acabamos de crear el badge.
-        BadgeUtils.attachBadgeDrawable(personalBadge!!, binding.appBarMain.toolbar, R.id.action_personal)
+        // Solo continuamos si el usuario NO ha visto el diálogo
+        if (!AppPreferences.haVistoDialogoPagoMovil()) {
+            personalBadge = BadgeDrawable.create(this)
+            // No le ponemos número para que sea solo un punto de notificación
+            personalBadge?.number = 1
+            personalBadge?.isVisible = true
+            BadgeUtils.attachBadgeDrawable(personalBadge!!, binding.appBarMain.toolbar, R.id.action_personal)
+        }
 
         return true
     }
@@ -254,9 +253,17 @@ class MainActivity : AppCompatActivity() {
                 showCustomDialogPM()
             }
 
+
+
             R.id.action_personal -> {
-                navController2.navigate(R.id.nav_Personal)
-                ocultarBadgePersonal()
+
+                if (!AppPreferences.haVistoDialogoPagoMovil()) {
+                    // Si no lo ha visto, mostramos el diálogo
+                    mostrarDialogoNovedadPagoMovil()
+                }else{
+                    navController2.navigate(R.id.nav_Personal)
+                }
+
             }
 
             R.id.action_salir -> {
@@ -266,6 +273,27 @@ class MainActivity : AppCompatActivity() {
 
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun mostrarDialogoNovedadPagoMovil() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("¡Nueva Función Disponible!")
+            .setMessage("Ahora puedes personalizar y compartir una imagen con tus datos de Pago Móvil para que tus transacciones sean más rápidas y profesionales.")
+            .setPositiveButton("Entendido") { dialog, which ->
+                // Cuando el usuario pulsa "Entendido":
+
+                // 1. Guardamos que ya vio el mensaje para no mostrarlo de nuevo
+                AppPreferences.marcarDialogoPagoMovilComoVisto()
+
+                // 2. Ocultamos el badge
+                ocultarBadgePersonal()
+
+                // 3. (Opcional) Puedes llevarlo directamente a la función de Pago Móvil
+                // TODO: Reemplaza esto con la acción que debe hacer tu botón normalmente
+                navController2.navigate(R.id.nav_Personal)
+            }
+            .setCancelable(false) // El usuario debe presionar el botón para cerrar
+            .show()
     }
     private fun movilidadPantalla(){
         if (isChromeOSDevice()) {

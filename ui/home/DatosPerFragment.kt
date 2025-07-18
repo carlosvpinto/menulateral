@@ -65,6 +65,8 @@ class DatosPerFragment : Fragment() {
         sharedPref = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         binding.recyPagoMovil.layoutManager = LinearLayoutManager(requireContext())
 
+
+
         llamarPagoMovil()
 
         binding.btnCancelar.setOnClickListener {

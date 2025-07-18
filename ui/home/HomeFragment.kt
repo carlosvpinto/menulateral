@@ -80,6 +80,7 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.carlosv.dolaraldia.AESCrypto
+import com.carlosv.dolaraldia.AppPreferences
 import com.carlosv.dolaraldia.MyApplication
 import com.carlosv.dolaraldia.model.FCMBody
 import com.carlosv.dolaraldia.model.FCMResponse
@@ -202,6 +203,8 @@ class HomeFragment : Fragment() {
         shakeDetector = ShakeDetector(requireContext()) {
             // onShakeDetected()
         }
+
+
         visibleLayoutProxBcv += 1
         //  llamarDolarApiNew()
         llamarApiCriptoDolar()
@@ -360,9 +363,7 @@ class HomeFragment : Fragment() {
             copiarBs()
         }
 
-        binding.imglogo.setOnClickListener {
-            // crearImagenUrl() creo objeto para imagen
-        }
+
 
         binding.imgVPublicidad.setOnClickListener {
             guardarClickAnuncio()
