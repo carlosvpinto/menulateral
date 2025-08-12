@@ -76,7 +76,9 @@ import java.security.cert.X509Certificate
 import java.util.Date
 import javax.net.ssl.*
 import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.carlosv.dolaraldia.AESCrypto
@@ -91,12 +93,7 @@ import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseCripto
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseBCV
 import com.carlosv.dolaraldia.model.apimercantil.ApiResponse
 
-import com.carlosv.dolaraldia.model.apimercantil.busqueda.MerchantIdentify
-import com.carlosv.dolaraldia.model.apimercantil.busqueda.MobileInfo
-import com.carlosv.dolaraldia.model.apimercantil.busqueda.MobilePaymentSearchRequest
-import com.carlosv.dolaraldia.model.apimercantil.busqueda.SearchBy
-import com.carlosv.dolaraldia.model.apimercantil.busqueda.ClientIdentify
-import com.carlosv.dolaraldia.model.apimercantil.busqueda.Location
+
 import com.carlosv.dolaraldia.model.clickAnuncios.ClickAnunicosModel
 import com.carlosv.dolaraldia.model.controlPublicidad.ConfigImagenModel
 import com.carlosv.dolaraldia.model.controlPublicidad.ImprecionesArtiModel
@@ -106,6 +103,8 @@ import com.carlosv.dolaraldia.provider.ClickAnuncioProvider
 import com.carlosv.dolaraldia.provider.RegistroPubliProvider
 import com.carlosv.dolaraldia.services.NotificationProvider
 import com.carlosv.dolaraldia.utils.Constants
+import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnError
+import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnSuccess
 import com.denzcoskun.imageslider.ImageSlider
 import com.denzcoskun.imageslider.constants.ScaleTypes
 import com.denzcoskun.imageslider.models.SlideModel
@@ -199,10 +198,10 @@ class HomeFragment : Fragment() {
         val root: View = binding.root
 
         //ImagenSlider
-        imageSlider = binding.imageSlider
-        shakeDetector = ShakeDetector(requireContext()) {
-            // onShakeDetected()
-        }
+//        imageSlider = binding.imageSlider
+//        shakeDetector = ShakeDetector(requireContext()) {
+//            // onShakeDetected()
+//        }
 
 
         visibleLayoutProxBcv += 1
@@ -213,8 +212,8 @@ class HomeFragment : Fragment() {
         //llama al end Points que actualiza el BCV a las 4pm
        // llamarDolarBcvAdelantado()
 
-
-
+        configurarBannerWhatsApp()
+        //cargarDisponibleIOs()
         MobileAds.initialize(requireContext()) {}
         // cargarImagendelConfig()
 
@@ -280,21 +279,11 @@ class HomeFragment : Fragment() {
 
 
             //PARA PUBLICIDAD INTERNA*******
-            //listenerImagenConfig()
+         //   listenerImagenConfig()
             //******************************
 
         }
-        binding.btnprobar.setOnClickListener {
-            // probarencryptado()
-            // realizarBusquedaMovil2()
-            // realizarBusqueda2()
 
-            // llamdaApiMercantil()
-            // sendPaymentRequest()
-
-            sendNotification()
-
-        }
         binding.btnRefres.setOnClickListener {
             comenzarCarga()
             llamarApiTipoCambio { isSuccessful ->
@@ -315,6 +304,17 @@ class HomeFragment : Fragment() {
         binding.imgVerDifBs.setOnClickListener {
             calcularDiferencia()
             //showCustomSnackbar("nada")
+        }
+
+        // Asigna un listener para los cambios de estado del Switch
+        binding.switchDolar.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                // Si el switch está activado, simula un clic en el botón de Euro
+                binding.btnEuroP.performClick()
+            } else {
+                // Si el switch está desactivado, simula un clic en el botón de BCV
+                binding.btnBcv.performClick()
+            }
         }
 
         binding.btnBcv.setOnClickListener {
@@ -365,15 +365,15 @@ class HomeFragment : Fragment() {
 
 
 
-        binding.imgVPublicidad.setOnClickListener {
+        /*binding.imgVPublicidad.setOnClickListener {
             guardarClickAnuncio()
             irAlArticulo()
 
-        }
-        binding.imgCerrarAnuncio.setOnClickListener {
-            // binding.layoutCerraAnun.visibility= View.GONE
-            binding.LnerPubliImagen.visibility = View.GONE
-        }
+        }*/
+//        binding.imgCerrarAnuncio.setOnClickListener {
+//            // binding.layoutCerraAnun.visibility= View.GONE
+//            binding.LnerPubliImagen.visibility = View.GONE
+//        }
         binding.SwUtimaAct.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 val resposeGuardadoApiTipoCambio = ApiResponseHolder.getResponseEuroTipoCambio()
@@ -528,7 +528,7 @@ class HomeFragment : Fragment() {
 
     private fun guardarClickAnuncio() {
         try {
-            val nombreAnuncio = nombreAnuncio
+            val nombreAnuncio = "Compartor App Ios"
             val uri = url
 
             val clickAnuncioModel = ClickAnunicosModel(
@@ -544,12 +544,12 @@ class HomeFragment : Fragment() {
             clickAnuncioProvider.create(clickAnuncioModel).addOnCompleteListener { it ->
                 if (it.isSuccessful) {
 
-                    // Toast.makeText(requireContext(), "GUARDANDO DATOS DEL CLICK", Toast.LENGTH_LONG).show()
+                     //Toast.makeText(requireContext(), "GUARDANDO DATOS DEL CLICK", Toast.LENGTH_LONG).show()
 
                 } else {
                     Log.d(TAG, "crearImagenUrl: ${it.exception}")
-                    Toast.makeText(requireContext(), "Error ${it.exception}", Toast.LENGTH_LONG)
-                        .show()
+//                    Toast.makeText(requireContext(), "Error ${it.exception}", Toast.LENGTH_LONG)
+//                        .show()
                 }
             }
         } catch (e: NumberFormatException) {
@@ -654,6 +654,62 @@ class HomeFragment : Fragment() {
 
     //PUBLICIDAD INTERNA*****************************
 
+
+    private fun configurarBannerWhatsApp() {
+        val bannerImageView = binding.bannerPromocionIos
+        val urlImagenBanner = "https://firebasestorage.googleapis.com/v0/b/dolar-mexico-739d5.firebasestorage.app/o/compartir_ios_gif2.gif?alt=media&token=8e3e621e-f46e-4d09-b533-20517185f9bb"
+
+        // --- Carga del GIF con diagnóstico (versión corregida) ---
+        Glide.with(this)
+            .asGif()
+            //.load(R.drawable.compartir_ios_gif2)
+            .load(urlImagenBanner)
+            .diskCacheStrategy(DiskCacheStrategy.NONE)
+            .skipMemoryCache(true)
+            // CORRECCIÓN: El listener ahora es específico para GifDrawable
+            .listener(object : RequestListener<GifDrawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<GifDrawable>,
+                    isFirstResource: Boolean,
+                ): Boolean {
+                    Log.e("Glide_GIF", "Error crítico al cargar el GIF.", e)
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: GifDrawable,
+                    model: Any,
+                    target: Target<GifDrawable>?,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean,
+                ): Boolean {
+                    Log.d("Glide_GIF", "El recurso GIF ha sido cargado exitosamente.")
+                    resource.setLoopCount(GifDrawable.LOOP_FOREVER) // Asegurar repetición
+                    return false
+                }
+
+            })
+            .into(bannerImageView)
+
+
+        // --- Configuración del clic (sin cambios) ---
+        bannerImageView.setOnClickListener {
+            guardarClickAnuncio()
+            val linkAppStore = "https://www.dolaraldiavzla.com/descarga/"
+            val mensajeParaCompartir = "¡Hola! Te recomiendo esta app para seguir el dólar en Venezuela, ahora también disponible para iPhone. Descárgala aquí: $linkAppStore"
+
+            val intent = Intent(Intent.ACTION_VIEW)
+            try {
+                val urlEncodedMessage = Uri.encode(mensajeParaCompartir)
+                intent.data = Uri.parse("https://api.whatsapp.com/send?text=$urlEncodedMessage")
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "WhatsApp no está instalado en este dispositivo.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     //    private fun irAlArticulo() {
 //        if(linkAfiliado.isNullOrEmpty()){
 //            // URL que quieres abrir cuando se hace clic en la imagen
@@ -703,8 +759,8 @@ class HomeFragment : Fragment() {
 //                            val fecha = Date().toString()
 //                            val id = configImageModels[randomIndex].id
 //                            url = configImageModels[randomIndex].url
-//                            url2= configImageModels[randomIndex].url2
-//                            url3= configImageModels[randomIndex].url3
+////                            url2= configImageModels[randomIndex].url2
+////                            url3= configImageModels[randomIndex].url3
 //                            nombreAnuncio = configImageModels[randomIndex].nombre
 //                            linkAfiliado = configImageModels[randomIndex].linkAfiliado
 //                            pagina = configImageModels[randomIndex].pagina
@@ -725,132 +781,132 @@ class HomeFragment : Fragment() {
 //                }
 //            }
 //    }
-
-    private fun cargarImagenSlider(url: String?, url2: String?, url3: String?) {
-
-        //agregar imagen a la lista
-        val imageList = ArrayList<SlideModel>()
-        imageList.add(SlideModel(url, ScaleTypes.CENTER_CROP))
-        if (url2 != null) {
-            imageList.add(SlideModel(url2, ScaleTypes.CENTER_CROP))
-        }
-        if (url3 != null) {
-            imageList.add(SlideModel(url3, ScaleTypes.CENTER_CROP))
-        }
-        Log.d(TAG, "cargarImagenSlider: url:$url  url2:$url2  url3:$url3")
-        Log.d(TAG, "cargarImagenSlider: imageList $imageList ")
-        imageSlider?.setImageList(imageList)
-    }
-
-
-//    private fun eliminarListener() {
-//        imageConfigListener?.remove()
+//
+//    private fun cargarImagenSlider(url: String?, url2: String?, url3: String?) {
+//
+//        //agregar imagen a la lista
+//        val imageList = ArrayList<SlideModel>()
+//        imageList.add(SlideModel(url, ScaleTypes.CENTER_CROP))
+//        if (url2 != null) {
+//            imageList.add(SlideModel(url2, ScaleTypes.CENTER_CROP))
+//        }
+//        if (url3 != null) {
+//            imageList.add(SlideModel(url3, ScaleTypes.CENTER_CROP))
+//        }
+//        Log.d(TAG, "cargarImagenSlider: url:$url  url2:$url2  url3:$url3")
+//        Log.d(TAG, "cargarImagenSlider: imageList $imageList ")
+//        imageSlider?.setImageList(imageList)
 //    }
-
-    //Contabiliza la veces que es Visible una Publicidad
-    private fun crearImpresion(id: String, nombreArticulo: String?, fecha: String?) {
-        Log.d(TAG, "crearImpresion: nombreArticulo $nombreArticulo")
-        lifecycleScope.launch {
-            try {
-                val imprecionesArtiModel = ImprecionesArtiModel(
-                    id = id,
-                    nombre = nombreArticulo,
-                    numeroImpresiones = 1,
-                    fecha = fecha,
-                    numeroClic = 1,
-                )
-
-                try {
-                    val documentReference =
-                        registroPublicidad.createWithCoroutines(imprecionesArtiModel)
-                    Log.d(TAG, "crearImpresion: documentReference $documentReference")
-                    Toast.makeText(
-                        requireContext(),
-                        "Datos Enviados para Validar",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } catch (e: Exception) {
-                    Log.d(TAG, "crearImagenUrl: $e")
-                    Toast.makeText(requireContext(), "Error al crear los datos", Toast.LENGTH_LONG)
-                        .show()
-                }
-            } catch (e: NumberFormatException) {
-                Toast.makeText(requireContext(), "Error en datos $e", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-
-    //CRE UN ARCHIVO PARA LA PUBLICIDAD INTERNA DE LA APP
-    private fun crearImagenUrl() {
-
-
-        try {
-            val uri = "https://loremflickr.com/g/320/240/paris,girl/all"
-            val linkAfiliado = "https://www.google.com"
-
-            val imagenConfigModel = ConfigImagenModel(
-                url = uri,
-                linkAfiliado = linkAfiliado,
-                date = Date()
-            )
-
-            imagenConfProvider.create(imagenConfigModel).addOnCompleteListener { it ->
-                if (it.isSuccessful) {
-
-                    Toast.makeText(
-                        requireContext(),
-                        "Datos Enviados para Validar",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                } else {
-                    Toast.makeText(requireContext(), "Error al crear los datos", Toast.LENGTH_LONG)
-                        .show()
-                }
-            }
-        } catch (e: NumberFormatException) {
-            Toast.makeText(requireContext(), "Error en datos $e", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    //Carga la Imagen para la piblicidad Interna de la app
-    private fun cargarImagen(uri: String?, nombreAnun: String?, id: String, fecha: String?) {
-        if (uri != "") {
-            binding.LnerPubliImagen.visibility = View.VISIBLE
-            //para crear imprecion de publicidad
-            // crearImpresion(id,nombreAnun,fecha )
-            Glide.with(this)
-                .load(uri)
-                .listener(object : RequestListener<Drawable> {
-
-                    override fun onResourceReady(
-                        resource: Drawable,
-                        model: Any,
-                        target: com.bumptech.glide.request.target.Target<Drawable>?,
-                        dataSource: DataSource,
-                        isFirstResource: Boolean,
-                    ): Boolean {
-                        //binding.LnerPubliImagen.visibility = View.VISIBLE
-                        binding.layoutCerraAnun.visibility = View.VISIBLE
-
-                        return false
-                    }
-
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: Target<Drawable>,
-                        isFirstResource: Boolean,
-                    ): Boolean {
-                        return false
-                    }
-                })
-                .into(binding.imgVPublicidad)
-        } else {
-            Log.d(TAG, "cargarImagen: URI Vacio")
-        }
-    }
+//
+//
+////    private fun eliminarListener() {
+////        imageConfigListener?.remove()
+////    }
+//
+//    //Contabiliza la veces que es Visible una Publicidad
+//    private fun crearImpresion(id: String, nombreArticulo: String?, fecha: String?) {
+//        Log.d(TAG, "crearImpresion: nombreArticulo $nombreArticulo")
+//        lifecycleScope.launch {
+//            try {
+//                val imprecionesArtiModel = ImprecionesArtiModel(
+//                    id = id,
+//                    nombre = nombreArticulo,
+//                    numeroImpresiones = 1,
+//                    fecha = fecha,
+//                    numeroClic = 1,
+//                )
+//
+//                try {
+//                    val documentReference =
+//                        registroPublicidad.createWithCoroutines(imprecionesArtiModel)
+//                    Log.d(TAG, "crearImpresion: documentReference $documentReference")
+//                    Toast.makeText(
+//                        requireContext(),
+//                        "Datos Enviados para Validar",
+//                        Toast.LENGTH_LONG
+//                    ).show()
+//                } catch (e: Exception) {
+//                    Log.d(TAG, "crearImagenUrl: $e")
+//                    Toast.makeText(requireContext(), "Error al crear los datos", Toast.LENGTH_LONG)
+//                        .show()
+//                }
+//            } catch (e: NumberFormatException) {
+//                Toast.makeText(requireContext(), "Error en datos $e", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//    }
+//
+//
+//    //CRE UN ARCHIVO PARA LA PUBLICIDAD INTERNA DE LA APP
+//    private fun crearImagenUrl() {
+//
+//
+//        try {
+//            val uri = "https://loremflickr.com/g/320/240/paris,girl/all"
+//            val linkAfiliado = "https://www.google.com"
+//
+//            val imagenConfigModel = ConfigImagenModel(
+//                url = uri,
+//                linkAfiliado = linkAfiliado,
+//                date = Date()
+//            )
+//
+//            imagenConfProvider.create(imagenConfigModel).addOnCompleteListener { it ->
+//                if (it.isSuccessful) {
+//
+//                    Toast.makeText(
+//                        requireContext(),
+//                        "Datos Enviados para Validar",
+//                        Toast.LENGTH_LONG
+//                    ).show()
+//
+//                } else {
+//                    Toast.makeText(requireContext(), "Error al crear los datos", Toast.LENGTH_LONG)
+//                        .show()
+//                }
+//            }
+//        } catch (e: NumberFormatException) {
+//            Toast.makeText(requireContext(), "Error en datos $e", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//
+//    //Carga la Imagen para la publicidad Interna de la app
+//    private fun cargarImagen(uri: String?, nombreAnun: String?, id: String, fecha: String?) {
+//        if (uri != "") {
+//            binding.LnerPubliImagen.visibility = View.VISIBLE
+//            //para crear imprecion de publicidad
+//            // crearImpresion(id,nombreAnun,fecha )
+//            Glide.with(this)
+//                .load(uri)
+//                .listener(object : RequestListener<Drawable> {
+//
+//                    override fun onResourceReady(
+//                        resource: Drawable,
+//                        model: Any,
+//                        target: com.bumptech.glide.request.target.Target<Drawable>?,
+//                        dataSource: DataSource,
+//                        isFirstResource: Boolean,
+//                    ): Boolean {
+//                        binding.LnerPubliImagen.visibility = View.VISIBLE
+//                        binding.layoutCerraAnun.visibility = View.VISIBLE
+//
+//                        return false
+//                    }
+//
+//                    override fun onLoadFailed(
+//                        e: GlideException?,
+//                        model: Any?,
+//                        target: Target<Drawable>,
+//                        isFirstResource: Boolean,
+//                    ): Boolean {
+//                        return false
+//                    }
+//                })
+//                .into(binding.imgVPublicidad)
+//        } else {
+//            Log.d(TAG, "cargarImagen: URI Vacio")
+//        }
+//    }
 
 
     //INTERFACE PARA COMUNICAR CON EL ACTIVITY
@@ -1269,99 +1325,9 @@ class HomeFragment : Fragment() {
     }
 
 
-//    //llamar a api Una sola vez desde create  para verifica fecha
-//    fun llamarDolarBcvAdelantado() {
-//        // Obtén la hora actual
-//        val horaActual = LocalTime.now()
-//
-//        // Obtén el día actual
-//        val diaActual = LocalDate.now().dayOfWeek
-//
-//        // Verifica si es fin de semana
-//        val esFinDeSemana = diaActual == DayOfWeek.SATURDAY || diaActual == DayOfWeek.SUNDAY
-//
-//        // Define los intervalos de tiempo
-//        val inicioSegundaConsulta = LocalTime.of(15, 1) // 3:01 PM
-//        val finSegundaConsulta = LocalTime.MAX // 11:59 PM
-//
-//        // Si es fin de semana o está dentro del segundo intervalo de tiempo (3:01 PM - 11:59 PM)
-//        if (esFinDeSemana || horaActual in inicioSegundaConsulta..finSegundaConsulta) {
-//            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-//                val baseUrl = Constants.URL_BASE // URL base
-//
-//                val client = OkHttpClient.Builder()
-//                    .addInterceptor { chain ->
-//                        val request = chain.request().newBuilder()
-//                            .addHeader("Authorization", Constants.BEARER_TOKEN)
-//                            .build()
-//                        try {
-//                            val response = chain.proceed(request)
-//                            response
-//                        } catch (e: Exception) {
-//                            Log.e(TAG, "Error in interceptor: ${e.message}")
-//                            throw e
-//                        }
-//                    }
-//                    .build()
-//
-//                val retrofit = Retrofit.Builder()
-//                    .baseUrl(baseUrl)
-//                    .addConverterFactory(GsonConverterFactory.create())
-//                    .client(client)
-//                    .build()
-//
-//                val apiService = retrofit.create(ApiService::class.java)
-//                try {
-//                    val responseApiBcvAdelantado = apiService.tipocambio()
-//                    if (responseApiBcvAdelantado != null) {
-//                        withContext(Dispatchers.Main) {
-//
-//                            ApiResponseHolder.setResponseOriginal(responseApiBcvAdelantado)
-//                            guardarResponseAdelantado(requireContext(), responseApiBcvAdelantado )
-//                            var dateMayor = verificafechaActBcv(responseApiBcvAdelantado)  //Mientras tanto No aparesca la barra ***********
-//                            //Mientras tanto
-//                            dateMayor = false
-//                            if (dateMayor) {
-//                                if (visibleLayoutProxBcv < 2) {
-//                                    visibleLayoutProxBcv += 1
-//                                    val slideIn = AnimationUtils.loadAnimation(
-//                                        requireContext(),
-//                                        R.anim.slide_in
-//                                    )
-//                                    val layoutUltActBcv = binding.layoutUltActBcv
-//                                    layoutUltActBcv.startAnimation(slideIn)
-//                                    binding.layoutUltActBcv.visibility = View.VISIBLE
-//                                    ApiResponseHolder.setResponseOriginal(responseApiBcvAdelantado)
-//                                    val fechaSinHora =
-//                                        extraerFecha(responseApiBcvAdelantado.monitors.eur.last_update)
-//                                    binding.txtUltActBcv.text = fechaSinHora
-//                                }
-//                            } else {
-//                                binding.layoutUltActBcv.visibility = View.GONE
-//                                binding.SwUtimaAct.isChecked = false
-//                            }
-//
-//
-//
-//                            multiplicaDolares()
-//                            dividirABolivares()
-//                        }
-//                    }
-//                } catch (e: Exception) {
-//                    withContext(Dispatchers.Main) {
-//                        Log.e(TAG, "llamarDolarBcvAdelantado: $e",)
-//
-//
-//                    }
-//                }
-//            }
-//        }
-//
-//    }
-
 
     private fun visibilidadSwicheDiaManana(resposeApiTipoCambio: ApiEuroTipoCambio ) {
-
+        Log.d(TAG, "visibilidadSwicheDiaManana:resposeApiTipoCambio: $resposeApiTipoCambio ")
         if (!diaActual) {
             if (visibleLayoutProxBcv < 2) {
                 visibleLayoutProxBcv += 1
@@ -1431,6 +1397,7 @@ class HomeFragment : Fragment() {
             try {
                 // Realizar la solicitud a la API con el parámetro de consulta
                 val response = apiService.getDollarBancosBcv("bcv")
+                Log.d(TAG, "llamarApiPaginaBCV: RESPONSE $response")
 
                 if (response != null) {
 
@@ -1446,10 +1413,12 @@ class HomeFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 // Manejo de errores generales
+
                 Log.e("API_CALL", "Error: ${e.message}")
             } finally {
                 withContext(Dispatchers.Main) {
                     // Detener cualquier indicador de carga si es necesario
+
                 }
             }
         }
@@ -1517,13 +1486,13 @@ class HomeFragment : Fragment() {
             val apiService = retrofit.create(ApiService::class.java)
             try {
                 val apiResponseTipoCambio = apiService.tipocambio()
-                Log.d(TAG, "llamarDolarApiEuro: apiResponse $apiResponseTipoCambio")
+
                 if (apiResponseTipoCambio != null) {
                     withContext(Dispatchers.Main) {
 
                         ApiResponseHolder.setResponseApiEurosTipoCambio(apiResponseTipoCambio)
                         diaActual = verificafechaActBcv(apiResponseTipoCambio)
-                        Log.d(TAG, "llamarDolarApiEuro: verificafechaActBcv diaActual $diaActual")
+
                         visibilidadSwicheDiaManana(apiResponseTipoCambio)
 
                         valorActualParalelo = apiResponseTipoCambio.monitors.eur.price
@@ -1540,6 +1509,18 @@ class HomeFragment : Fragment() {
                                 R.color.md_theme_light_surfaceTint
                             )
                         )
+
+                        //Desaparece el boton de Conectado
+                        if (binding.imgSinConext.visibility == View.VISIBLE){
+                            binding.imgSinConext.visibility= View.GONE
+                            vibrateOnSuccess(requireContext())
+                            Toast.makeText(
+                                requireContext(),
+                                "Reconexion!!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
 
                         llenarCampoBCVNew(apiResponseTipoCambio, diaActual)
                         llenarDolarEuro(apiResponseTipoCambio, diaActual)
@@ -1560,9 +1541,14 @@ class HomeFragment : Fragment() {
                     animarSwipe()
                     Toast.makeText(
                         requireContext(),
-                        "Problemas de Conexion",
+                        "Problemas de Conexion!!",
                         Toast.LENGTH_SHORT
                     ).show()
+
+                    //Vibra para indicar que no hay conexcion
+                    vibrateOnError(requireContext())
+                    binding.imgSinConext.visibility= View.VISIBLE
+
                     callback(false) // Operación fallida
                 }
             } finally {
@@ -1766,17 +1752,6 @@ class HomeFragment : Fragment() {
         editor.apply()
     }
 
-    //Guarda en SharePreference los Respose de cada solicitud al API ADEKANTADO
-    private fun guardarResponseAdelantado(context: Context, responseBCV: ApiEuroTipoCambio) {
-        val gson = Gson()
-        val responseJson = gson.toJson(responseBCV)
-
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("dolarBCVAdelantado", responseJson)
-        editor.apply()
-    }
 
 
     private fun guardarResponseCripto(context: Context, responseBCV: ApiModelResponseCripto) {
@@ -1821,20 +1796,6 @@ class HomeFragment : Fragment() {
         return null // Retorna null si no se encontró la respuesta en SharedPreferences
     }
 
-    private fun getResponseFromSharedPreferencesAdelantado(context: Context): ApiEuroTipoCambio? {
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
-        val responseJson = sharedPreferences.getString("dolarBCVAdelantado", null)
-
-        if (responseJson != null) {
-            val gson = Gson()
-
-            return gson.fromJson(responseJson, ApiEuroTipoCambio::class.java)
-        }
-
-        return null // Retorna null si no se encontró la respuesta en SharedPreferences
-    }
-
 
     // Define una función para recuperar la respuesta de SharedPreferences
     private fun getResponseSharedPreferencesCriptodolar(context: Context): ApiModelResponseCripto? {
@@ -1865,21 +1826,6 @@ class HomeFragment : Fragment() {
 
         return null // Retorna null si no se encontró la respuesta en SharedPreferences
     }
-
-    private fun getResponseSharedPreferencesHistory(context: Context): HistoryModelResponse? {
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
-        val responseJson = sharedPreferences.getString("ResponseHistory", null)
-
-        if (responseJson != null) {
-            val gson = Gson()
-
-            return gson.fromJson(responseJson, HistoryModelResponse::class.java)
-        }
-
-        return null // Retorna null si no se encontró la respuesta en SharedPreferences
-    }
-
 
 
 
@@ -1924,26 +1870,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-
-
-    fun llenarCampoPromedio(response: ApiConTokenResponse) {
-
-        // Verificar si el precio no está vacío o nulo
-        if (!response.monitors.bcv.price.toString().isNullOrEmpty()) {
-            // Calcular el promedio con dos decimales
-            val promedio = ((response.monitors.bcv.price
-                .plus(response.monitors.enparalelovzla.price))?.div(2))
-
-            // Formatear el promedio a dos decimales
-            val promedioConDosDecimales = String.format(Locale.US, "%.2f", promedio)
-
-            // Asignar el texto al ToggleButton
-            binding.btnPromedio.text = promedioConDosDecimales
-            binding.btnPromedio.textOff = promedioConDosDecimales
-            binding.btnPromedio.textOn = promedioConDosDecimales
-
-        }
-    }
     fun llenarCampoBCVNew(response: ApiEuroTipoCambio,diaActual: Boolean) {
         // DATOS DEL BCV
 
@@ -2206,20 +2132,6 @@ class HomeFragment : Fragment() {
 
     }
 
-    //FUNCION PARA COPIAR AL PORTA PAPEL
-//    fun copyToClipboard(context: Context, text: String, titulo: String, unidad: String) {
-//        // Obtener el servicio del portapapeles
-//        val clipboardManager =
-//            context.getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager
-//
-//        // Crear un objeto ClipData para guardar el texto
-//        val clipData = ClipData.newPlainText("text", text)
-//
-//        // Copiar el objeto ClipData al portapapeles
-//        clipboardManager.setPrimaryClip(clipData)
-//        Toast.makeText(requireContext(), "Monto Copiado: $titulo $unidad", Toast.LENGTH_SHORT)
-//            .show()
-//    }
 
     // FUNCIÓN PARA COPIAR AL PORTA PAPELES
     fun copyToClipboard(context: Context, text: String, titulo: String, unidad: String) {
@@ -2306,7 +2218,7 @@ class HomeFragment : Fragment() {
     override fun onPause() {
         //eliminarListener()
         super.onPause()
-        shakeDetector.stop()
+       // shakeDetector.stop()
     }
 
     private fun onShakeDetected() {
@@ -2415,112 +2327,6 @@ class HomeFragment : Fragment() {
             hideSnackbar()
         }, 5000) // Simular 5 segundos de retraso
     }
-
-    private fun probarencryptado(){
-        // Clave maestra (la que usas en tu sistema)
-        val masterKey = "A11103402525120190822HB01"
-
-        // Datos que deseas cifrar (por ejemplo, un número de teléfono)
-        val dataToEncrypt = "584148508980"
-        val dataToEncrypt2 = "584166227839"
-
-        // Cifrar los datos
-        val encryptedData = AESCrypto.encrypt(dataToEncrypt, masterKey)
-        println("Datos cifrados: $encryptedData")
-        Log.d("probarencryptado", "probarencryptado encryptedData: $encryptedData ")
-
-        val encryptedData2 = AESCrypto.encrypt(dataToEncrypt2, masterKey)
-        println("Datos cifrados: $encryptedData2")
-        Log.d("probarencryptado", "probarencryptado encryptedData2: $encryptedData2 ")
-
-        // Descifrar los datos
-        val decryptedData = AESCrypto.decrypt(encryptedData, masterKey)
-        println("Datos descifrados: $decryptedData")
-        Log.d("probarencryptado", "probarencryptado decryptedData: $decryptedData ")
-
-        val decryptedData2 = AESCrypto.decrypt(encryptedData2, masterKey)
-        println("Datos descifrados: $decryptedData2")
-        Log.d("probarencryptado", "probarencryptado decryptedData2: $decryptedData2 ")
-
-
-    }
-
-
-
-
-    private fun realizarBusqueda2(){
-        val merchantIdentify = MerchantIdentify(
-            integratorId = 31,
-            merchantId = 150332,
-            terminalId = "abcde"
-        )
-
-        val mobileInfo = MobileInfo(
-            manufacturer = "Samsung",
-            model = "S9",
-            os_version = "Oreo 9.1"
-        )
-
-        val location = Location(
-            lat = 0,
-            lng = 0
-        )
-
-        val clientIdentify = ClientIdentify(
-            ipaddress = "127.0.0.1",
-            browser_agent = "Chrome 18.1.3",
-            mobile = mobileInfo,
-            os_version = "Oreo 9.1",
-            location = location
-        )
-
-        val searchBy = SearchBy(
-            amount = 30.0,
-            currency = "ves",
-            origin_mobile_number = "0PbWVea/C/hyO37XjEoFaA==",  // Cifrado
-            destination_mobile_number = "mD9ROJSFzSpnLTOPGr7B7A==",  // Cifrado
-            payment_reference = "118060003823",
-            trx_date = "2024-10-04"
-        )
-
-        val request = MobilePaymentSearchRequest(
-            merchant_identify = merchantIdentify,
-            client_identify = clientIdentify,
-            search_by = searchBy
-        )
-
-// Realizamos la solicitud
-        val call = RetrofitClient.apiService.searchMobilePayment(request)
-
-        call.enqueue(object : Callback<ApiResponse> {
-            override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
-                if (response.isSuccessful) {
-                    println("Respuesta exitosa: ${response.body()}")
-                    Log.d("probarencryptado", "Respuesta exitosa: ${response.body()}")
-                } else {
-                    println("Error en la respuesta: ${response.code()} - ${response.errorBody()} response $response")
-                    Log.d("probarencryptado", "Error en la respuesta: ${response.code()} - ${response.errorBody()} response $response")
-                }
-            }
-
-            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
-                println("Error en la solicitud: ${t.message}")
-            }
-        })
-
-    }
-
-    object RetrofitClient {
-        private const val BASE_URL = "https://apimbu.mercantilbanco.com/mercantil-banco/sandbox/v1/"
-
-        val retrofit: Retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val apiService: ApiService = retrofit.create(ApiService::class.java)
-    }
-
 
 
 }

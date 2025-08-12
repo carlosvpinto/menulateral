@@ -24,5 +24,6 @@ object Constants {
     const val END_POINT = "https://api.dolaraldiavzla.com/api/v1/dollar?page=alcambio"
     const val BEARER_TOKEN = "Bearer 2x9Qjpxl5F8CoKK6T395KA"
     const val TOKEN_AS21 = "ccNt36cjSi2uOxgIMJxvt7:APA91bHqmTKTBF1pNWVLoBMJcH6ll43eeUuhS74PXIHxk7GbQ4l5-BKKoEMDJxjdOKQWEQ50Wc2AVxD8f2RHr47ELqiuw7_k4VuvxYCgZkeD6wQUGZgkVt4"
+    const val URL_DESCARGA = "https://www.dolaraldiavzla.com/descarga/"
 
 }

@@ -63,6 +63,7 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.ToggleButton
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
 
 
@@ -73,6 +74,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.carlosv.dolaraldia.model.datosPMovil.DatosPMovilModel
+import com.carlosv.dolaraldia.utils.Constants.URL_DESCARGA
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
@@ -90,6 +92,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.text.DecimalFormat
+import java.text.ParseException
 
 
 class MainActivity : AppCompatActivity() {
@@ -105,7 +109,7 @@ class MainActivity : AppCompatActivity() {
     private val AD_UNIT_ID: String = "ca-app-pub-3940256099942544/9257395921"
 
 
-
+    private var enviarImagenP: Boolean? = null
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private val PERMISSION_REQUEST_CODE = 123
@@ -115,7 +119,10 @@ class MainActivity : AppCompatActivity() {
 
     private var personalBadge: BadgeDrawable? = null
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -145,7 +152,7 @@ class MainActivity : AppCompatActivity() {
         //verificaciondeSuscripcion()// Verifica la suscripcion Con Work en segundo plano
         verificasiLeyoMsj()
         versionUltima()
-        movilidadPantalla()
+       // movilidadPantalla()
 
         binding.navView
 
@@ -210,11 +217,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-//        // Inflar el menú; esto agrega elementos a la barra de acciones si está presente.
-//        menuInflater.inflate(R.menu.main, menu)
-//        return true
-//    }
 
     // 2. MODIFICA TU MÉTODO 'onCreateOptionsMenu'
     @OptIn(ExperimentalBadgeUtils::class)
@@ -712,7 +714,8 @@ class MainActivity : AppCompatActivity() {
                 montoPersonalizado.visibility = View.GONE
 
                 // 2. Ocultar el teclado y limpiar el foco
-                hideKeyboard(montoPersonalizado)
+                //hideKeyboard(montoPersonalizado)
+                hideKeyboard()
                 montoPersonalizado.clearFocus()
             }
         }
@@ -725,9 +728,9 @@ class MainActivity : AppCompatActivity() {
         enviareButton.setOnClickListener {
 
             val textoMonto = montoPersonalizado.text.toString() // Obtiene el texto del EditText como String
-
+                enviarImagenP = chechImagenPersonalizada.isChecked
             // Intenta convertir el texto a Float. Si es nulo (vacío o no es un número válido), usa 0.0f
-            val montoFloat: Float = textoMonto.toFloatOrNull() ?: 0.0f
+            val montoFloat: String = (textoMonto.toString() ?: 0.0f).toString()
             shareLogic(chechPagoMovil.isChecked,chechImagenPersonalizada.isChecked,chekMontoPersonalizado.isChecked, montoFloat)
             dialog.dismiss()
         }
@@ -759,19 +762,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Función auxiliar para mostrar el teclado
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        // Buscamos la vista que tiene el foco actual. Si no hay ninguna, usamos la vista raíz.
+        // Esto es más seguro que depender de una vista específica que podría no ser válida.
+        val view = currentFocus ?: View(this)
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
     private fun showKeyboard(view: View) {
-        if (view.requestFocus()) {
-            val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-            imm?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        // Usar view.post asegura que este código se ejecute después de que la vista
+        // esté completamente medida y dibujada, evitando condiciones de carrera.
+        view.post {
+            if (view.requestFocus()) {
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                imm?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            }
         }
     }
 
-    // Función auxiliar para ocultar el teclado
-    private fun hideKeyboard(view: View) {
-        val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-        imm?.hideSoftInputFromWindow(view.windowToken, 0)
-    }
 
     //Inabilita el CheckBox que le envien
     private fun inabilitarCheck(checkInvilitar: CheckBox, text:String){
@@ -792,7 +801,6 @@ class MainActivity : AppCompatActivity() {
         checkInvilitar.alpha = 1.0f
 
     }
-
 
     private fun setupDecimalInputValidation(editText: EditText) {
         val textWatcher = object : TextWatcher {
@@ -852,16 +860,12 @@ class MainActivity : AppCompatActivity() {
 
         editText.addTextChangedListener(textWatcher)
     }
-
-
-
-
 //Logica para Compartr el pago movil con el texto y la imagen
     private fun shareLogic(
     enviarDatosPM: Boolean,
     enviarImagenP: Boolean,
     enviarMontoP: Boolean,
-    montoPersonalizado: Float,
+    montoPersonalizado: String,
 ) {
         pagoMovilListTrue = obtenerPagoMovilListTrue(this@MainActivity)
         Log.d(TAG, "Decidiendo lógica para: DatosPM=$enviarDatosPM, ImagenP=$enviarImagenP, MontoP=$enviarMontoP")
@@ -994,10 +998,14 @@ class MainActivity : AppCompatActivity() {
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "image/*"
                         putExtra(Intent.EXTRA_TEXT, shareText)
-                        if (nombreFragmentAct != "Pago Movil" || !chechImagenPersonalizada.isChecked){
-                            Log.d(TAG, "shareImageWithText: ENTRO AL INTEN URI $nombreFragmentAct")
+
+
+                        //Verifica que no este en pago movil y no tenga activada el chkImagen Personalizada
+                        val sendImage = nombreFragmentAct != "Pago Movil"|| enviarImagenP== true
+                        if (sendImage) {
                             putExtra(Intent.EXTRA_STREAM, uri)
                         }
+
 
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
@@ -1073,7 +1081,7 @@ class MainActivity : AppCompatActivity() {
         enviarImagenPM: Boolean,
         enviarMontoPM: Boolean,
         pagoMovilListTrue: DatosPMovilModel?,
-        montoPersonalizado: Float,
+        montoPersonalizado: String,
     ): String {
         var textoCapture = ""
         var inputTextoBs = ""
@@ -1082,7 +1090,7 @@ class MainActivity : AppCompatActivity() {
         var paralelo = ""
         var promedio = ""
         var tasa = ""
-        val linkCorto = "https://bit.ly/dolaraldia"
+        val linkCorto = URL_DESCARGA
 
 
         //**************************
@@ -1213,7 +1221,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (enviarDatosPM && enviarMontoPM){
-                textoCapture = "-Monto en bs:$montoPersonalizado \n\n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${prefijo(pagoMovilListTrue?.cedula)} ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
+                textoCapture = "-Monto en bs: $montoPersonalizado \n\n -Pago Movil:\n -Tlf: ${pagoMovilListTrue?.tlf} \n -${prefijo(pagoMovilListTrue?.cedula)} ${pagoMovilListTrue?.cedula}  \n -Banco: ${pagoMovilListTrue?.banco}\n \n -Descarga la App \n $linkCorto"
             }
 
         }
