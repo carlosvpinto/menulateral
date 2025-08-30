@@ -83,6 +83,8 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.carlosv.dolaraldia.AESCrypto
 import com.carlosv.dolaraldia.AppPreferences
+import com.carlosv.dolaraldia.AppPreferences.borrarEstadoDialogoPagoMovil
+import com.carlosv.dolaraldia.AppPreferences.borrarEstadoDialogoPlatformas
 import com.carlosv.dolaraldia.MyApplication
 import com.carlosv.dolaraldia.model.FCMBody
 import com.carlosv.dolaraldia.model.FCMResponse
@@ -282,6 +284,11 @@ class HomeFragment : Fragment() {
          //   listenerImagenConfig()
             //******************************
 
+        }
+        //Para Borrar la memoria de los mensajes
+        binding.imglogo.setOnClickListener {
+            borrarEstadoDialogoPagoMovil()
+            borrarEstadoDialogoPlatformas()
         }
 
         binding.btnRefres.setOnClickListener {

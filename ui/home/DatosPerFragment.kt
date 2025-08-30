@@ -326,57 +326,54 @@ class DatosPerFragment : Fragment() {
     }
 
     // Conversión y guardado de la imagen seleccionada, corrigiendo orientación
+// --- FUNCIÓN TOTALMENTE ACTUALIZADA ---
     private fun convertToJpgAndStore(imageUri: Uri) {
-        // Es seguro acceder al binding aquí ya que estamos en el hilo principal
-        // y la función se llamará cuando el fragmento esté activo.
         binding.apply {
-            // Asegúrate de que estos IDs existan en tu layout
-            // progresImagen.visibility = View.VISIBLE
-            // imgLogoPersona.visibility = View.INVISIBLE
             btnGuardar.isEnabled = false
             btnCancelar.isEnabled = false
         }
 
-        // Iniciar una corrutina en el lifecycleScope del fragmento.
-        // Esto asegura que la operación se cancelará si la vista del fragmento se destruye,
-        // evitando intentar actualizar la UI de un fragmento que ya no existe.
         lifecycleScope.launch {
             try {
-                // Realizar operaciones que bloquean o son intensivas en I/O en un hilo de fondo (Dispatchers.IO)
+                // Realizamos la decodificación y corrección de orientación en un hilo de fondo
                 val bitmap = withContext(Dispatchers.IO) {
                     getCorrectlyOrientedBitmap(imageUri)
-                } ?: throw Exception("No se pudo decodificar la imagen o está corrupta.")
+                } ?: throw Exception("No se pudo decodificar la imagen.")
 
-                val jpgFile = withContext(Dispatchers.IO) {
-                    createJpgFromBitmap(bitmap)
+                // --- ¡LA CORRECCIÓN CLAVE! ---
+                // Guardamos la imagen en el almacenamiento INTERNO y PERMANENTE de la app.
+                val permanentFile = withContext(Dispatchers.IO) {
+                    // Creamos un nombre de archivo único
+                    val fileName = "pm_image_${System.currentTimeMillis()}.jpg"
+                    // Obtenemos el directorio de archivos internos (filesDir)
+                    val directory = requireContext().filesDir
+                    val file = File(directory, fileName)
+
+                    // Guardamos el bitmap en el nuevo archivo
+                    FileOutputStream(file).use { outputStream ->
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                    }
+                    file // Devolvemos el archivo permanente
                 }
 
-                // Actualizar la ruta solo si todo fue exitoso
-                rutaImagenSeleccionada = jpgFile.absolutePath
+                // Guardamos la ruta ABSOLUTA y PERMANENTE
+                rutaImagenSeleccionada = permanentFile.absolutePath
 
-                // Volver al hilo principal (Dispatchers.Main) para actualizar la UI.
-                // Gracias a lifecycleScope, esto solo se ejecutará si la vista del fragmento es válida.
+                // Volvemos al hilo principal para actualizar la UI
                 withContext(Dispatchers.Main) {
                     binding.apply {
-                        // Asegúrate de que estos IDs existan en tu layout
-                        // progresImagen.visibility = View.GONE
-                        // imgLogoPersona.visibility = View.VISIBLE
                         btnGuardar.isEnabled = true
                         btnCancelar.isEnabled = true
-
-                        Glide.with(this@DatosPerFragment) // Usar 'this@DatosPerFragment' para el contexto del fragmento
-                            .load(jpgFile)
+                        Glide.with(this@DatosPerFragment)
+                            .load(permanentFile)
                             .into(imgLogoPersona)
                     }
-                    Toast.makeText(requireContext(), "Imagen convertida y guardada exitosamente.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Imagen guardada exitosamente.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // Volver al hilo principal para mostrar el Toast en caso de error.
                 withContext(Dispatchers.Main) {
                     binding.apply {
-                        // Asegúrate de que estos IDs existan en tu layout
-                        // progresImagen.visibility = View.GONE
-                        btnGuardar.isEnabled = true // Habilitar botones de nuevo en caso de error
+                        btnGuardar.isEnabled = true
                         btnCancelar.isEnabled = true
                     }
                     Log.e("DatosPerFragment", "Error al procesar la imagen: ${e.message}", e)

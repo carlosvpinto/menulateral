@@ -2,6 +2,7 @@ package com.carlosv.dolaraldia
 
 import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiEuroTipoCambio
 import com.carlosv.dolaraldia.model.apiBcvEuro.ApiBcvEuroResponse
+import com.carlosv.dolaraldia.model.apiPlatforms.PlatformResponse
 import com.carlosv.dolaraldia.model.apicontoken.ApiConTokenResponse
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseCripto
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseBCV
@@ -54,6 +55,13 @@ interface ApiService {
         @Query("start_date") startDate: String,
         @Query("end_date") endDate: String
     ): HistoryModelResponse
+
+    //Para el PlatForms****************************
+
+    @GET("market-p2p") //
+    suspend fun getPlatformRates(): PlatformResponse?
+
+    //*********************************************
 
     //** Para api Mercantil***********************
    /*

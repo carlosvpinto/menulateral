@@ -98,8 +98,13 @@ import java.text.ParseException
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var appOpenAdManager: AppOpenAdManager
-    private lateinit var navController2: NavController
+
+   // private lateinit var navController2: NavController
+   // AÑADE ESTA LÍNEA (la haremos lazy para que se inicialice de forma segura)
+   private val navController by lazy {
+       val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
+       navHostFragment.navController
+   }
 
 
     private val isMobileAdsInitializeCalled = AtomicBoolean(false)
@@ -118,6 +123,11 @@ class MainActivity : AppCompatActivity() {
     private var pagoMovilListTrue: DatosPMovilModel? = null
 
     private var personalBadge: BadgeDrawable? = null
+    private var plaftforBagde: BadgeDrawable? = null
+
+    //Propiedad para guardar una referencia al menú ---
+    private var optionsMenu: Menu? = null
+
 
 
 
@@ -130,29 +140,25 @@ class MainActivity : AppCompatActivity() {
 
 
         MobileAds.initialize(this) {}
-        appOpenAdManager = AppOpenAdManager()
+       // appOpenAdManager = AppOpenAdManager()
         setSupportActionBar(binding.appBarMain.toolbar)
 
         // Inicializa nuestra clase de preferencias.
         AppPreferences.init(this)
 
 
-        //adOpen*********************
-        // initializeMobileAdsSdk()
-        // Cargar el anuncio al crear la actividad
-        // (application as MyApplication).loadAd(this)
 
-        //***********************
         // Obtén el NavHostFragment y el NavController
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
-        navController2 = navHostFragment.navController
+//        val navHostFragment =
+//            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
+//        navController2 = navHostFragment.navController
         //**********************
 
         //verificaciondeSuscripcion()// Verifica la suscripcion Con Work en segundo plano
         verificasiLeyoMsj()
         versionUltima()
-       // movilidadPantalla()
+        movilidadPantalla()
+        // movilidadPantalla()
 
         binding.navView
 
@@ -165,6 +171,7 @@ class MainActivity : AppCompatActivity() {
             setOf(
                 R.id.nav_home,
                 R.id.nav_monedas,
+               // R.id.nav_platforms,
                 R.id.nav_bancos,
                 R.id.nav_acerca,
                 R.id.nav_Euros,
@@ -173,57 +180,48 @@ class MainActivity : AppCompatActivity() {
             ), drawerLayout
         )
 
+
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
     }
 
 
-    inner class AppOpenAdManager {
-        private var appOpenAd: AppOpenAd? = null
-        private var isLoadingAd = false
-        var isShowingAd = false
-
-        fun loadAd(context: Context) {
-            // Do not load ad if there is an unused ad or one is already loading.
-            if (isLoadingAd || isAdAvailable()) {
-                return
-            }
-
-            isLoadingAd = true
-            val request = AdRequest.Builder().build()
-            AppOpenAd.load(
-                context, AD_UNIT_ID!!, request,
-                AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,
-                object : AppOpenAd.AppOpenAdLoadCallback() {
-
-                    override fun onAdLoaded(ad: AppOpenAd) {
-                        // Called when an app open ad has loaded.
-                        Log.d(LOG_TAG, "Ad was loaded.")
-                        appOpenAd = ad
-                        isLoadingAd = false
-                    }
-
-                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                        // Called when an app open ad has failed to load.
-                        Log.d(LOG_TAG, loadAdError.message)
-                        isLoadingAd = false;
-                    }
-                })
-        }
-
-        private fun isAdAvailable(): Boolean {
-            return appOpenAd != null
-        }
-    }
 
 
     // 2. MODIFICA TU MÉTODO 'onCreateOptionsMenu'
     @OptIn(ExperimentalBadgeUtils::class)
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
+
+        this.optionsMenu = menu
         menuInflater.inflate(R.menu.main, menu)
 
-        // --- LÓGICA DEL BADGE CONDICIONAL ---
+
+
+        // Lógica del badge para "Plataformas"
+        val platformsItem = menu.findItem(R.id.action_platforms)
+
+        // Comprobamos si el usuario ya vio la novedad
+        if (AppPreferences.haVistoDialogoPlatformas()) {
+            // Si ya la vio, nos aseguramos de que el ítem sea invisible.
+            platformsItem.isVisible = false
+
+
+        } else {
+
+            //ACTIVAR SOLOA PARA NOTIFICAR CUANDO SE PUEDA VER LAS PLATAFORMAS
+
+            // Si no la ha visto, lo hacemos visible y le ponemos el badge.
+            platformsItem.isVisible = true
+            plaftforBagde = BadgeDrawable.create(this)
+            plaftforBagde?.number = 1
+            plaftforBagde?.isVisible = true
+            BadgeUtils.attachBadgeDrawable(plaftforBagde!!, binding.appBarMain.toolbar, R.id.action_platforms)
+
+
+
+
+        }
 
         // Solo continuamos si el usuario NO ha visto el diálogo
         if (!AppPreferences.haVistoDialogoPagoMovil()) {
@@ -256,16 +254,23 @@ class MainActivity : AppCompatActivity() {
             }
 
 
+            R.id.action_platforms -> {
+                if (!AppPreferences.haVistoDialogoPlatformas()) {
+                    // Si no lo ha visto, mostramos el diálogo
+                    mostrarDialogoNovedadPlataformas()
+                }else{
+                    //navController2.navigate(R.id.nav_platforms)
+                    navController.navigate(R.id.nav_platforms)
+                }
+            }
 
             R.id.action_personal -> {
-
                 if (!AppPreferences.haVistoDialogoPagoMovil()) {
                     // Si no lo ha visto, mostramos el diálogo
                     mostrarDialogoNovedadPagoMovil()
                 }else{
-                    navController2.navigate(R.id.nav_Personal)
+                    navController.navigate(R.id.nav_Personal)
                 }
-
             }
 
             R.id.action_salir -> {
@@ -277,6 +282,28 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+
+    // --- DIÁLOGO DE NOVEDAD ACTUALIZADO ---
+    private fun mostrarDialogoNovedadPlataformas() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("¡Nueva Pantalla Disponible!")
+            .setMessage("Hemos añadido una nueva sección de 'Plataformas'. Ahora puedes consultar las tasas de cambio de Binance, Bybit y Yadio directamente en la app.")
+            .setPositiveButton("¡Genial, quiero verla!") { dialog, _ ->
+                // 1. Guardamos que el usuario ya vio el mensaje.
+                AppPreferences.marcarDialogoPlatformasComoVisto()
+                ocultarBadgePlatformas()
+
+                // 3. Navegamos a la nueva pantalla.
+                navController.navigate(R.id.nav_platforms)
+
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+
+
     private fun mostrarDialogoNovedadPagoMovil() {
         MaterialAlertDialogBuilder(this)
             .setTitle("¡Nueva Función Disponible!")
@@ -284,15 +311,15 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Entendido") { dialog, which ->
                 // Cuando el usuario pulsa "Entendido":
 
-                // 1. Guardamos que ya vio el mensaje para no mostrarlo de nuevo
+                // Guardamos que ya vio el mensaje para no mostrarlo de nuevo
                 AppPreferences.marcarDialogoPagoMovilComoVisto()
 
-                // 2. Ocultamos el badge
+                // Ocultamos el badge
                 ocultarBadgePersonal()
 
-                // 3. (Opcional) Puedes llevarlo directamente a la función de Pago Móvil
+                //llevarlo directamente a la función de Pago Móvil
                 // TODO: Reemplaza esto con la acción que debe hacer tu botón normalmente
-                navController2.navigate(R.id.nav_Personal)
+                navController.navigate(R.id.nav_Personal)
             }
             .setCancelable(false) // El usuario debe presionar el botón para cerrar
             .show()
@@ -326,6 +353,22 @@ class MainActivity : AppCompatActivity() {
      */
     fun ocultarBadgePersonal() {
         personalBadge?.isVisible = false
+    }
+
+    // --- FUNCIÓN ocultarBadgePlatformas TOTALMENTE ACTUALIZADA ---
+    fun ocultarBadgePlatformas() {
+        // 1. Oculta el badge visualmente (buena práctica)
+        plaftforBagde?.isVisible = false
+
+        // 2. Busca el ítem del menú usando la referencia que guardamos
+        val platformsItem = optionsMenu?.findItem(R.id.action_platforms)
+
+        // 3. Oculta el ítem del menú
+        platformsItem?.isVisible = false
+
+        // 4. (Opcional pero recomendado) Invalida el menú para asegurar que se redibuje
+        // A veces, cambiar 'isVisible' no es suficiente y es bueno forzar un redibujado.
+       // invalidateOptionsMenu()
     }
 
 
