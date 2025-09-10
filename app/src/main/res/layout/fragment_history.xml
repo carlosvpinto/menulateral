@@ -1,0 +1,79 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.carlosv.dolaraldia.ui.historial.HistoryFragment">
+
+    <ImageView
+        android:id="@+id/imglogo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="8dp"
+        android:clipToOutline="true"
+        android:scaleType="fitCenter"
+        android:layout_gravity="center"
+        android:src="@drawable/logoredondo"
+        android:text="@string/historia_de_dolar_en_venezuela" />
+
+    <!-- Texto de la descripción encima del gráfico -->
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:text="@string/historia_del_dolar_bcv"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp" />
+
+    <Spinner
+        android:id="@+id/spinnerHistory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:background="@drawable/spinner_background" />
+
+    <!-- FrameLayout para superponer el gráfico y la barra de progreso -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+       android:layout_marginRight="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="10dp">
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/borde"
+            />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:visibility="visible" /> <!-- Inicialmente invisible -->
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/txtValores"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_margin="16dp"
+        android:text="@string/clic_grafico" />
+
+</LinearLayout>
+

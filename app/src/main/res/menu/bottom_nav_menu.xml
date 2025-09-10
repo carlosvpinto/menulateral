@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home_24"
+        android:title="@string/menu_inicio" />
+
+    <item
+        android:id="@+id/nav_Personal"
+        android:icon="@drawable/ic_doc_icon"
+        android:title="@string/pago_movil"/>
+
+    <item
+        android:id="@+id/nav_platforms"
+        android:icon="@drawable/globe_americas"
+        android:title="@string/precio_en_plataformas" />
+
+    <item
+        android:id="@+id/nav_bancos"
+        android:icon="@drawable/ic_instituciones_24"
+        android:title="@string/menu_Bancos" />
+
+
+
+    <!-- OPCIONAL, PERO RECOMENDADO: Un quinto ítem para el resto de opciones -->
+    <item
+        android:id="@+id/nav_more"
+    android:icon="@drawable/ic_menu_24"
+
+    android:title="Mas" />
+
+</menu>

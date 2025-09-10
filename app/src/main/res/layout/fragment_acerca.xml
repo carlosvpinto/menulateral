@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context="com.carlosv.dolaraldia.ui.acerca.EuroFragment">
+
+    <ImageView
+        android:id="@+id/imglogo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="136dp"
+        android:layout_marginEnd="159dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/rounded_edittext_background"
+        android:clipToOutline="true"
+        android:gravity="top|center"
+        android:scaleType="fitCenter"
+        android:src="@drawable/logodolar_al_dia" />
+
+    <TextView
+        android:id="@+id/textViewScrollable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="220dp"
+        android:padding="16dp"
+        android:textColor="@color/black"
+        android:background="@drawable/rounded_edittext_background"
+        android:gravity="top|start"
+        android:hint="Escribe aquí..."
+        android:maxLines="105"
+        android:scrollbars="vertical" />
+
+    <!-- Botón en la parte inferior -->
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="50dp">
+
+        <Button
+            android:id="@+id/btnCalificar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_edittext_background"
+            android:foregroundGravity="center"
+            android:text="@string/calificar"
+            android:textColor="#FFFFFF"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</RelativeLayout>
+

@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipeRefreshLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.carlosv.dolaraldia.ui.home.HomeFragment">
+
+    <!--
+    PASO 1: Usar un ConstraintLayout como contenedor principal.
+    Este layout contendrá tanto la vista de scroll como el banner fijo de abajo.
+    -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!--
+        PASO 2: Tu NestedScrollView ahora se restringe para ocupar todo el espacio
+        HASTA el borde superior del banner.
+        - layout_height="0dp" (match_constraint) hace que se expanda para llenar el espacio.
+        - layout_constraintBottom_toTopOf="@+id/LnerPubliImagen" lo ancla arriba del banner.
+        -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/LnerPubliImagen">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/constrainerImagen"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:context=".ui.home.HomeFragment">
+
+                <!-- ... TODO TU CONTENIDO QUE SÍ SE DEBE DESPLAZAR VA AQUÍ ... -->
+
+                <ImageView
+                    android:id="@+id/imglogo"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="8dp"
+                    android:clipToOutline="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/logoredondo"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.498"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+
+                <LinearLayout
+                    android:id="@+id/linearLayout2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/borde"
+                    android:orientation="vertical"
+                    android:padding="7dp"
+                    app:layout_constraintTop_toBottomOf="@+id/imglogo"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+
+
+                        <LinearLayout
+                            android:id="@+id/linearLayout4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginTop="1dp"
+                            android:layout_marginRight="10dp"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+                            app:layout_constraintTop_toBottomOf="@+id/imglogo"
+                            app:layout_constraintVertical_bias="0.0"
+                            tools:layout_editor_absoluteX="10dp">
+
+                            <ProgressBar
+                                android:id="@+id/progressBar"
+                                style="?android:attr/progressBarStyle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:visibility="gone" />
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:visibility="gone"
+                                android:layout_marginBottom="5dp">
+
+                                <TextView
+                                    android:id="@+id/txtPromedio"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Tasa Promedio"
+                                    android:textStyle="bold"
+                                    android:layout_marginBottom="8dp"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"/>
+
+                                <ToggleButton
+                                    android:id="@+id/btnPromedio"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/toggle_background"
+                                    android:button="@drawable/toggle_button"
+                                    android:checked="false"
+                                    android:clickable="true"
+                                    android:drawableStart="@drawable/ic_bssvg"
+                                    android:drawablePadding="4dp"
+                                    android:paddingStart="8dp"
+                                    android:paddingEnd="8dp"
+
+                                    android:textColor="@drawable/toggle_text_colors"
+
+
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    app:layout_constraintTop_toBottomOf="@id/txtPromedio"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintWidth_percent="0.45" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/txtPrecioBcv"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+
+                                    android:text="@string/tasa_bcv"
+                                    android:textStyle="bold" />
+
+
+
+                                <TextView
+                                    android:id="@+id/txtPrecioParalelo"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center|end"
+                                    android:layout_weight="1"
+                                    android:visibility="visible"
+
+                                    android:layout_marginRight="15dp"
+                                    android:text="@string/tasa_euro"
+
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+
+                                android:gravity="center"
+                                android:orientation="horizontal">
+
+
+                                <ToggleButton
+                                    android:id="@+id/btnBcv"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="10dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/toggle_background"
+                                    android:button="@drawable/toggle_button"
+                                    android:checked="true"
+                                    android:clickable="true"
+                                    android:drawableStart="@drawable/ic_bssvg"
+                                    android:drawablePadding="4dp"
+                                    android:paddingStart="8dp"
+                                    android:paddingEnd="8dp"
+                                    android:textColor="@drawable/toggle_text_colors"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                                <com.google.android.material.switchmaterial.SwitchMaterial
+                                    android:id="@+id/switchDolar"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:clickable="true"
+
+
+                                    android:visibility="visible"
+                                    android:checked="false"
+                                    android:scaleX="1.2"
+                                    android:scaleY="1.2"
+                                    android:thumbTint="?attr/colorPrimary" />
+
+                                <SeekBar
+                                    android:id="@+id/seekBar"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:max="2"
+                                    android:progress="1"
+                                    android:splitTrack="false"
+                                    android:clickable="false"
+                                    android:scaleX="1.2"
+                                    android:scaleY="1.2"
+                                    android:visibility="gone"
+                                    android:backgroundTint="?attr/colorPrimary"
+                                    android:thumbTint="?attr/colorPrimary"/>
+                                <ToggleButton
+                                    android:id="@+id/btnEuroP"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/toggle_background"
+                                    android:button="@drawable/toggle_button"
+                                    android:checked="false"
+                                    android:clickable="true"
+                                    android:drawableStart="@drawable/ic_bssvg"
+                                    android:drawablePadding="4dp"
+                                    android:paddingStart="8dp"
+                                    android:paddingEnd="8dp"
+
+                                    android:textColor="@drawable/toggle_text_colors"
+
+                                    android:visibility="visible"
+
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:baselineAligned="false"
+                                android:orientation="horizontal">
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_margin="2dp"
+                                    android:layout_weight="0.5"
+                                    android:gravity="center"
+                                    android:orientation="horizontal"
+                                    android:visibility="visible">
+
+                                    <ImageView
+                                        android:id="@+id/imgflechaBcv"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:src="@drawable/ic_flechaverde" />
+
+                                    <TextView
+                                        android:id="@+id/txtVariacionBcv"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+
+
+                                        android:text="0.0" />
+
+                                </LinearLayout>
+
+
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_margin="2dp"
+                                    android:layout_weight="0.5"
+                                    android:gravity="center"
+
+                                    android:orientation="horizontal"
+                                    android:visibility="visible">
+
+                                    <ImageView
+                                        android:id="@+id/imgFlechaParalelo"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:src="@drawable/ic_flecha_roja" />
+
+                                    <TextView
+                                        android:id="@+id/txtVariacionParalelo"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+
+                                        android:text="0.0" />
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="5dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:id="@+id/linearLayout"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <com.google.android.material.textfield.TextInputLayout
+                                        android:id="@+id/edtxtDolares"
+                                        style="@style/Theme.MENULATERAL"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:hint="@string/labelDolar"
+                                        app:endIconMode="clear_text"
+                                        app:startIconDrawable="@drawable/ic_dolar">
+
+                                        <com.google.android.material.textfield.TextInputEditText
+                                            android:id="@+id/inputDolares"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:inputType="numberDecimal"
+                                            android:textSize="18sp"
+                                            android:textStyle="bold" />
+                                    </com.google.android.material.textfield.TextInputLayout>
+
+                                    <ImageView
+                                        android:id="@+id/imgCopyDolar"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="8dp"
+                                        android:layout_marginEnd="1dp"
+
+                                        android:background="@drawable/button_shape"
+                                        android:contentDescription="Right Icon"
+                                        android:src="@drawable/ic_copy_24" />
+
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <com.google.android.material.textfield.TextInputLayout
+                                        android:id="@+id/edtxtBolivares"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:hint="@string/labelBolivares"
+                                        android:inputType="numberDecimal"
+                                        app:endIconMode="clear_text"
+                                        app:startIconDrawable="@drawable/ic_bs_24">
+
+                                        <com.google.android.material.textfield.TextInputEditText
+                                            android:id="@+id/inputBolivares"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:inputType="numberDecimal"
+                                            android:textSize="18sp"
+                                            android:textStyle="bold" />
+                                    </com.google.android.material.textfield.TextInputLayout>
+
+                                    <ImageView
+                                        android:id="@+id/imgCoyBolivar"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="8dp"
+                                        android:layout_marginEnd="1dp"
+                                        android:background="@drawable/button_shape"
+                                        android:contentDescription="Right Icon"
+                                        android:src="@drawable/ic_copy_24" />
+
+
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/linerIgual"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:layout_gravity="center"
+                                android:orientation="vertical">
+
+
+                                <ImageButton
+                                    android:id="@+id/imgVerDifBs"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:visibility="visible"
+                                    android:tooltipText="@string/tool_diferencia"
+                                    android:background="@drawable/button_shape"
+                                    android:src="@drawable/ic_comparar" />
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/linearLayout3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:gravity="center|top"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="gone"
+                            android:orientation="horizontal">
+
+                            <TextView
+
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+
+                                android:layout_weight="0.5"
+                                android:gravity="right"
+                                android:text="@string/actualizacionPara"
+                                android:textColor="?attr/colorOnTertiary" />
+
+                            <TextView
+                                android:id="@+id/txtFechaActualizacionPara"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="10dp"
+                                android:layout_weight="1"
+                                android:text="Date"
+                                android:textStyle="bold"
+                                android:textColor="@color/md_theme_light_surfaceTint" />
+
+
+                        </LinearLayout>
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal"
+                            android:layout_marginLeft="8dp"
+                            android:layout_marginBottom="15dp"
+                            android:layout_marginTop="5dp"
+                            android:visibility="visible">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+
+                                android:layout_weight="0.5"
+                                android:gravity="right"
+                                android:text="@string/actualizacion"
+                               />
+
+                            <TextView
+                                android:id="@+id/txtFechaActualizacionBcv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="10dp"
+                                android:layout_weight="1"
+                                android:text="Date"
+                                android:textStyle="bold"
+                                android:textColor="@color/md_theme_light_surfaceTint" />
+
+
+                        </LinearLayout>
+                        <LinearLayout
+                            android:id="@+id/layoutUltActBcv"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="5dp"
+                            android:visibility="visible"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:foregroundGravity="center"
+                            android:background="@drawable/borde"
+                            android:orientation="horizontal">
+
+
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/SwUtimaAct"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/prox_act_dolar_bcv"
+                                android:layout_marginStart="8dp"
+                                />
+                            <TextView
+                                android:id="@+id/txtUltActBcv"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+
+                                android:text="Date"
+                                android:textStyle="bold"
+                                android:textColor="@color/md_theme_light_surfaceTint" />
+                            />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:id="@+id/imgSinConext"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:visibility="gone"
+                            android:src="@drawable/wifi_sin_conect"/>
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="15dp"
+                        android:layout_gravity="center">
+
+                        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                            android:id="@+id/btnRefres"
+                            style="@style/Widget.Material3.FloatingActionButton.Primary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:contentDescription="@string/actualizar_tasas"
+                            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                            app:elevation="2dp"
+                            app:srcCompat="@drawable/ic_refresh_35" />
+
+                        <ProgressBar
+                            android:id="@+id/progressBarBoton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginTop="5dp"
+                            android:elevation="4dp"
+                            android:visibility="gone" />
+
+                    </FrameLayout>
+
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/swSeleccionApi"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Seleccionar api"
+                            android:visibility="gone"
+                            android:checked="true"
+
+                            />
+
+                    </LinearLayout>
+
+
+                <!-- El banner y el AdView ya NO van aquí dentro -->
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+        <!--
+        PASO 3: Mover el banner y el AdView FUERA del NestedScrollView.
+        Ahora son hijos directos del ConstraintLayout principal.
+        Se anclan a la parte inferior del padre (la pantalla).
+        -->
+
+        <LinearLayout
+            android:id="@+id/LnerPubliImagen"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible"
+            app:layout_constraintBottom_toTopOf="@+id/adView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+
+
+
+            <ImageView
+                android:id="@+id/bannerPromocionIos"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:visibility="gone"
+                android:scaleType="fitCenter" />
+
+
+
+        </LinearLayout>
+
+
+        <com.google.android.gms.ads.AdView
+            android:id="@+id/adView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            app:adSize="BANNER"
+            app:adUnitId="@string/banner_ad_prueba"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:visibility="gone"
+            android:descendantFocusability="blocksDescendants">
+        </com.google.android.gms.ads.AdView>
+        <ImageView
+            android:id="@+id/imageSwipe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/swipe_vertical"
+            android:visibility="gone"
+
+            app:layout_constraintHorizontal_bias="0.49"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

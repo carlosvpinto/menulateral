@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <!-- NUEVO ÍTEM PARA PLATAFORMAS -->
+    <item
+        android:id="@+id/action_platforms"
+        android:orderInCategory="90"
+    android:title="Plataformas"
+    android:icon="@drawable/ic_notificacion"
+    app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_compartir"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        android:icon="@drawable/ic_share_blanco_24"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_personal"
+        android:orderInCategory="100"
+        android:title="Pago Movil"
+        android:icon="@drawable/ic_doc_icon"
+        android:visible="true"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_salir"
+        android:orderInCategory="100"
+        android:title="@string/salir"
+        android:icon="@drawable/ic_power_blanco_24"
+        app:showAsAction="ifRoom"/>
+
+
+</menu>

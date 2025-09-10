@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView  xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardView"
+
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="5dp"
+    android:elevation="10dp"
+    android:background="@color/black"
+
+    app:cardCornerRadius="30dp"
+    app:cardElevation="10dp"
+    android:layout_margin="15dp"
+    app:contentPadding="5dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="5dp"
+        android:layout_gravity="center"
+        android:paddingBottom="5dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_gravity="center"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginTop="5dp">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/circleInstitucion"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_little_person"
+                app:civ_border_width="3dp"
+                android:layout_marginTop="20dp"
+                app:civ_border_color="@color/black"
+                android:layout_gravity="bottom|center"
+                android:layout_marginBottom="45dp"/>
+
+            <ImageView
+                android:id="@+id/imgBancos"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:visibility="gone"
+                android:src="@drawable/ic_copy_24" />
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginLeft="15dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nombre_del_banco"
+                    android:textStyle="bold"
+
+                    android:textSize="17sp"/>
+
+                <TextView
+                    android:id="@+id/txtNombreBanco"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="banco"
+                    android:textSize="17sp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginLeft="45dp"
+            android:layout_gravity="center|top"
+            android:layout_marginRight="15dp"
+            android:layout_marginTop="5dp">
+
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:src="@drawable/ic_calendario" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginLeft="15dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/fecha_actualizacion"
+                    android:textStyle="bold"
+
+                    android:textSize="17sp"/>
+
+                <TextView
+                    android:id="@+id/txtFechaActualizacionBanco"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="fecha"
+                    android:textSize="17sp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginLeft="60dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginTop="5dp">
+
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:src="@drawable/ic_bssvg" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginLeft="15dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/precio_en_bs"
+                    android:textStyle="bold"
+                    android:textSize="17sp"/>
+
+                <TextView
+                    android:id="@+id/txtPrecioBsBanco"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Precio"
+                    android:textStyle="bold"
+                    android:textSize="17sp"/>
+
+            </LinearLayout>
+            <TextView
+                android:id="@+id/txtVariacion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.04"
+                android:textStyle="bold"
+                android:layout_marginLeft="20dp"
+                android:textSize="14sp"/>
+
+            <ImageView
+                android:id="@+id/imgfechabanco"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_flecha_roja"
+                android:textStyle="bold"
+                android:padding="5dp"
+                android:textSize="15sp"/>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

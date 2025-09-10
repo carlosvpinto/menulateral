@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_home_24"
+            android:title="@string/menu_inicio" />
+
+        <!--
+        <item
+            android:id="@+id/nav_monedas"
+            android:icon="@drawable/ic_monetization_on_24"
+            android:visible="true"
+            android:title="@string/precio_en_paginas" />
+                                                    -->
+
+        <item
+            android:id="@+id/nav_platforms"
+            android:icon="@drawable/globe_americas"
+            android:title="@string/precio_en_plataformas"
+            android:visible="true" />
+
+
+        <!-- El resto de tus ítems -->
+        <item
+            android:id="@+id/nav_bancos"
+            android:icon="@drawable/ic_instituciones_24"
+            android:visible="true"
+            android:title="@string/menu_Bancos" />
+        <item
+            android:id="@+id/nav_Personal"
+            android:icon="@drawable/enviar_banco_2"
+            android:visible="true"
+            android:title="@string/info_de_cuentas" />
+
+        <item
+            android:id="@+id/nav_history"
+            android:icon="@drawable/ic_graph_24"
+            android:visible="true"
+            android:title="@string/historia_del_dolar" />
+        <item
+            android:title=""
+            android:enabled="false"
+            android:checkable="false">
+            <menu>
+                <item
+                    android:title=""
+                    android:enabled="false"
+                    android:checkable="false"/>
+            </menu>
+        </item>
+        <item
+            android:id="@+id/nav_pago"
+            android:icon="@drawable/premiun"
+            android:title="@string/frgm_payment_title" />
+        <item
+            android:id="@+id/nav_notificaciones"
+            android:icon="@drawable/ic_notificacion"
+            android:title="@string/menu_notificaciones" />
+
+        <item
+            android:id="@+id/nav_acerca"
+            android:icon="@drawable/ic_info_24"
+            android:title="@string/acerca_de" />
+
+    </group>
+</menu>

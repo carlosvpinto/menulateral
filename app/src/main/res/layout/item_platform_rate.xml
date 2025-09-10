@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingVertical="12dp">
+
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/binance_svg" />
+
+    <TextView
+        android:id="@+id/tvPlatformName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:color="?attr/colorOnPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/ivLogo"
+        app:layout_constraintStart_toEndOf="@id/ivLogo"
+        app:layout_constraintTop_toTopOf="@id/ivLogo"
+        tools:text="Binance" />
+
+    <TextView
+        android:id="@+id/tvPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:color="?attr/colorOnPrimary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Bs 193.00" />
+
+    <TextView
+        android:id="@+id/tvPercentage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="14sp"
+        tools:textColor="@color/green"
+        app:layout_constraintEnd_toEndOf="@id/tvPrice"
+        app:layout_constraintTop_toBottomOf="@id/tvPrice"
+        tools:text="↑ 0.10%" />
+
+    <TextView
+        android:id="@+id/tvLastUpdate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:color="?attr/colorOnPrimary"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="@id/tvPercentage"
+        app:layout_constraintTop_toBottomOf="@id/tvPercentage"
+        tools:text="13/08/2025, 08:45 PM" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

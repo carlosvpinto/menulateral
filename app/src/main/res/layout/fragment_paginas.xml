@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+
+
+        tools:context="com.carlosv.dolaraldia.ui.otrasPaginas.OtrasPaginasFragment">
+    <EditText
+        android:id="@+id/editTexFiltroC"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:backgroundTint="@color/md_theme_light_surfaceTint"
+        android:imeOptions="actionSearch"
+        tools:text="@string/paginas_a_buscar"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:inputType="text"
+
+        android:hint="@string/paginas_a_buscar"
+        android:drawableRight="@drawable/ic_buscar_24"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerOtrasPaginas"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="56dp"
+
+            />
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

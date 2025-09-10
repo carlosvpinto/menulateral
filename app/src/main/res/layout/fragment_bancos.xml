@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    tools:context="com.carlosv.dolaraldia.ui.bancos.BancosFragment">
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textFieldLayoutFiltroC"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:hint="@string/banco_a_buscar"
+
+        app:endIconMode="custom"
+
+    app:boxStrokeColor="?attr/colorPrimary"
+    app:hintTextColor="?attr/colorOnSurface"
+    android:textColorHint="?attr/colorOnSurfaceVariant"
+    app:endIconTint="?attr/colorOnSurfaceVariant"
+        app:endIconDrawable="@drawable/ic_buscar_24">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTexFiltroC"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionSearch"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:inputType="text"
+
+            tools:text="Buscar Bancos" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerOtrasBancos"
+        android:layout_marginTop="80dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        />
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

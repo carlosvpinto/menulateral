@@ -1,0 +1,29 @@
+<!-- res/values-night/themes.xml (VERSIÓN FINAL Y LIMPIA) -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- 1. TEMA PRINCIPAL PARA MODO OSCURO -->
+    <style name="Theme.MENULATERAL" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Colores del Tema Oscuro -->
+        <item name="colorPrimary">@color/md_theme_light_primary</item> <!-- Forzado al azul del modo claro -->
+        <item name="colorOnPrimary">@color/md_theme_dark_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/md_theme_dark_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/md_theme_dark_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/md_theme_dark_secondary</item>
+        <item name="colorOnSecondary">@color/md_theme_dark_onSecondary</item>
+        <!-- ... (y todos los demás colores `md_theme_dark_...` de tu paleta) ... -->
+        <item name="android:colorBackground">@color/md_theme_dark_background</item>
+        <item name="colorOnBackground">@color/md_theme_dark_onBackground</item>
+        <item name="colorSurface">@color/md_theme_dark_surface</item>
+        <item name="colorOnSurface">@color/md_theme_dark_onSurface</item>
+        <item name="colorSurfaceVariant">@color/md_theme_dark_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_dark_onSurfaceVariant</item>
+    </style>
+
+    <!-- Estilo para la BottomNavigationView (versión oscura) -->
+    <style name="Widget.App.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="itemIconTint">@color/bottom_nav_icon_tint</item>
+        <item name="itemTextColor">@color/bottom_nav_icon_tint</item>
+    </style>
+
+</resources>

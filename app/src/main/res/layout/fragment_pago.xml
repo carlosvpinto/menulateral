@@ -1,0 +1,149 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.carlosv.dolaraldia.ui.pago.PagoFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center|top">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="15dp"
+            android:src="@drawable/logoredondo" />
+
+        <TextView
+            android:id="@+id/tvSubscription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selecciona tu suscripción"
+            android:textSize="18sp"
+            android:textStyle="italic|bold"
+            android:layout_marginTop="12dp"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:id="@+id/tcFechaSuscripcion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fecha"
+            android:textSize="12sp"
+            android:textStyle="italic|bold"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/green"
+            android:layout_centerHorizontal="true" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:background="@drawable/borde">
+
+            <RadioGroup
+                android:id="@+id/rgSubscriptions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tvSubscription"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="16dp"
+                android:padding="16dp">
+
+                <!-- Suscripción Mensual -->
+                <RadioButton
+                    android:id="@+id/rbMonthly"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:text="Suscripción Mensual - $1.5" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="- Sin Publicidad\n- Pago mensual de tarifas"
+                    android:layout_marginLeft="16dp"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:background="#2B2B2B"
+                    android:layout_marginVertical="8dp" />
+
+                <!-- Suscripción Anual -->
+                <RadioButton
+                    android:id="@+id/rbAnnual"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:text="Suscripción Anual - $9" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle=""
+                    android:text="- Sin Publicidad\n- Ahorro de 50% comparado con mensual"
+                    android:layout_marginLeft="16dp"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:background="#2B2B2B"
+                    android:layout_marginVertical="8dp" />
+
+                <!-- Suscripción de Por Vida -->
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="50dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_gravity="right"
+                    android:src="@drawable/recomendado" />
+
+
+                    <RadioButton
+                        android:id="@+id/rbLifetime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:textStyle="bold"
+                        android:text="Suscripción de Por Vida - $12" />
+
+
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="- Sin Publicidad\n- Sin pagos recurrentes\n- Un solo pago de por vida!!"
+                    android:layout_marginLeft="16dp"
+                    android:textSize="14sp" />
+
+            </RadioGroup>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSubscribe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Suscribirse"
+            android:layout_below="@id/rgSubscriptions"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp" />
+
+        <Button
+            android:id="@+id/btnBorrar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Borrar Suscrip"
+            android:layout_below="@id/rgSubscriptions"
+            android:layout_centerHorizontal="true"
+            android:visibility="gone"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+
+</ScrollView>

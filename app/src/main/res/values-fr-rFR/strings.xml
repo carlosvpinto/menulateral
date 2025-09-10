@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dolar al Dia</string>
+    <string name="navigation_drawer_open">Ouvrir le tiroir de navigation</string>
+    <string name="navigation_drawer_close">Fermer le tiroir de navigation</string>
+    <string name="nav_header_title">Prix en dollars</string>
+    <string name="nav_header_subtitle">Coordonnées 04243454032</string>
+    <string name="nav_header_desc">En-tête de navigation</string>
+    <string name="action_settings">Paramètres</string>
+    <string name="menu_inicio">Dollar par jour</string>
+    <string name="menu_monedas">Autres pages</string>
+    <string name="menu_euro">Prix en euros</string>
+    <string name="menu_Bancos">Prix dans les banques</string>
+    <string name="menu_Euros">Prix en euros</string>
+    <string name="labelDolar">Dollars</string>
+    <string name="labelBolivares">Bolivars</string>
+    <string name="hello_blank_fragment">Bonjour fragment vierge</string>
+    <string name="facebook_app_id">3241868982780008</string>
+    <string name="texto_largo_con_formato">
+     <![CDATA[
+        <b>¡Bienvenido a Dolar al Dia!</b><br><br>
+
+        Esta aplicación está diseñada para mantenerte informado sobre las tasas de cambio del dólar en Venezuela. Nuestra misión es proporcionarte información actualizada y precisa sobre los precios del dólar tanto en páginas web como en bancos nacionales.<br><br>
+
+        <b>Características Principales:</b><br><br>
+        <ul>
+            <li>Monitoreo Continuo: Mantente al tanto de las fluctuaciones del dólar con actualizaciones en tiempo real desde diversas fuentes confiables.</li>
+            <li>Información Bancaria: Obtén tasas de cambio específicas de los principales bancos nacionales para tomar decisiones informadas.</li>
+            <li>Conversión Rápida: Convierte fácilmente entre dólares y bolívares con una interfaz intuitiva y rápida.</li>
+            <li>Histórico de Precios: Explora el historial de los precios del dólar para comprender mejor las tendencias.</li>
+        </ul><br>
+
+        <b>Contáctanos:</b><br><br>
+        ¡Valoramos tus comentarios! Si tienes sugerencias, preguntas o simplemente quieres saludar, no dudes en ponerte en contacto con nosotros. <br><br>
+         email: desoftsis@gmail.com
+
+        ]]>
+    </string>
+    <string name="tasa_bcv">Taux BCV</string>
+    <string name="tasa_paralelo">Tarif parallèle</string>
+    <string name="tasa_euro">Taux Euro</string>
+    <string name="actualizacion">Actualisation BCV:</string>
+    <string name="precio_en_bs">Prix en Bs</string>
+    <string name="fecha_actualizacion">Actualisation:</string>
+    <string name="actualizacionPara">Mise à jour des dates: </string>
+    <string name="paginas_a_buscar">Pages à rechercher</string>
+    <string name="paginas">Paginas</string>
+    <string name="bancos">Bancos</string>
+    <string name="precio_en_paginas">Prix en pages</string>
+    <string name="acerca_de">à propos de...</string>
+    <string name="calificar">Qualifier</string>
+    <string name="nombre_del_banco">Nom de l entité</string>
+    <string name="ver_un_video_para_colaborar">Voir une vidéo pour collaborer</string>
+    <string name="banner_ad_prueba">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="banner_ad_ejecucion"> ca-app-pub-5303101028880067/3567978792</string>
+
+    <string name="interstitial_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="default_notification_channel_id">fcm_default_channel</string>
+    <string name="splash_activity_image_text">Dolar Al Dia</string>
+    <string name="splash_activity_text">Dolar Al Dia</string>
+    <string name="dif">Diff</string>
+    <string name="dif_bs">Diff. Bs</string>
+    <string name="dif_dolar">Diff. en $</string>
+    <string name="mensaje_dolar">Différence entre le dollar et l euro</string>
+    <string name="sin_imagen_personalizada">Sin Imagen Personalizada</string>
+    <string name="imagen_personalizada">Enviar Imagen Personalizada</string>
+    <string name="mensaje_paralelo">Diff. par rapport au parallèle.</string>
+    <string name="tool_diferencia">Différence entre les monnaies</string>
+    <string name="desea_enviar_datos_de_su_pago_movil">Desea enviar datos de su pago Movil</string>
+    <string name="info_de_cuentas">Info de Cuentas</string>
+    <string name="pago_movil_message">Ahora presionando el siguiente %1$s: puede guardar tus números de pagos móvil para enviarlo con mayor rapidez a la hora de solicitar algún pago</string>
+    <string name="sin_cuenta_seleccionada">Aucun compte sélectionné</string>
+    <string name="historia_del_dolar">Historia del Dolar</string>
+    <string name="clic_grafico">Haz Click en el Grafico para ver los Valores</string>
+    <string name="menu_notificaciones">Notificaciones</string>
+    <string name="activar_notificaciones">Activar Notificaciones</string>
+    <string name="notificaciones">Configuración de Notificaciones</string>
+    <string name="frgm_payment_msg_thanks">Merci pour votre achat !</string>
+    <string name="frgm_payment_price">Total to pay: $%.2f USD</string>
+    <string name="fecha_vencimiento">Date d expiration: %s</string>
+    <string name="frgm_payment_title">Payment</string>
+    <string name="suscripcion">Suscripcion</string>
+    <string name="paypal">Paypal</string>
+    <string name="pago_movil">Pago Movil</string>
+    <string name="acerca">Acerca...</string>
+    <string name="notificaciones_label">Notificaciones</string>
+    <string name="historia_del_dolar_label">Historia del Dolar</string>
+    <string name="prox_act_dolar_bcv">"Proch. Mise à Jour BCV"</string>
+    <string name="recibir_notificaciones">Recibir Notificaciones</string>
+    <string name="imagen_personal">Imagen personal</string>
+    <string name="datos_pago_movil">Datos Pago Movil</string>
+    <string name="monto_personalizado">Monto Personalizado</string>
+    <string name="agregar">Agregar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="zelle">Zelle</string>
+    <string name="logo_de_la_persona">Logo de la persona</string>
+    <string name="transferencia">Transferencia</string>
+    <string name="cedula_o_rif">Cedula o Rif</string>
+    <string name="alias">Alias</string>
+    <string name="telefono">Telefono</string>
+    <string name="salir">Salir</string>
+    <string name="historia_del_dolar_bcv">Historia del Dólar BCV</string>
+    <string name="historia_de_dolar_en_venezuela">Historia del Dolar en Venezuela</string>
+    <string name="precio_en_plataformas">Plateformes</string>
+    <string name="actualizar_tasas">Actualizar tasas</string>
+    <string name="banco_a_buscar">Banco a Buscar</string>
+
+
+    <!-- Otros strings y recursos existentes -->
+
+    <string-array name="lista_bancos">
+        <item>Sélectionner une banque</item>
+        <item>0134 - Banesco</item>
+        <item>0102 - Banco de Venezuela</item>
+        <item>0108 - Banco Provincial</item>
+        <item>0114 - Bancaribe</item>
+        <item>0105 - Banco Mercantil</item>
+        <item>0163 - Banco del Tesoro</item>
+        <item>0175 - Banco Bicentenario</item>
+        <item>0191 - Banco Nacional de Crédito (BNC)</item>
+        <item>0172 - Bancamiga</item>
+        <item>0171 - Banco Activo</item>
+        <item>0115 - Banco Exterior</item>
+        <item>0151 - Banco Fondo Comun</item>
+        <item>0138 - Banco Plaza</item>
+        <item>0104 - Banco Venezolano de Credito</item>
+    </string-array>
+    <string-array name="lista_history">
+        <item>Ultimos 7 Dias</item>
+        <item>Ultimos 30 Dias</item>
+
+    </string-array>
+    <string-array name="lista_letras">
+        <item>V</item>
+        <item>P</item>
+        <item>E</item>
+        <item>J</item>
+        <item>G</item>
+    </string-array>
+</resources>

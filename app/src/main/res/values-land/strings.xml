@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dif">Dif</string>
+    <string name="imagen_personal">Imagen personal</string>
+    <string name="datos_pago_movil">Datos Pago Movil</string>
+    <string name="monto_personalizado">Monto Personalizado</string>
+</resources>

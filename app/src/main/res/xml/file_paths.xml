@@ -1,0 +1,13 @@
+<!-- res/xml/file_paths.xml -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permiso para la carpeta de caché (usada por el recibo, el logo, etc.) -->
+    <cache-path name="shared_images" path="images/"/>
+
+    <!-- CAMBIO: Añadimos permiso para la carpeta de archivos internos -->
+    <!-- `name` puede ser lo que quieras, `path` debe ser "." para indicar la raíz de esa carpeta -->
+    <files-path name="my_images" path="."/>
+
+</paths>
+
+

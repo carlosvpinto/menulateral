@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_home">
+
+    <!-- Tus destinos existentes (home, platforms, bancos, etc.) se quedan igual -->
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.carlosv.dolaraldia.ui.home.HomeFragment"
+        android:label="@string/menu_inicio"
+        tools:layout="@layout/fragment_home" />
+
+    <!-- ... otros fragments ... -->
+
+    <!-- CAMBIO CLAVE AQUÍ: Usa la etiqueta <dialog> para el destino "Más" -->
+    <dialog
+        android:id="@+id/nav_more"
+        android:name="com.carlosv.dolaraldia.utils.MoreOptionsBottomSheetFragment"
+        android:label="Más Opciones"
+        tools:layout="@layout/fragment_more_options" />
+
+    <!-- ASEGÚRATE DE QUE LOS DESTINOS A LOS QUE NAVEGAS DESDE EL MENÚ EXISTAN AQUÍ -->
+
+
+    <!-- ... y así para notificaciones y acerca de ... -->
+    <!-- AÑADE ESTE BLOQUE PARA EL NUEVO FRAGMENTO -->
+    <fragment
+        android:id="@+id/nav_platforms"
+        android:name="com.carlosv.dolaraldia.ui.platforms.PlatformRatesFragment"
+        android:label="@string/precio_en_plataformas"
+        tools:layout="@layout/fragment_platform_rates" />
+
+    <fragment
+        android:id="@+id/nav_Euros"
+        android:name="com.carlosv.dolaraldia.ui.acerca.EuroFragment"
+        android:label="@string/menu_Euros"
+        tools:layout="@layout/fragment_paginas" />
+    <fragment
+        android:id="@+id/nav_bancos"
+        android:name="com.carlosv.dolaraldia.ui.bancos.BancosFragment"
+        android:label="@string/menu_Bancos"
+        tools:layout="@layout/fragment_bancos" />
+    <fragment
+        android:id="@+id/nav_acerca"
+        android:name="com.carlosv.dolaraldia.ui.acerca.AcercaFragment"
+        android:label="@string/acerca"
+        tools:layout="@layout/fragment_acerca" />
+
+    <fragment
+        android:id="@+id/nav_Personal"
+        android:name="com.carlosv.dolaraldia.ui.home.DatosPerFragment"
+        android:label="@string/pago_movil"
+        tools:layout="@layout/fragment_datos_per" />
+    <fragment
+        android:id="@+id/nav_history"
+        android:name="com.carlosv.dolaraldia.ui.historial.HistoryFragment"
+        android:label="@string/historia_del_dolar_label"
+        tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/nav_notificaciones"
+        android:name="com.carlosv.dolaraldia.ui.notificaciones.NotificacionesFragment"
+        android:label="@string/notificaciones_label"
+        tools:layout="@layout/fragment_notificaciones" />
+    <fragment
+        android:id="@+id/nav_pago"
+        android:name="com.carlosv.dolaraldia.ui.pago.PagoFragment"
+        android:label="@string/suscripcion"
+        tools:layout="@layout/fragment_pago"/>
+    <fragment
+        android:id="@+id/nav_payment"
+        android:name="com.carlosv.dolaraldia.ui.pago.PaymentFragment"
+        android:label="@string/paypal"
+        tools:layout="@layout/fragment_payment"/>
+
+   </navigation>

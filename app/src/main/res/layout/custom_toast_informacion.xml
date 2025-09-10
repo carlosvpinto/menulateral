@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/custom_toast_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="10dp"
+    android:background="@drawable/snackbar_background">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        > <!-- Color de fondo del RelativeLayout -->
+
+        <TextView
+            android:id="@+id/toast_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lo Nuevo!!"
+            android:textColor="@color/design_default_color_on_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_centerHorizontal="true"/>
+
+
+        <ImageButton
+            android:id="@+id/close_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:colorPrimary"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+       > <!-- Color de fondo del LinearLayout -->
+        <TextView
+            android:id="@+id/txtContenido"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Texto"
+            android:textColor="@color/white"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="25dp"
+            android:gravity="center"
+            >
+            <Button
+                android:id="@+id/btnRecordarDespues"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="10dp"
+                android:padding="5dp"
+                android:text="Recordar Despues"
+                android:textColor="?attr/colorOnTertiary"
+                android:src="@drawable/enviar_2"
+                android:background="@drawable/fondo_boton"/>
+
+            <Button
+                android:id="@+id/btnOkEntendi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/fondo_boton"
+                android:padding="5dp"
+                android:textColor="?attr/colorOnTertiary"
+                android:src="@drawable/enviar_2"
+                android:text="Ok Entendido" />
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+</LinearLayout>

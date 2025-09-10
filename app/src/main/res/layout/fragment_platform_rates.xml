@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.carlosv.dolaraldia.ui.platforms.">
+
+    <LinearLayout
+        android:id="@+id/linerTituloPlataforma"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="5dp"
+        android:gravity="center"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginTop="16dp"
+            android:text="Tasas de Plataformas"
+            android:color="?attr/colorOnPrimary"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvDolarDigital"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:color="?attr/colorOnPrimary"
+            android:text="Dolar Digital"
+
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    </LinearLayout>
+    <!-- Título Principal -->
+
+
+    <!-- Contenedor principal con TU estilo @drawable/borde -->
+    <LinearLayout
+        android:id="@+id/containerRates"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/borde"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linerTituloPlataforma">
+
+        <!-- Fila de Binance -->
+        <include layout="@layout/item_platform_rate" android:id="@+id/binanceRow"/>
+
+        <!-- Divisor (opcional, para separar las filas) -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:alpha="0.2"
+            android:layout_marginVertical="8dp"/>
+
+        <!-- Fila de Bybit -->
+        <include layout="@layout/item_platform_rate" android:id="@+id/bybitRow"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:alpha="0.2"
+            android:layout_marginVertical="8dp"/>
+
+        <!-- Fila de Yadio -->
+        <include layout="@layout/item_platform_rate" android:id="@+id/yadioRow"/>
+
+    </LinearLayout>
+
+    <!-- Botón para refrescar con TU estilo ImageButton -->
+    <FrameLayout
+        android:id="@+id/refreshButtonContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/containerRates">
+
+        <!-- Botón para refrescar (igual que antes) -->
+        <ImageButton
+            android:id="@+id/btnRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Actualizar"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:src="@drawable/ic_refresh_35"
+            android:visibility="visible" />
+
+        <!-- ProgressBar que se mostrará durante la carga -->
+        <ProgressBar
+            android:id="@+id/progressBarRefresh"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:padding="5dp"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </FrameLayout>
+
+    <!-- Indicador de Sin Conexión (igual que en tu home) -->
+    <ImageView
+        android:id="@+id/imgSinConexion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/wifi_sin_conect"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/refreshButtonContainer"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
