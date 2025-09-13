@@ -39,13 +39,20 @@ class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
             dismiss()
         }
 
-        binding.optionNotificaciones.setOnClickListener {
-            findNavController().navigate(R.id.nav_notificaciones)
-            dismiss()
-        }
+
 
         binding.optionAcerca.setOnClickListener {
             findNavController().navigate(R.id.nav_acerca)
+            dismiss()
+        }
+
+        binding.optionNotificaciones.setOnClickListener {
+            findNavController().navigate(R.id.nav_guardar_noti)
+            dismiss()
+        }
+
+        binding.optionConfiguration.setOnClickListener {
+            findNavController().navigate(R.id.nav_configuration)
             dismiss()
         }
     }

@@ -1,4 +1,4 @@
-package com.carlosv.dolaraldia.ui.notificaciones
+package com.carlosv.dolaraldia.ui.configuracion
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -9,15 +9,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
-import com.carlosv.menulateral.databinding.FragmentNotificacionesBinding
+import com.carlosv.menulateral.databinding.FragmentConfigurationBinding
 import com.google.firebase.messaging.FirebaseMessaging
-private var _binding: FragmentNotificacionesBinding? = null
+private var _binding: FragmentConfigurationBinding? = null
 private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-class NotificacionesFragment : Fragment() {
+class ConfiguracionFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
 
@@ -33,7 +33,7 @@ class NotificacionesFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View? {
-        _binding = FragmentNotificacionesBinding.inflate(inflater, container, false)
+        _binding = FragmentConfigurationBinding.inflate(inflater, container, false)
         val root: View = binding.root
         verificarSwitch()
         return root

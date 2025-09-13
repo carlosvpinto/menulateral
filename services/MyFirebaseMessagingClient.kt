@@ -3,16 +3,19 @@ package com.carlosv.dolaraldia.services
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.carlosv.dolaraldia.MainActivity
+import com.carlosv.dolaraldia.MyApplication
+import com.carlosv.dolaraldia.utils.roomDB.NotificationEntity
 import com.carlosv.menulateral.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 
@@ -23,38 +26,46 @@ class MyFirebaseMessagingClient: FirebaseMessagingService() {
     private val NOTIFICATION_CODE = 100
     private val random = Random
 
+    // Es "lazy", por lo que solo se inicializará la primera vez que se use.
+    private val repository by lazy { (application as MyApplication).repository }
+
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        val data = message.data
-        val title = data.values
-        val body = data["body"]
-        println()
-        val idBooking = data["idBooking"]
-      Log.d("NOTIFICACION", "title: $title body: $body  message: $message  message.data: ${message.data}" )
+        // Verificamos si la notificación viene en el payload "notification"
+        message.notification?.let { notification ->
+            val title = notification.title ?: "Dólar al Día"
+            val body = notification.body ?: "Nueva información disponible."
 
-//        if (!title.isNullOrBlank() && !body.isNullOrBlank()) {
-//            if (idBooking != null) {
-//                showNotificationActions(title, body, idBooking)
-//            }
-//            else {
-//                showNotification(title, body)
-//            }
+            // 1. Mostrar la notificación en la barra de estado (tu lógica existente)
+            sendNotification(notification)
+
+            // 2. Crear la entidad para la base de datos
+            val notificationEntity = NotificationEntity(title = title, body = body)
+
+            // 3. Guardar la notificación en la base de datos usando una Coroutine
+            //    Usamos CoroutineScope(Dispatchers.IO) para realizar la operación
+            //    en un hilo de fondo, ideal para operaciones de base de datos.
+            CoroutineScope(Dispatchers.IO).launch {
+                repository.insert(notificationEntity)
+            }
         }
+    }
+
     private fun sendNotification(message: RemoteMessage.Notification) {
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(FLAG_ACTIVITY_CLEAR_TOP)
         }
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent, FLAG_IMMUTABLE
+            this, 0, intent, PendingIntent.FLAG_IMMUTABLE
         )
         val channelId = this.getString(R.string.default_notification_channel_id)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setContentTitle(message.title)
             .setContentText(message.body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setSmallIcon(R.drawable.ic_buscar_24)
+            .setSmallIcon(R.drawable.logoredondo) // CAMBIO: Usar un ícono adecuado para notificaciones
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
 
@@ -64,63 +75,11 @@ class MyFirebaseMessagingClient: FirebaseMessagingService() {
             val channel = NotificationChannel(channelId, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
             manager.createNotificationChannel(channel)
         }
-        manager.notify(random.nextInt(), notificationBuilder.build())
+        manager.notify(Random.nextInt(), notificationBuilder.build())
     }
 
     companion object {
         const val CHANNEL_NAME = "FCM notification channel"
     }
 
-
-    //   }
-
-//    private fun showNotification(title: String, body: String) {
-//        val helper = NotificationHelper(baseContext)
-//        val builder = helper.getNotification(title, body)
-//        helper.getManager().notify(1, builder.build())
-//    }
-
-//    private fun showNotificationActions(title: String, body: String, idBooking: String) {
-//        val helper = NotificationHelper(baseContext)
-//
-//        // ACEPTAR VIAJE
-//        val acceptIntent = Intent(this, AcceptReceiver::class.java)
-//        acceptIntent.putExtra("idBooking", idBooking)
-//        var acceptPendingIntent: PendingIntent? = null
-//
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-//            acceptPendingIntent = PendingIntent.getBroadcast(this, NOTIFICATION_CODE, acceptIntent, PendingIntent.FLAG_MUTABLE)
-//        }
-//        else {
-//            acceptPendingIntent = PendingIntent.getBroadcast(this, NOTIFICATION_CODE, acceptIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-//        }
-//
-//        val actionAccept = NotificationCompat.Action.Builder(
-//            R.mipmap.ic_launcher,
-//            "Aceptar",
-//            acceptPendingIntent
-//        ).build()
-//
-//        // CANCELAR VIAJE
-//        val cancelIntent = Intent(this, CancelReceiver::class.java)
-//        cancelIntent.putExtra("idBooking", idBooking)
-//        var cancelPendingIntent: PendingIntent? = null
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-//            cancelPendingIntent = PendingIntent.getBroadcast(this, NOTIFICATION_CODE, cancelIntent, PendingIntent.FLAG_MUTABLE)
-//        }
-//        else {
-//            cancelPendingIntent = PendingIntent.getBroadcast(this, NOTIFICATION_CODE, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-//        }
-//
-//        val actionCancel = NotificationCompat.Action.Builder(
-//            R.mipmap.ic_launcher,
-//            "Cancelar",
-//            cancelPendingIntent
-//        ).build()
-//
-//
-//        val builder = helper.getNotificationActions(title, body, actionAccept, actionCancel)
-//        helper.getManager().notify(2, builder.build())
-//    }
-//
 }

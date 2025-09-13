@@ -9,6 +9,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
+import com.carlosv.dolaraldia.utils.roomDB.NotificationEntity
+import com.carlosv.dolaraldia.utils.roomDB.AppDatabase
+import com.carlosv.dolaraldia.utils.roomDB.NotificationsRepository
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -45,10 +51,56 @@ class MyApplication :
     private lateinit var appOpenAdManager: AppOpenAdManager
     private var currentActivity: Activity? = null
 
+    // --- INICIO DE LA SECCIÓN PARA LA BASE DE DATOS DE NOTIFICACIONES ---
+
+    private val database by lazy {
+        Room.databaseBuilder(
+            this,
+            AppDatabase::class.java, "dolar_al_dia_database"
+        )
+            // CAMBIO 1: Añadimos nuestro callback aquí
+            .addCallback(databaseCallback)
+            .build()
+    }
+
+    val repository by lazy {
+        NotificationsRepository(database.notificationDao())
+    }
+
+    // CAMBIO 2: Creamos el objeto Callback
+    private val databaseCallback = object : RoomDatabase.Callback() {
+        /**
+         * Se llama una única vez, cuando la base de datos es creada por primera vez.
+         */
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            super.onCreate(db)
+            Log.d("RoomDatabase", "Base de datos creada por primera vez. Insertando notificación de bienvenida.")
+            // Usamos una corutina para insertar los datos en un hilo de fondo.
+            CoroutineScope(Dispatchers.IO).launch {
+                insertWelcomeNotification()
+            }
+        }
+    }
+
+    // CAMBIO 3: Creamos una función para la inserción
+    private suspend fun insertWelcomeNotification() {
+        // Creamos la notificación de bienvenida
+        val welcomeNotification = NotificationEntity(
+            title = "¡Bienvenido a Dólar al Día!",
+            body = "Gracias por instalar la aplicación. Aquí recibirás todas las actualizaciones importantes sobre las tasas de cambio.",
+            timestamp = System.currentTimeMillis() // La hora actual
+        )
+        // Obtenemos el DAO de la base de datos e insertamos
+        database.notificationDao().insert(welcomeNotification)
+    }
+
+    // --- FIN DE LA SECCIÓN ---
+
     private val PREFS_NAME = "MyAppPrefs"
     private val TOPIC_SUBSCRIBED_KEY = "isSubscribedToTopic"
 
     private val TOKEN_KEY = "fcmToken"
+
 
 
 
@@ -58,6 +110,10 @@ class MyApplication :
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         appOpenAdManager = AppOpenAdManager()
+
+        // Forzamos la inicialización de la base de datos aquí para que el callback se ejecute al inicio.
+        // Esto es una buena práctica.
+        database.openHelper.writableDatabase
         //countDeviceTokens()
         try {
             // Configura Firebase Crashlytics
@@ -325,6 +381,8 @@ class MyApplication :
     interface OnShowAdCompleteListener {
         fun onShowAdComplete()
     }
+
+
 
     private inner class AppOpenAdManager {
 
