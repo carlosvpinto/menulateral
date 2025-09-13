@@ -62,10 +62,10 @@
         tools:layout="@layout/fragment_history" />
 
     <fragment
-        android:id="@+id/nav_notificaciones"
-        android:name="com.carlosv.dolaraldia.ui.notificaciones.NotificacionesFragment"
-        android:label="@string/notificaciones_label"
-        tools:layout="@layout/fragment_notificaciones" />
+        android:id="@+id/nav_configuration"
+        android:name="com.carlosv.dolaraldia.ui.configuracion.ConfiguracionFragment"
+        android:label="Configuracion"
+        tools:layout="@layout/fragment_configuration" />
     <fragment
         android:id="@+id/nav_pago"
         android:name="com.carlosv.dolaraldia.ui.pago.PagoFragment"
@@ -76,5 +76,11 @@
         android:name="com.carlosv.dolaraldia.ui.pago.PaymentFragment"
         android:label="@string/paypal"
         tools:layout="@layout/fragment_payment"/>
+
+    <fragment
+        android:id="@+id/nav_guardar_noti"
+        android:name="com.carlosv.dolaraldia.ui.notificaciones.FragmentGuardarNotifications"
+        android:label="Notificaciones"
+        tools:layout="@layout/fragment_guardar_notifications"/>
 
    </navigation>

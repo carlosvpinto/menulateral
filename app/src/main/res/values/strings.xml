@@ -113,6 +113,7 @@
     <string name="precio_en_plataformas">Plataformas</string>
     <string name="actualizar_tasas">Actualizar tasas</string>
     <string name="banco_a_buscar">Banco a Buscar</string>
+    <string name="configuracion">Configuracion</string>
 
 
     <string-array name="lista_bancos">

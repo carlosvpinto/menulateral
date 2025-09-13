@@ -127,6 +127,13 @@ dependencies {
     val lifecycle_version = "2.7.0"
     val arch_version = "2.2.0"
 
+    // Room
+    val room_version = "2.6.1" // Reemplaza con la última versión
+
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    kapt("androidx.room:room-compiler:$room_version") // Usa 'kapt'
+
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version")
     // LiveData

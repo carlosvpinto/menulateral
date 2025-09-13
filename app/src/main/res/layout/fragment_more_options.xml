@@ -54,8 +54,21 @@
         android:focusable="true"
         android:textAppearance="?attr/textAppearanceBody1"
         app:drawableStartCompat="@drawable/ic_notificacion"
-        app:drawableTint="?attr/colorPrimary" /> <!-- CAMBIO: Añadido para colorear el ícono -->
-
+        app:drawableTint="?attr/colorPrimary" />
+    <TextView
+        android:id="@+id/option_Configuration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/configuracion"
+        android:drawablePadding="16dp"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:textAppearance="?attr/textAppearanceBody1"
+        app:drawableStartCompat="@drawable/ic_menu_24"
+        app:drawableTint="?attr/colorPrimary" />
     <!-- Opción 4: Acerca de -->
     <TextView
         android:id="@+id/option_acerca"
