@@ -14,7 +14,7 @@
 
     <item
         android:id="@+id/nav_platforms"
-        android:icon="@drawable/globe_americas"
+        android:icon="@drawable/usdt"
         android:title="@string/precio_en_plataformas" />
 
     <item

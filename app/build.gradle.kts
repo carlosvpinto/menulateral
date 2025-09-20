@@ -15,8 +15,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 35
-        versionCode = 118
-        versionName = "118BottomNav"
+        versionCode = 119
+        versionName = "119BottomNav2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
