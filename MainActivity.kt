@@ -96,6 +96,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputLayout
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
@@ -671,6 +672,7 @@ class MainActivity : AppCompatActivity() {
         val enviareButton: MaterialButton = customView.findViewById(R.id.btnEnviarPM)
         val chekMontoPersonalizado: MaterialCheckBox = customView.findViewById(R.id.checkMontoPerso)
         val montoPersonalizado: EditText = customView.findViewById(R.id.editMontoPersonalizado)
+        val layoutMontoPersonalizado: TextInputLayout = customView.findViewById(R.id.montoPersonalizadoLayout)
 
         // ¡Aquí aplicamos la magia de la validación a nuestro EditText!
         setupDecimalInputValidation(montoPersonalizado)
@@ -704,7 +706,7 @@ class MainActivity : AppCompatActivity() {
                 // 1. Actualizar la UI
                 chekMontoPersonalizado.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 montoPersonalizado.visibility = View.VISIBLE
-
+                layoutMontoPersonalizado.visibility = View.VISIBLE
                 // 2. Mover el foco y mostrar el teclado
                 montoPersonalizado.requestFocus()
                 showKeyboard(montoPersonalizado)
@@ -715,7 +717,7 @@ class MainActivity : AppCompatActivity() {
                 // 1. Restaurar la UI
                 chekMontoPersonalizado.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
                 montoPersonalizado.visibility = View.GONE
-
+                layoutMontoPersonalizado.visibility = View.GONE
                 // 2. Ocultar el teclado y limpiar el foco
                 //hideKeyboard(montoPersonalizado)
                 hideKeyboard()
