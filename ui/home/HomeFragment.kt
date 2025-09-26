@@ -370,6 +370,15 @@ class HomeFragment : Fragment() {
             copiarBs()
         }
 
+        //MODO DESRROLLLO BORRAR**********
+        binding.imglogo.setOnClickListener {
+            AppPreferences.clearPremiumStatus()
+            Toast.makeText(requireContext(), "[DEBUG] Estado Premium borrado.", Toast.LENGTH_LONG).show()
+
+            // Devuelve 'true' para indicar que el evento de clic largo ha sido manejado.
+            true
+        }
+
 
 
         /*binding.imgVPublicidad.setOnClickListener {
@@ -934,6 +943,16 @@ class HomeFragment : Fragment() {
         private const val FECHA_EURO = "fecha"
         private const val VALOR_DOLAR = "ValorDolar"
         private const val NUMERO_DOLAR = "ValorEuro"
+
+        fun getTasaVentaBcv(): Double {
+            // Usamos la misma fuente de datos que usa tu UI (llamarApiTipoCambio)
+            val respuesta = getResponseEuroTipoCambio() // O getResponse(), dependiendo de cuál sea el principal
+
+            // Usamos el operador de encadenamiento seguro (?.) para evitar null pointers.
+            // Si 'respuesta' o 'monitors' o 'usd' es nulo, la expresión devolverá null.
+            // El '?: 0.0' al final asegura que si algo es nulo, devolvamos 0.0.
+            return respuesta?.monitors?.usd?.price ?: 0.0
+        }
 
 
         fun getResponse(): ApiEuroTipoCambio? {

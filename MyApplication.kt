@@ -3,6 +3,7 @@ package com.carlosv.dolaraldia
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.lifecycle.Lifecycle
@@ -12,15 +13,19 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.carlosv.dolaraldia.ui.pago.PlanesPagoActivity
+import com.carlosv.dolaraldia.utils.premiun.PremiumDialogManager
 import com.carlosv.dolaraldia.utils.roomDB.NotificationEntity
 import com.carlosv.dolaraldia.utils.roomDB.AppDatabase
 import com.carlosv.dolaraldia.utils.roomDB.NotificationsRepository
+import com.carlosv.menulateral.R
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.tasks.Task
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.crashlytics.BuildConfig
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.firestore.FirebaseFirestore
@@ -36,9 +41,9 @@ import java.util.Date
 
 
 private const val LOG_TAG: String = "AppOpenAdManager"
-//private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
 //private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
-private const val AD_UNIT_ID: String  = "ca-app-pub-3265312813580307/7449206999" // Admob Dolarmexico 2
+//private const val AD_UNIT_ID: String  = "ca-app-pub-3265312813580307/7449206999" // Admob Dolarmexico 2
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 
@@ -50,6 +55,8 @@ class MyApplication :
 
     private lateinit var appOpenAdManager: AppOpenAdManager
     private var currentActivity: Activity? = null
+    // ¡NUEVO! Bandera para controlar la primera muestra.
+    private var isFirstAdAttempted = false
 
     // --- INICIO DE LA SECCIÓN PARA LA BASE DE DATOS DE NOTIFICACIONES ---
 
@@ -63,8 +70,40 @@ class MyApplication :
             .build()
     }
 
+    private val premiumDialogManager: PremiumDialogManager by lazy {
+        PremiumDialogManager(this)
+    }
+
     val repository by lazy {
         NotificationsRepository(database.notificationDao())
+    }
+
+    // --- FUNCIÓN ACTUALIZADA PARA MOSTRAR EL DIÁLOGO DE MATERIAL 3 ---
+    private fun showPremiumDialog(activity: Activity) {
+        activity.runOnUiThread {
+            MaterialAlertDialogBuilder(activity)
+                // 1. Usa el nuevo string para el título, que ahora es el gancho principal.
+                .setTitle(R.string.premium_dialog_title)
+
+                // 2. Usa el nuevo string para el mensaje, que da más detalles.
+                .setMessage(R.string.premium_dialog_message_v3)
+
+                // 3. El botón positivo ahora es más claro sobre su acción.
+                .setPositiveButton(R.string.premium_dialog_positive_button) { dialog, _ ->
+                    val intent = Intent(activity, PlanesPagoActivity::class.java)
+                    activity.startActivity(intent)
+                    dialog.dismiss()
+                }
+
+                // 4. El botón negativo no cambia.
+                .setNegativeButton(R.string.premium_dialog_negative_button) { dialog, _ ->
+                    dialog.dismiss()
+                }
+
+                .setIcon(R.drawable.premiun) // El ícono se mantiene
+
+                .show()
+        }
     }
 
     // CAMBIO 2: Creamos el objeto Callback
@@ -106,11 +145,15 @@ class MyApplication :
 
     override fun onCreate() {
         super.onCreate()
+
+        AppPreferences.init(this)
         registerActivityLifecycleCallbacks(this)
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         appOpenAdManager = AppOpenAdManager()
 
+
+        appOpenAdManager.loadAd(this)
         // Forzamos la inicialización de la base de datos aquí para que el callback se ejecute al inicio.
         // Esto es una buena práctica.
         database.openHelper.writableDatabase
@@ -328,11 +371,13 @@ class MyApplication :
 //        // Muestra el anuncio (si está disponible) cuando la aplicación pasa al primer plano.
 //        currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
 //    }
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreateLifecycle() {
-        // Muestra el anuncio (si está disponible) cuando la aplicación pasa al primer plano.
-        currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
-        // Acciones que deseas realizar cuando se crea el LifecycleOwner
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onMoveToForeground() {
+        // Este método ahora solo se encarga de mostrar el anuncio
+        // CUANDO LA APP VUELVE DESDE SEGUNDO PLANO, no en el primer inicio.
+        if (isFirstAdAttempted) {
+            currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
+        }
     }
 
 //    @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -342,29 +387,32 @@ class MyApplication :
 //    }
 
 
-    /** ActivityLifecycleCallback methods. */
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+        // La primera vez que se crea una actividad, iniciamos la carga del anuncio.
+        if (!isFirstAdAttempted) {
+            appOpenAdManager.loadAd(activity)
+        }
+    }
 
     override fun onActivityStarted(activity: Activity) {
-        // Se inicia una actividad publicitaria cuando se muestra un anuncio, que podría ser la clase AdActivity de Google
-        // SDK u otra clase de actividad implementada por un socio de mediación externo. Actualizando el
-        // currentActivity solo cuando un anuncio no se muestra garantizará que no se trate de una actividad publicitaria, sino del
-        // uno que muestra el anuncio.
         if (!appOpenAdManager.isShowingAd) {
             currentActivity = activity
         }
-
     }
-
-    override fun onActivityResumed(activity: Activity) {}
-
+    override fun onActivityResumed(activity: Activity) {
+        currentActivity = activity
+        // Intentamos mostrar el anuncio en el onResume de la PRIMERA actividad.
+        if (!isFirstAdAttempted) {
+            Log.d(LOG_TAG, "Primer onResume, intentando mostrar anuncio.")
+            isFirstAdAttempted = true // Marcamos que ya hemos hecho el primer intento.
+            currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
+        }
+    }
     override fun onActivityPaused(activity: Activity) {}
-
     override fun onActivityStopped(activity: Activity) {}
-
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-
     override fun onActivityDestroyed(activity: Activity) {}
+
 
     fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
         // Ajustamos el anuncio del programa si está disponible para exigir que otras clases solo interactúen con MiAplicación
@@ -384,161 +432,97 @@ class MyApplication :
 
 
 
+    // --- CLASE INTERNA AppOpenAdManager (DEPURADA) ---
     private inner class AppOpenAdManager {
-
-        private var googleMobileAdsConsentManager: GoogleMobileAdsConsentManager =
-            GoogleMobileAdsConsentManager.getInstance(applicationContext)
         private var appOpenAd: AppOpenAd? = null
         private var isLoadingAd = false
         var isShowingAd = false
-
-        /** Keep track of the time an app open ad is loaded to ensure you don't show an expired ad. */
         private var loadTime: Long = 0
 
-        /**
-         * Load an ad.
-         *
-         * @param context the context of the activity that loads the ad
-         */
         fun loadAd(context: Context) {
-            // Do not load ad if there is an unused ad or one is already loading.
             if (isLoadingAd || isAdAvailable()) {
                 return
             }
-
             isLoadingAd = true
+            Log.d(LOG_TAG, "Iniciando carga del anuncio...")
             val request = AdRequest.Builder().build()
             AppOpenAd.load(
-                context,
-                AD_UNIT_ID,
-                request,
+                context, AD_UNIT_ID, request,
                 object : AppOpenAd.AppOpenAdLoadCallback() {
-                    /**
-                     * Se llama cuando se ha cargado un anuncio abierto de aplicación.
-                     *
-                     * @param anuncia el anuncio abierto de la aplicación cargada.
-                     */
                     override fun onAdLoaded(ad: AppOpenAd) {
                         appOpenAd = ad
                         isLoadingAd = false
                         loadTime = Date().time
-                     //   Log.d(LOG_TAG, "Cargado!!")
-                        // Toast.makeText(context, "Cargado!!", Toast.LENGTH_SHORT).show()
-                        // Mostrar el anuncio automáticamente si no se ha mostrado antes
-                        if (!hasAdBeenShown) {
-                            showAdIfAvailable(context as Activity)
-                        }
+                        Log.d(LOG_TAG, "¡Anuncio cargado y listo!")
                     }
 
-                    /**
-                     * Called when an app open ad has failed to load.
-                     *
-                     * @param loadAdError the error.
-                     */
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         isLoadingAd = false
-                        Log.d(LOG_TAG, "No se pudo Cargar el Anuncio: " + loadAdError.message)
-                        //  Toast.makeText(context, "onAdFai ledToLoad", Toast.LENGTH_SHORT).show()
+                        appOpenAd = null
+                        Log.e(LOG_TAG, "Fallo al cargar el anuncio: ${loadAdError.message}")
                     }
                 }
             )
         }
 
-        /** ** Verifique si el anuncio se cargó hace más de n horas. * */
+        private fun isAdAvailable(): Boolean = appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
         private fun wasLoadTimeLessThanNHoursAgo(numHours: Long): Boolean {
             val dateDifference: Long = Date().time - loadTime
             val numMilliSecondsPerHour: Long = 3600000
             return dateDifference < numMilliSecondsPerHour * numHours
         }
 
-        /**Compruebe si el anuncio existe y se puede mostrar. */
-        private fun isAdAvailable(): Boolean {
-            // Las referencias a anuncios en la versión beta abierta de la aplicación expirarán después de cuatro horas, pero este límite de tiempo
-            // puede cambiar en futuras versiones beta. Para más detalles, consulte:
-            // https://support.google.com/admob/answer/9341964?hl=en
-            return appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
-        }
 
         fun showAdIfAvailable(activity: Activity) {
-            showAdIfAvailable(
-                activity,
-                object : OnShowAdCompleteListener {
-                    override fun onShowAdComplete() {
-                        // Vacío porque el usuario volverá a la actividad que muestra el anuncio.
-                    }
-                }
-            )
+            // Pasamos un callback vacío por defecto
+            showAdIfAvailable(activity, object: OnShowAdCompleteListener {
+                override fun onShowAdComplete() {}
+            })
         }
 
-
-        fun showAdIfAvailable(
-            activity: Activity,
-            onShowAdCompleteListener: OnShowAdCompleteListener,
-        ) {
-            // Si el anuncio de aplicación abierta ya se muestra, no vuelva a mostrarlo.
+        fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
+            if (AppPreferences.isUserPremiumActive()) {
+                Log.d(LOG_TAG, "showAdIfAvailable: Plan : ${AppPreferences.getPremiumPlan()} Vence: ${AppPreferences.getPremiumExpirationDate()}")
+                Log.d(LOG_TAG, "Usuario premium. No se mostrará anuncio.")
+                onShowAdCompleteListener.onShowAdComplete()
+                return
+            }
             if (isShowingAd) {
-                Log.d(LOG_TAG, "El anuncio de apertura de la aplicación ya se muestra.")
+                Log.d(LOG_TAG, "Intento de mostrar abortado: ya se está mostrando un anuncio.")
+                return
+            }
+            if (!isAdAvailable()) {
+                Log.d(LOG_TAG, "Intento de mostrar abortado: no hay un anuncio disponible.")
+                onShowAdCompleteListener.onShowAdComplete()
+                // Ya no cargamos aquí, la carga se maneja en onActivityCreated.
                 return
             }
 
-            // Si el anuncio de apertura de la aplicación aún no está disponible, invoque la devolución de llamada.
-            if (!isAdAvailable()) {
-                Log.d(LOG_TAG, "El anuncio de apertura de la aplicación aún no está listo.")
-                onShowAdCompleteListener.onShowAdComplete()
-                if (googleMobileAdsConsentManager.canRequestAds) {
+            Log.d(LOG_TAG, "Anuncio disponible. Mostrando...")
+            appOpenAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+                override fun onAdDismissedFullScreenContent() {
+                    appOpenAd = null
+                    isShowingAd = false
+                    if (premiumDialogManager.shouldShowPremiumDialog()) {
+                        showPremiumDialog(activity)
+                    }
+                    onShowAdCompleteListener.onShowAdComplete()
+                    loadAd(activity) // Precargamos el siguiente.
+                }
+
+                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                    appOpenAd = null
+                    isShowingAd = false
+                    Log.e(LOG_TAG, "Fallo al mostrar el anuncio: ${adError.message}")
+                    onShowAdCompleteListener.onShowAdComplete()
                     loadAd(activity)
                 }
-                return
-            }
-
-            Log.d(LOG_TAG, "Mostrará anuncio.")
-
-            appOpenAd?.fullScreenContentCallback =
-                object : FullScreenContentCallback() {
-                    /**Se llama cuando se descarta el contenido de pantalla completa.*/
-                    override fun onAdDismissedFullScreenContent() {
-                        // Establezca la referencia en nulo para que isAdAvailable() devuelva falso.
-                        appOpenAd = null
-                        isShowingAd = false
-                        Log.d(LOG_TAG, "en Anuncio descartado en Contenido de pantalla completa.")
-                        //  Toast.makeText(activity, "en Anuncio descartado ed Contenido de pantalla completa", Toast.LENGTH_SHORT).show()
-
-                        onShowAdCompleteListener.onShowAdComplete()
-                        // if (googleMobileAdsConsentManager.canRequestAds) {
-                        loadAd(activity)
-                        //   }
-                    }
-
-                    /** Called when fullscreen content failed to show. */
-                    override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                        appOpenAd = null
-                        isShowingAd = false
-                        Log.d(
-                            LOG_TAG,
-                            "el anuncio no se puede mostrar cuando la aplicación no está en primer plano: " + adError.message
-                        )
-                        //Toast.makeText(activity, " el anuncio no se puede mostrar cuando la aplicación no está en primer plano", Toast.LENGTH_SHORT).show()
-
-                        onShowAdCompleteListener.onShowAdComplete()
-                        if (googleMobileAdsConsentManager.canRequestAds) {
-                            loadAd(activity)
-                        }
-                    }
-
-                    /** Se llama cuando se muestra contenido en pantalla completa.*/
-                    override fun onAdShowedFullScreenContent() {
-                        Log.d(
-                            LOG_TAG,
-                            "** Se llama cuando se muestra contenido en pantalla completa."
-                        )
-                        //  Toast.makeText(activity, "contenido en pantalla completa.", Toast.LENGTH_SHORT).show()
-                    }
+                override fun onAdShowedFullScreenContent() {
+                    Log.d(LOG_TAG, "Anuncio mostrado.")
                 }
+            }
             isShowingAd = true
             appOpenAd?.show(activity)
-            hasAdBeenShown = true  // Marcar que el anuncio ya se mostró
-
-
         }
     }
 }
