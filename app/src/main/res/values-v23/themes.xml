@@ -1,0 +1,54 @@
+<!-- res/values/themes.xml (VERSIÓN FINAL Y LIMPIA) -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+  <!-- 1. TEMA PRINCIPAL PARA MODO CLARO -->
+  <style name="Theme.MENULATERAL" parent="Theme.Material3.Light.NoActionBar">
+    <!-- Colores del Tema Claro -->
+    <item name="colorPrimary">@color/md_theme_light_primary</item>
+    <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
+    <item name="colorPrimaryContainer">@color/md_theme_light_primaryContainer</item>
+    <item name="colorOnPrimaryContainer">@color/md_theme_light_onPrimaryContainer</item>
+    <item name="colorSecondary">@color/md_theme_light_secondary</item>
+    <item name="colorOnSecondary">@color/md_theme_light_onSecondary</item>
+    <!-- ... (y todos los demás colores `md_theme_light_...` de tu paleta) ... -->
+    <item name="android:colorBackground">@color/md_theme_light_background</item>
+    <item name="colorOnBackground">@color/md_theme_light_onBackground</item>
+    <item name="colorSurface">@color/md_theme_light_surface</item>
+    <item name="colorOnSurface">@color/md_theme_light_onSurface</item>
+    <item name="colorSurfaceVariant">@color/md_theme_light_surfaceVariant</item>
+    <item name="colorOnSurfaceVariant">@color/md_theme_light_onSurfaceVariant</item>
+
+    <item name="android:activityOpenEnterAnimation">@anim/appear_from_top</item>
+
+    <!-- Animación para la Activity que SALE de la pantalla -->
+    <item name="android:activityOpenExitAnimation">@anim/stay_put</item>
+
+    <!-- Animación para la Activity que vuelve a ENTRAR (al presionar "atrás") -->
+    <item name="android:activityCloseEnterAnimation">@anim/stay_put</item>
+
+    <!-- Animación para la Activity que SALE (al presionar "atrás") -->
+    <item name="android:activityCloseExitAnimation">@anim/disappear_to_bottom</item>
+  </style>
+
+  <!-- 2. ESTILOS DE WIDGETS Y OTROS (Se definen solo una vez, aquí) -->
+
+  <!-- Estilo para la BottomNavigationView (versión base/clara) -->
+  <style name="Widget.App.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+    <item name="itemIconTint">@color/bottom_nav_icon_tint</item>
+    <item name="itemTextColor">@color/bottom_nav_icon_tint</item>
+    <item name="android:windowLightStatusBar">true</item>
+  </style>
+
+  <!-- Estilo para el Splash Screen -->
+  <style name="SplashTheme" parent="Theme.Material3.Dark.NoActionBar">
+    <item name="android:windowBackground">@color/md_theme_dark_surface</item>
+  </style>
+  <!-- Base application theme. -->
+  <style name="Base.Theme.MENULATERAL" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Customize your light theme here. -->
+    <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+  </style>
+
+
+
+</resources>

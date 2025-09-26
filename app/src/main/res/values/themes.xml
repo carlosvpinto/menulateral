@@ -17,6 +17,18 @@
         <item name="colorOnSurface">@color/md_theme_light_onSurface</item>
         <item name="colorSurfaceVariant">@color/md_theme_light_surfaceVariant</item>
         <item name="colorOnSurfaceVariant">@color/md_theme_light_onSurfaceVariant</item>
+
+        <!-- Animación para la Activity que ENTRA en la pantalla -->
+        <item name="android:activityOpenEnterAnimation">@anim/appear_from_top</item>
+
+        <!-- Animación para la Activity que SALE de la pantalla -->
+        <item name="android:activityOpenExitAnimation">@anim/stay_put</item>
+
+        <!-- Animación para la Activity que vuelve a ENTRAR (al presionar "atrás") -->
+        <item name="android:activityCloseEnterAnimation">@anim/stay_put</item>
+
+        <!-- Animación para la Activity que SALE (al presionar "atrás") -->
+        <item name="android:activityCloseExitAnimation">@anim/disappear_to_bottom</item> <!-- Puedes crear esta animación si quieres un efecto al cerrar -->
     </style>
 
     <!-- 2. ESTILOS DE WIDGETS Y OTROS (Se definen solo una vez, aquí) -->
@@ -31,12 +43,12 @@
     <style name="SplashTheme" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:windowBackground">@color/md_theme_dark_surface</item>
     </style>
+  <!-- Base application theme. -->
+    <style name="Base.Theme.MENULATERAL" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
 
-    <!--
-        NOTA: Los estilos `AppBarOverlay`, `PopupOverlay` y `CustomCheckbox`
-        basados en `AppCompat` ya no son necesarios con la nueva estructura de Material 3
-        y a menudo son la fuente de estos conflictos. Los eliminamos para limpiar.
-        Si algún layout los necesita, debemos modernizar ese layout también.
-    -->
+
 
 </resources>

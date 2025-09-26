@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -11,35 +10,36 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-
-
     <application
         android:name="com.carlosv.dolaraldia.MyApplication"
         android:allowBackup="true"
-        android:networkSecurityConfig="@xml/network_security_config"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MENULATERAL"
         tools:targetApi="31">
-
-
+        <activity
+            android:name="com.carlosv.dolaraldia.ui.pago.PlanesPagoActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.carlosv.dolaraldia.ui.pago.DetallesPagoMActivity"
+            android:exported="false" />
         <activity
             android:name="com.carlosv.dolaraldia.SplashActivity"
             android:exported="true"
             android:noHistory="true"
-            android:theme="@style/SplashTheme">
-
-        </activity>
-
+            android:theme="@style/SplashTheme" />
+        <activity
+            android:name="com.carlosv.dolaraldia.ui.pago.MercantilSearchActivity"
+            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3265312813580307~7177373128"
-            />
+            android:value="ca-app-pub-3265312813580307~7177373128" />
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id"
@@ -49,8 +49,8 @@
             android:name="com.carlosv.dolaraldia.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:windowSoftInputMode="adjustPan"
-            android:theme="@style/Theme.MENULATERAL">
+            android:theme="@style/Theme.MENULATERAL"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -78,10 +78,9 @@
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="@string/default_notification_channel_id" />
-<!--        <meta-data-->
-<!--            android:name="com.google.android.gms.ads.AD_SERVICES_CONFIG"-->
-<!--            tools:replace="android:value" />-->
+            android:value="@string/default_notification_channel_id" /> <!-- <meta-data -->
+        <!-- android:name="com.google.android.gms.ads.AD_SERVICES_CONFIG" -->
+        <!-- tools:replace="android:value" /> -->
         <property
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/gma_ad_services_config"

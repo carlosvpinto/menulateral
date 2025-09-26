@@ -83,5 +83,7 @@
     <color name="md_theme_dark_surfaceTint">#B1C5FF</color>
     <color name="md_theme_dark_outlineVariant">#44464F</color>
     <color name="md_theme_dark_scrim">#000000</color>
+    <color name="premium_gold">#FFD700</color>
+    <color name="text_secondary_light">#808080</color> <!-- Un color gris para el texto secundario -->
 
 </resources>

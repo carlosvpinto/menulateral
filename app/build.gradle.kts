@@ -1,3 +1,4 @@
+import java.util.Properties
 plugins {
 
     id("com.android.application")
@@ -7,14 +8,22 @@ plugins {
     kotlin("kapt")
 }
 
+// --- BLOQUE CORRECTO PARA .kts ---
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+
 android {
     namespace = "com.carlosv.menulateral"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 119
         versionName = "119BottomNav2.0"
 
@@ -34,16 +43,30 @@ android {
 
         }
 
+        // --- ¡AÑADE ESTE BLOQUE COMPLETO DENTRO DE buildTypes! ---
+        // Esto crea campos en BuildConfig para todas tus variantes de build (debug, release, etc.)
+        all {
+            buildConfigField("String", "MERCANTIL_MERCHANT_ID", "\"${localProperties.getProperty("MERCANTIL_MERCHANTID")}\"")
+            buildConfigField("String", "MERCANTIL_CLIENT_ID", "\"${localProperties.getProperty("MERCANTIL_CLIENTID")}\"")
+            buildConfigField("String", "MERCANTIL_SECRET_KEY", "\"${localProperties.getProperty("MERCANTIL_SECRETKEY")}\"")
+            buildConfigField("String", "MERCANTIL_INTEGRATOR_ID", "\"${localProperties.getProperty("MERCANTIL_INTEGRATORID")}\"")
+            buildConfigField("String", "MERCANTIL_TERMINAL_ID", "\"${localProperties.getProperty("MERCANTIL_TERMINALID")}\"")
+            buildConfigField("String", "MERCANTIL_PHONE_NUMBER", "\"${localProperties.getProperty("MERCANTIL_PHONE_NUMBER")}\"")
+        }
+        // --- FIN DEL BLOQUE A AÑADIR ---
+
+
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 
 }
@@ -116,6 +139,7 @@ dependencies {
     implementation("org.jsoup:jsoup:1.16.1")
     implementation("com.google.android.ump:user-messaging-platform:2.2.0")
     implementation("androidx.compose.material3:material3-android:1.3.1")
+    implementation("androidx.activity:activity:1.8.0")
 
 //    // Facebook SDK
 //    implementation("com.facebook.android:facebook-android-sdk:16.0.0")

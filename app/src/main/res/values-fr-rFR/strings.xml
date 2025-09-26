@@ -138,4 +138,29 @@
         <item>J</item>
         <item>G</item>
     </string-array>
+
+    !-- Textos para el Diálogo de la Oferta Premium -->
+    <!-- ¡CORREGIDO! El título ahora es la oferta principal -->
+    <string name="premium_dialog_title">¡Navega sin publicidad desde 1.5$!</string>
+
+    <!-- ¡NUEVO! El mensaje explica cómo proceder -->
+    <string name="premium_dialog_message_v3">Puedes pagar con Pago Móvil para activar la versión Premium.</string>
+
+    <string name="premium_dialog_positive_button">Ver Datos de Pago</string>
+    <string name="premium_dialog_negative_button">Más tarde</string>
+
+    <!-- Textos para la Pantalla de Detalles de Pago -->
+    <string name="payment_details_full">Para activar la versión Premium, realiza un Pago Móvil con los siguientes datos y envía el comprobante a nuestro correo electrónico.\n\n• Teléfono: 0412-1234567\n• CI: 12.345.678\n• Banco: Nombre del Banco\n\nEmail: soporte@dolaraldia.com</string>
+    <string name="rif_banco">J-5068188172</string>
+
+    <string name="verificar_pago_m_vil">Verificar Pago Móvil</string>
+    <string name="ingresa_los_datos_de_la_transacci_n_para_validarla">Ingresa los datos de la transacción para validarla.</string>
+    <string name="tel_fono_del_cliente">Teléfono del cliente</string>
+    <string name="n_mero_de_referencia">Número de referencia</string>
+    <string name="monto_de_la_operaci_n">Monto de la operación</string>
+    <string name="buscar_transacci_n">Buscar Transacción</string>
+    <string name="logo_del_banco">Logo del Banco</string>
+
+    <string name="c_dula_de_identidad">Cédula de Identidad</string>
+    <string name="fecha_de_la_transacci_n">Fecha de la Transacción</string>
 </resources>
