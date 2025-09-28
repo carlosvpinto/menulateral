@@ -7,13 +7,13 @@ import android.util.Log
 class PremiumDialogManager(context: Context) {
 
     companion object {
-        // Nombre del archivo de preferencias y de la clave para el contador.
         private const val PREFS_NAME = "ad_dialog_prefs"
         private const val AD_VIEW_COUNT_KEY = "ad_view_count"
         val  TAG = "PremiumDialogManager"
 
-        // ¡Puedes ajustar este número! El diálogo se mostrará cada 3 anuncios.
-        private const val AD_SHOW_THRESHOLD = 2
+        // El diálogo se mostrará la primera vez (conteo 1) y en el conteo máximo (20).
+        // Se reiniciará después de llegar a este número.
+        private const val AD_SHOW_THRESHOLD = 20
     }
 
     // Obtenemos una instancia de SharedPreferences.
@@ -30,13 +30,21 @@ class PremiumDialogManager(context: Context) {
         // 2. Incrementamos el contador.
         currentCount++
         Log.d(TAG, "shouldShowPremiumDialog:currentCount $currentCount ")
-        // 3. Verificamos si hemos alcanzado el umbral.
-        if (currentCount >= AD_SHOW_THRESHOLD) {
-            // Si lo alcanzamos, reiniciamos el contador a 0 y devolvemos 'true'.
-            prefs.edit().putInt(AD_VIEW_COUNT_KEY, 0).apply()
+
+        // 3. Verificamos la lógica: Mostrar si es 1 O si alcanza el umbral (20).
+        val shouldShow = (currentCount == 1) || (currentCount >= AD_SHOW_THRESHOLD)
+
+        if (shouldShow) {
+            // Si el conteo es 20 (el umbral), lo reiniciamos a 0 para empezar de nuevo.
+            if (currentCount == AD_SHOW_THRESHOLD) {
+                prefs.edit().putInt(AD_VIEW_COUNT_KEY, 0).apply()
+            } else {
+                // Si el conteo fue 1, solo guardamos el nuevo valor (1).
+                prefs.edit().putInt(AD_VIEW_COUNT_KEY, currentCount).apply()
+            }
             return true
         } else {
-            // Si no, solo guardamos el nuevo conteo y devolvemos 'false'.
+            // Si no se muestra, solo guardamos el nuevo conteo.
             prefs.edit().putInt(AD_VIEW_COUNT_KEY, currentCount).apply()
             return false
         }
