@@ -1,116 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Dolar al Dia</string>
+    <string name="app_name">Dollar Quotidien</string>
     <string name="navigation_drawer_open">Ouvrir le tiroir de navigation</string>
-    <string name="navigation_drawer_close">Fermer le tiroir de navigation</string>
-    <string name="nav_header_title">Prix en dollars</string>
+    <string name="navigation_drawer_close">Fermer la navigation</string>
+    <string name="nav_header_title">Prix du Dollar</string>
     <string name="nav_header_subtitle">Coordonnées 04243454032</string>
     <string name="nav_header_desc">En-tête de navigation</string>
     <string name="action_settings">Paramètres</string>
-    <string name="menu_inicio">Dollar par jour</string>
-    <string name="menu_monedas">Autres pages</string>
-    <string name="menu_euro">Prix en euros</string>
-    <string name="menu_Bancos">Prix dans les banques</string>
-    <string name="menu_Euros">Prix en euros</string>
+    <string name="menu_inicio">Dollar du Jour</string>
+    <string name="menu_monedas">Autres Pages</string>
+    <string name="menu_euro">Prix de l\'Euro</string>
+    <string name="menu_Bancos">Taux Bancaires</string>
+    <string name="menu_Euros">Prix de l\'Euro</string>
     <string name="labelDolar">Dollars</string>
     <string name="labelBolivares">Bolivars</string>
-    <string name="hello_blank_fragment">Bonjour fragment vierge</string>
+    <string name="hello_blank_fragment">Bonjour Fragment</string>
     <string name="facebook_app_id">3241868982780008</string>
+
     <string name="texto_largo_con_formato">
-     <![CDATA[
-        <b>¡Bienvenido a Dolar al Dia!</b><br><br>
+           <![CDATA[
+        <b>Bienvenue sur Dollar Quotidien !</b><br><br>
 
-        Esta aplicación está diseñada para mantenerte informado sobre las tasas de cambio del dólar en Venezuela. Nuestra misión es proporcionarte información actualizada y precisa sobre los precios del dólar tanto en páginas web como en bancos nacionales.<br><br>
+        Cette application est conçue pour vous tenir informé des taux de change du dollar au Venezuela. Notre mission est de vous fournir des informations à jour et précises sur les prix du dollar provenant de sites web et de banques nationales.<br><br>
 
-        <b>Características Principales:</b><br><br>
+        <b>Principales Fonctionnalités :</b><br><br>
         <ul>
-            <li>Monitoreo Continuo: Mantente al tanto de las fluctuaciones del dólar con actualizaciones en tiempo real desde diversas fuentes confiables.</li>
-            <li>Información Bancaria: Obtén tasas de cambio específicas de los principales bancos nacionales para tomar decisiones informadas.</li>
-            <li>Conversión Rápida: Convierte fácilmente entre dólares y bolívares con una interfaz intuitiva y rápida.</li>
-            <li>Histórico de Precios: Explora el historial de los precios del dólar para comprender mejor las tendencias.</li>
+            <li>Suivi Continu : Restez au courant des fluctuations du dollar avec des mises à jour en temps réel provenant de diverses sources fiables.</li>
+            <li>Informations Bancaires : Obtenez des taux de change spécifiques des principales banques nationales pour prendre des décisions éclairées.</li>
+            <li>Conversion Rapide : Convertissez facilement entre dollars et bolivars grâce à une interface rapide et intuitive.</li>
+            <li>Historique des Prix : Explorez l\'historique des prix du dollar pour mieux comprendre les tendances.</li>
         </ul><br>
 
-        <b>Contáctanos:</b><br><br>
-        ¡Valoramos tus comentarios! Si tienes sugerencias, preguntas o simplemente quieres saludar, no dudes en ponerte en contacto con nosotros. <br><br>
-         email: desoftsis@gmail.com
+       <b>Contactez-Nous :</b><br><br>
+        Vos commentaires sont précieux ! Si vous avez des suggestions, des questions ou si vous voulez simplement dire bonjour, n\'hésitez pas à nous contacter. <br><br>
+         email : desoftsis@gmail.com
 
         ]]>
     </string>
-    <string name="tasa_bcv">Taux BCV</string>
-    <string name="tasa_paralelo">Tarif parallèle</string>
-    <string name="tasa_euro">Taux Euro</string>
-    <string name="actualizacion">Actualisation BCV:</string>
-    <string name="precio_en_bs">Prix en Bs</string>
-    <string name="fecha_actualizacion">Actualisation:</string>
-    <string name="actualizacionPara">Mise à jour des dates: </string>
-    <string name="paginas_a_buscar">Pages à rechercher</string>
-    <string name="paginas">Paginas</string>
-    <string name="bancos">Bancos</string>
-    <string name="precio_en_paginas">Prix en pages</string>
-    <string name="acerca_de">à propos de...</string>
-    <string name="calificar">Qualifier</string>
-    <string name="nombre_del_banco">Nom de l entité</string>
-    <string name="ver_un_video_para_colaborar">Voir une vidéo pour collaborer</string>
-    <string name="banner_ad_prueba">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="banner_ad_ejecucion"> ca-app-pub-5303101028880067/3567978792</string>
 
+    <string name="tasa_bcv">Taux BCV</string>
+    <string name="tasa_paralelo">Taux Parallèle</string>
+    <string name="tasa_euro">Taux de l\'Euro</string>
+    <string name="actualizacion">Mise à Jour BCV :</string>
+    <string name="precio_en_bs">Prix en Bs</string>
+    <string name="fecha_actualizacion">Date de Mise à Jour</string>
+    <string name="actualizacionPara">Date de Mise à Jour Parallèle</string>
+    <string name="paginas_a_buscar">Pages à Rechercher</string>
+    <string name="paginas">Pages</string>
+    <string name="bancos">Banques</string>
+    <string name="precio_en_paginas">Prix sur les Pages</string>
+    <string name="acerca_de">À Propos…</string>
+    <string name="calificar">Évaluer</string>
+    <string name="nombre_del_banco">Nom de l\'Entité</string>
+    <string name="ver_un_video_para_colaborar">Regarder une Vidéo pour Collaborer</string>
+    <string name="banner_ad_prueba">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="banner_ad_ejecucion">ca-app-pub-5303101028880067/3567978792</string>
     <string name="interstitial_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
     <string name="default_notification_channel_id">fcm_default_channel</string>
-    <string name="splash_activity_image_text">Dolar Al Dia</string>
-    <string name="splash_activity_text">Dolar Al Dia</string>
+    <string name="splash_activity_image_text">Dollar Quotidien</string>
+    <string name="splash_activity_text">Dollar Quotidien</string>
     <string name="dif">Diff</string>
     <string name="dif_bs">Diff. Bs</string>
     <string name="dif_dolar">Diff. en $</string>
-    <string name="mensaje_dolar">Différence entre le dollar et l euro</string>
-    <string name="sin_imagen_personalizada">Sin Imagen Personalizada</string>
-    <string name="imagen_personalizada">Enviar Imagen Personalizada</string>
-    <string name="mensaje_paralelo">Diff. par rapport au parallèle.</string>
-    <string name="tool_diferencia">Différence entre les monnaies</string>
-    <string name="desea_enviar_datos_de_su_pago_movil">Desea enviar datos de su pago Movil</string>
-    <string name="info_de_cuentas">Info de Cuentas</string>
-    <string name="pago_movil_message">Ahora presionando el siguiente %1$s: puede guardar tus números de pagos móvil para enviarlo con mayor rapidez a la hora de solicitar algún pago</string>
-    <string name="sin_cuenta_seleccionada">Aucun compte sélectionné</string>
-    <string name="historia_del_dolar">Historia del Dolar</string>
-    <string name="clic_grafico">Haz Click en el Grafico para ver los Valores</string>
-    <string name="menu_notificaciones">Notificaciones</string>
-    <string name="activar_notificaciones">Activar Notificaciones</string>
-    <string name="notificaciones">Configuración de Notificaciones</string>
+    <string name="mensaje_dolar">Diff Dollar vs Euro</string>
+    <string name="mensaje_paralelo">Diff. par rapport au Parallèle</string>
+    <string name="tool_diferencia">Différence entre les Devises</string>
+    <string name="desea_enviar_datos_de_su_pago_movil">Voulez-vous envoyer vos données de Paiement Mobile ?</string>
+    <string name="info_de_cuentas">Infos Compte</string>
+    <string name="pago_movil_message">Maintenant, en appuyant sur le %1$s suivant : vous pouvez enregistrer vos numéros de paiement mobile pour les envoyer plus rapidement lors de la demande d\'un paiement</string>
+    <string name="sin_cuenta_seleccionada">Aucun Compte Sélectionné</string>
+    <string name="sin_imagen_personalizada">Pas d\'Image Personnalisée</string>
+    <string name="imagen_personalizada">Envoyer une Image Personnalisée</string>
+    <string name="historia_del_dolar">Historique du Dollar</string>
+    <string name="clic_grafico">Cliquez sur le Graphique pour voir les Valeurs</string>
+    <string name="menu_notificaciones">Notifications</string>
+    <string name="activar_notificaciones">Activer les Notifications</string>
+    <string name="notificaciones">Paramètres de Notification</string>
     <string name="frgm_payment_msg_thanks">Merci pour votre achat !</string>
-    <string name="frgm_payment_price">Total to pay: $%.2f USD</string>
-    <string name="fecha_vencimiento">Date d expiration: %s</string>
-    <string name="frgm_payment_title">Payment</string>
-    <string name="suscripcion">Suscripcion</string>
+    <string name="frgm_payment_price">Total à payer : %.2f USD</string>
+    <string name="fecha_vencimiento">Date d\'Expiration : %s</string>
+    <string name="frgm_payment_title">Paiement</string>
+    <string name="suscripcion">Abonnement</string>
     <string name="paypal">Paypal</string>
-    <string name="pago_movil">Pago Movil</string>
-    <string name="acerca">Acerca...</string>
-    <string name="notificaciones_label">Notificaciones</string>
-    <string name="historia_del_dolar_label">Historia del Dolar</string>
-    <string name="prox_act_dolar_bcv">"Proch. Mise à Jour BCV"</string>
-    <string name="recibir_notificaciones">Recibir Notificaciones</string>
-    <string name="imagen_personal">Imagen personal</string>
-    <string name="datos_pago_movil">Datos Pago Movil</string>
-    <string name="monto_personalizado">Monto Personalizado</string>
-    <string name="agregar">Agregar</string>
-    <string name="cancelar">Cancelar</string>
+    <string name="pago_movil">Paiement Mobile</string>
+    <string name="acerca">À Propos…</string>
+    <string name="notificaciones_label">Notifications</string>
+    <string name="historia_del_dolar_label">Historique du Dollar</string>
+    <string name="prox_act_dolar_bcv">Prochaine Mise à Jour BCV</string>
+    <string name="recibir_notificaciones">Recevoir les Notifications</string>
+    <string name="imagen_personal">Image Personnelle</string>
+    <string name="datos_pago_movil">Données de Paiement Mobile</string>
+    <string name="monto_personalizado">Montant Personnalisé</string>
+    <string name="agregar">Ajouter</string>
+    <string name="cancelar">Annuler</string>
     <string name="zelle">Zelle</string>
-    <string name="logo_de_la_persona">Logo de la persona</string>
-    <string name="transferencia">Transferencia</string>
-    <string name="cedula_o_rif">Cedula o Rif</string>
+    <string name="logo_de_la_persona">Logo de la Personne</string>
+    <string name="transferencia">Virement</string>
+    <string name="cedula_o_rif">CI ou RIF</string>
     <string name="alias">Alias</string>
-    <string name="telefono">Telefono</string>
-    <string name="salir">Salir</string>
-    <string name="historia_del_dolar_bcv">Historia del Dólar BCV</string>
-    <string name="historia_de_dolar_en_venezuela">Historia del Dolar en Venezuela</string>
+    <string name="telefono">Téléphone</string>
+    <string name="salir">Quitter</string>
+    <string name="historia_del_dolar_bcv">Historique du Dollar BCV</string>
+    <string name="historia_de_dolar_en_venezuela">Historique du Dollar au Venezuela</string>
     <string name="precio_en_plataformas">Plateformes</string>
-    <string name="actualizar_tasas">Actualizar tasas</string>
-    <string name="banco_a_buscar">Banco a Buscar</string>
-    <string name="configuracion">Configuracion</string>
-
-
-    <!-- Otros strings y recursos existentes -->
+    <string name="actualizar_tasas">Mettre à Jour les Taux</string>
+    <string name="banco_a_buscar">Banque à Rechercher</string>
+    <string name="configuracion">Configuration</string>
 
     <string-array name="lista_bancos">
-        <item>Sélectionner une banque</item>
+        <item>Sélectionner la Banque</item>
         <item>0134 - Banesco</item>
         <item>0102 - Banco de Venezuela</item>
         <item>0108 - Banco Provincial</item>
@@ -124,12 +122,11 @@
         <item>0115 - Banco Exterior</item>
         <item>0151 - Banco Fondo Comun</item>
         <item>0138 - Banco Plaza</item>
-        <item>0104 - Banco Venezolano de Credito</item>
+        <item>0104 - Banco Venezola de Credito</item>
     </string-array>
     <string-array name="lista_history">
-        <item>Ultimos 7 Dias</item>
-        <item>Ultimos 30 Dias</item>
-
+        <item>7 Derniers Jours</item>
+        <item>30 Derniers Jours</item>
     </string-array>
     <string-array name="lista_letras">
         <item>V</item>
@@ -139,28 +136,21 @@
         <item>G</item>
     </string-array>
 
-    !-- Textos para el Diálogo de la Oferta Premium -->
-    <!-- ¡CORREGIDO! El título ahora es la oferta principal -->
-    <string name="premium_dialog_title">¡Navega sin publicidad desde 1.5$!</string>
+    <string name="premium_dialog_title">Naviguez sans publicité à partir de 1,5 $ !</string>
+    <string name="premium_dialog_message_v3">Vous pouvez payer avec Paiement Mobile pour activer la version Premium.</string>
+    <string name="premium_dialog_positive_button">Voir les Détails de Paiement</string>
+    <string name="premium_dialog_negative_button">Plus tard</string>
 
-    <!-- ¡NUEVO! El mensaje explica cómo proceder -->
-    <string name="premium_dialog_message_v3">Puedes pagar con Pago Móvil para activar la versión Premium.</string>
-
-    <string name="premium_dialog_positive_button">Ver Datos de Pago</string>
-    <string name="premium_dialog_negative_button">Más tarde</string>
-
-    <!-- Textos para la Pantalla de Detalles de Pago -->
-    <string name="payment_details_full">Para activar la versión Premium, realiza un Pago Móvil con los siguientes datos y envía el comprobante a nuestro correo electrónico.\n\n• Teléfono: 0412-1234567\n• CI: 12.345.678\n• Banco: Nombre del Banco\n\nEmail: soporte@dolaraldia.com</string>
+    <string name="payment_details_full">Pour activer la version Premium, effectuez un Paiement Mobile avec les données suivantes et envoyez le reçu à notre e-mail.\n\n• Téléphone : 0412-1234567\n• CI : 12.345.678\n• Banque : Nom de la Banque\n\nE-mail : soporte@dolaraldia.com</string>
     <string name="rif_banco">J-5068188172</string>
 
-    <string name="verificar_pago_m_vil">Verificar Pago Móvil</string>
-    <string name="ingresa_los_datos_de_la_transacci_n_para_validarla">Ingresa los datos del Pago Movil para validarla.</string>
-    <string name="tel_fono_del_cliente">Teléfono del cliente</string>
-    <string name="n_mero_de_referencia">Número de referencia</string>
-    <string name="monto_de_la_operaci_n">Monto de la operación</string>
-    <string name="buscar_transacci_n">Buscar Transacción</string>
-    <string name="logo_del_banco">Logo del Banco</string>
-
-    <string name="c_dula_de_identidad">Cédula de Identidad</string>
-    <string name="fecha_de_la_transacci_n">Fecha de la Transacción</string>
+    <string name="verificar_pago_m_vil">Vérifier le Paiement Mobile</string>
+    <string name="ingresa_los_datos_de_la_transacci_n_para_validarla">Saisissez les données du Paiement Mobile pour le valider.</string>
+    <string name="tel_fono_del_cliente">Téléphone du Client</string>
+    <string name="n_mero_de_referencia">Numéro de Référence</string>
+    <string name="monto_de_la_operaci_n">Montant de la Transaction</string>
+    <string name="buscar_transacci_n">Rechercher la Transaction</string>
+    <string name="logo_del_banco">Logo de la Banque</string>
+    <string name="c_dula_de_identidad">Carte d\'Identité</string>
+    <string name="fecha_de_la_transacci_n">Date de la Transaction</string>
 </resources>
