@@ -44,27 +44,59 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textFieldLayoutPhoneNumber"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            <!-- LinearLayout para agrupar el prefijo y el número de teléfono -->
+            <LinearLayout
+                android:id="@+id/layoutPhoneNumber"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:hint="@string/tel_fono_del_cliente"
+                android:orientation="horizontal"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/textViewSubtitle"
-                app:startIconDrawable="@drawable/ic_phone_white">
+                android:baselineAligned="false">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/editTextPhoneNumber"
-                    android:layout_width="match_parent"
+                <!-- Menú desplegable para los prefijos -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textFieldLayoutPhonePrefix"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="110dp"
                     android:layout_height="wrap_content"
-                    android:inputType="phone"
-                    android:maxLength="12" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_gravity="bottom"
+                    android:hint="Prefijo">
 
-            <!-- ¡CAMBIO! LinearLayout para agrupar el selector de CI/RIF y el número -->
+                    <AutoCompleteTextView
+                        android:id="@+id/autoCompletePhonePrefix"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:text="0414" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Campo para el resto del número de teléfono -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textFieldLayoutPhoneNumber"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:layout_gravity="bottom"
+                    android:hint="Número">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editTextPhoneNumber"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:maxLength="7" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <!-- LinearLayout para CI/RIF -->
             <LinearLayout
                 android:id="@+id/layoutCustomerId"
                 android:layout_width="0dp"
@@ -73,7 +105,8 @@
                 android:orientation="horizontal"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textFieldLayoutPhoneNumber">
+                app:layout_constraintTop_toBottomOf="@id/layoutPhoneNumber"
+                android:baselineAligned="false">
 
                 <!-- Menú desplegable para el tipo de documento -->
                 <com.google.android.material.textfield.TextInputLayout
@@ -81,13 +114,15 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="80dp"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
                     android:hint="Tipo">
-
                     <AutoCompleteTextView
                         android:id="@+id/autoCompleteIdType"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
                         android:text="V" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -99,8 +134,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
+                    android:layout_gravity="bottom"
                     android:hint="@string/c_dula_de_identidad">
-
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextCustomerIdNumber"
                         android:layout_width="match_parent"
@@ -141,12 +176,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/textFieldLayoutReference"
                 app:startIconDrawable="@drawable/ic_calendario">
-
-                <!--
-                    El AutoCompleteTextView sigue siendo útil porque los campos de texto
-                    normales no se ven bien dentro de un TextInputLayout cuando no son editables.
-                    Este componente se adapta mejor visualmente.
-                -->
                 <AutoCompleteTextView
                     android:id="@+id/autoCompleteTransactionDate"
                     android:layout_width="match_parent"
@@ -156,7 +185,6 @@
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- ¡CAMBIO #2! Se deshabilita el campo de monto -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textFieldLayoutAmount"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -168,15 +196,13 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/textFieldLayoutTransactionDate"
                 app:startIconDrawable="@drawable/ic_monetization_on_24">
-
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextAmount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="numberDecimal"
                     android:enabled="false"
-                    android:textColor="?android:attr/textColorPrimary"
-                    />
+                    android:textColor="?android:attr/textColorPrimary" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton

@@ -154,7 +154,7 @@
     <string name="rif_banco">J-5068188172</string>
 
     <string name="verificar_pago_m_vil">Verificar Pago Móvil</string>
-    <string name="ingresa_los_datos_de_la_transacci_n_para_validarla">Ingresa los datos de la transacción para validarla.</string>
+    <string name="ingresa_los_datos_de_la_transacci_n_para_validarla">Ingresa los datos del Pago Movil para validarla.</string>
     <string name="tel_fono_del_cliente">Teléfono del cliente</string>
     <string name="n_mero_de_referencia">Número de referencia</string>
     <string name="monto_de_la_operaci_n">Monto de la operación</string>

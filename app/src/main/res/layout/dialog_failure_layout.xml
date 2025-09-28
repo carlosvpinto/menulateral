@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="24dp"
+    android:paddingBottom="8dp">
+
+    <!-- 1. Imagen de Error (mismos tamaños que la de éxito) -->
+    <ImageView
+        android:id="@+id/failure_image"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:contentDescription="Pago fallido"
+        android:src="@drawable/ic_warning_200"
+        app:tint="@android:color/holo_red_dark" />
+
+    <!-- 2. Título de Error (mismos tamaños y estilo que el de éxito) -->
+    <TextView
+        android:id="@+id/failure_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Pago No Verificado"
+        android:textAlignment="center"
+        android:textAppearance="@style/MaterialAlertDialog.Material3.Title.Text"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <!-- 3. Mensaje de Error (mismos tamaños y estilo que el de éxito) -->
+    <TextView
+        android:id="@+id/failure_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="No se pudo encontrar la transacción. Verifica los datos e intenta de nuevo."
+        android:textAlignment="center"
+        android:textAppearance="@style/MaterialAlertDialog.Material3.Body.Text"
+        android:textSize="14sp" />
+
+</LinearLayout>
