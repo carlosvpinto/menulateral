@@ -20,6 +20,8 @@ import com.carlosv.dolaraldia.utils.Constants
 import com.carlosv.dolaraldia.utils.mercantil.CryptoUtils
 import com.carlosv.dolaraldia.utils.mercantil.RetrofitClient
 import com.carlosv.menulateral.BuildConfig
+import com.carlosv.menulateral.databinding.DialogFailureLayoutBinding
+import com.carlosv.menulateral.databinding.DialogSuccessLayoutBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.launch
@@ -47,15 +49,16 @@ class MercantilSearchActivity : AppCompatActivity() {
         setupToolbar()
         setupIdTypeDropdown()
         setupDateSelection()
+        setupPhonePrefixDropdown() // ¡NUEVO! Llamamos a la nueva función de configuración.
         setupSearchButton()
 
         // Recibimos el nombre del plan y el monto.
         planSeleccionado = intent.getStringExtra(Constants.SUBSCRIPTION_PLAN_NAME)
-        val montoRecibido = intent.getDoubleExtra(Constants.PRICE_BS, 0.0)
+        val montoRecibido = intent.getStringExtra(Constants.PRICE_BS)
 
 
 
-            binding.editTextAmount.setText(montoRecibido.toString())
+        binding.editTextAmount.setText(montoRecibido.toString())
 
     }
 
@@ -70,11 +73,19 @@ class MercantilSearchActivity : AppCompatActivity() {
     /**
      * Configura el menú desplegable para el tipo de documento (V, E, J, G).
      */
+
+    private fun setupPhonePrefixDropdown() {
+        val phonePrefixes = arrayOf("0414", "0424", "0416", "0426", "0412", "0422")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, phonePrefixes)
+        binding.autoCompletePhonePrefix.setAdapter(adapter)
+    }
+
     private fun setupIdTypeDropdown() {
         val idTypes = arrayOf("V", "E", "J", "G")
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, idTypes)
         binding.autoCompleteIdType.setAdapter(adapter)
     }
+
 
     /**
      * Configura el campo de fecha para mostrar un diálogo con opciones rápidas.
@@ -182,60 +193,56 @@ class MercantilSearchActivity : AppCompatActivity() {
 
     private fun setupSearchButton() {
         binding.buttonSearch.setOnClickListener {
+
+            if (!validateFields()) {
+                // Si la validación falla, la función se detiene aquí.
+                return@setOnClickListener
+            }
+
             val idType = binding.autoCompleteIdType.text.toString().trim()
             val idNumber = binding.editTextCustomerIdNumber.text.toString().trim()
             val fullCustomerId = "$idType$idNumber"
 
-            val customerPhoneRaw = binding.editTextPhoneNumber.text.toString().trim()
+            val phonePrefix = binding.autoCompletePhonePrefix.text.toString().trim()
+            val phoneNumber = binding.editTextPhoneNumber.text.toString().trim()
 
-            // --- ¡AQUÍ EMPIEZA LA NUEVA LÓGICA DE VALIDACIÓN! ---
+            // --- ¡CORRECCIÓN #1! ---
+            // Construimos el número completo (ej. "04141234567") tal como lo ingresó el usuario.
+            val customerPhoneRaw = "$phonePrefix$phoneNumber"
 
-            // 1. Leemos la referencia completa que escribió el usuario.
             val fullReference = binding.editTextReference.text.toString().trim()
-
-            // 2. Validamos la longitud de la referencia.
+            // ... (validación de la referencia)
             if (fullReference.length < 5) {
-                // Si es muy corta, mostramos un error en el campo y detenemos el proceso.
                 binding.textFieldLayoutReference.error = "Debe tener al menos 5 dígitos"
-                Toast.makeText(this, "La referencia debe tener al menos 5 dígitos", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener // Sale del listener.
+                return@setOnClickListener
             } else {
-                // Si es válida, limpiamos cualquier error previo.
                 binding.textFieldLayoutReference.error = null
             }
-
-            // 3. Extraemos SOLO los últimos 5 caracteres.
             val lastFiveDigitsOfReference = fullReference.takeLast(5)
-
-            // --- FIN DE LA NUEVA LÓGICA DE VALIDACIÓN ---
 
             val transactionDate = selectedDateForApi
             val amount = binding.editTextAmount.text.toString().trim()
 
-            var formattedCustomerPhone = customerPhoneRaw
-            if (formattedCustomerPhone.startsWith("0")) {
-                formattedCustomerPhone = "58" + formattedCustomerPhone.substring(1)
-            }
+            // Validamos que los campos no estén vacíos.
+            if (customerPhoneRaw.length == 11 && idNumber.isNotEmpty() && lastFiveDigitsOfReference.isNotEmpty() && transactionDate.isNotEmpty() && amount.isNotEmpty()) {
 
-            // Validamos que el resto de los campos no estén vacíos.
-            if (formattedCustomerPhone.isNotEmpty() && idNumber.isNotEmpty() && transactionDate.isNotEmpty() && amount.isNotEmpty()) {
-
-                // 4. Pasamos la referencia recortada a la función de búsqueda.
+                // Pasamos el NÚMERO CRUDO (raw) a la función de búsqueda.
+                // La responsabilidad de formatearlo para la API recaerá en esa función.
                 searchMercantilPayment(
-                    formattedCustomerPhone,
+                    customerPhoneRaw,
                     fullCustomerId,
-                    lastFiveDigitsOfReference, // ¡USAMOS LA VERSIÓN RECORTADA!
+                    lastFiveDigitsOfReference,
                     transactionDate,
                     amount
                 )
 
             } else {
-                Toast.makeText(this, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Por favor, completa todos los campos correctamente", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun searchMercantilPayment(customerPhoneNumber: String, customerId: String, refNumber: String, transactionDate: String, amount: String) {
+    private fun searchMercantilPayment(customerPhoneNumberRaw: String, customerId: String, refNumber: String, transactionDate: String, amount: String) {
         binding.textViewResult.isVisible = true
         binding.textViewResult.text = "Buscando transacción..."
         binding.buttonSearch.isEnabled = false
@@ -244,16 +251,25 @@ class MercantilSearchActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // (La lógica interna de la llamada a la API no cambia)
+
+                // 1. Aseguramos que el número tenga el formato internacional (58...)
+                var formattedCustomerPhone = customerPhoneNumberRaw
+                if (formattedCustomerPhone.startsWith("0")) {
+                    formattedCustomerPhone = "58" + formattedCustomerPhone.substring(1)
+                }
+
+                // 2. Encriptamos el número ya formateado.
+                val encryptedCustomerPhone = CryptoUtils.encrypt(formattedCustomerPhone, BuildConfig.MERCANTIL_SECRET_KEY)
+
+                // ... (el resto de la lógica de encriptación y construcción del request no cambia)
                 val merchantId = BuildConfig.MERCANTIL_MERCHANT_ID
                 val integratorId = BuildConfig.MERCANTIL_INTEGRATOR_ID
                 val terminalId = BuildConfig.MERCANTIL_TERMINAL_ID
                 val clientId = BuildConfig.MERCANTIL_CLIENT_ID
                 val secretKey = BuildConfig.MERCANTIL_SECRET_KEY
                 val commercePhoneNumber = BuildConfig.MERCANTIL_PHONE_NUMBER
-
                 val encryptedCommercePhone = CryptoUtils.encrypt(commercePhoneNumber, secretKey)
-                val encryptedCustomerPhone = CryptoUtils.encrypt(customerPhoneNumber, secretKey)
+
 
                 val requestBody = MercantilSearchRequest(
                     merchantIdentify = MerchantIdentify(integratorId, merchantId, terminalId),
@@ -281,12 +297,11 @@ class MercantilSearchActivity : AppCompatActivity() {
                         val searchResult = gson.fromJson(jsonString, MercantilSearchResponse::class.java)
 
                         if (!searchResult.transactionList.isNullOrEmpty()) {
-                            // --- ¡AQUÍ ESTÁ LA MODIFICACIÓN PRINCIPAL! ---
-                            // En lugar de mostrar el texto en el TextView, llamamos al diálogo de éxito.
+                            //  llamamos al diálogo de éxito.
                             showSuccessDialog()
                         } else {
-                            // Si la transacción no se encuentra, lo indicamos en el TextView.
-                            binding.textViewResult.text = "Transacción no encontrada. Verifica los datos."
+                            // FALLO: La API respondió pero no encontró la transacción.
+                            showFailureDialog("Transacción no encontrada. Por favor, verifica que los datos sean correctos.")
                         }
 
                     } catch (e: Exception) {
@@ -297,6 +312,8 @@ class MercantilSearchActivity : AppCompatActivity() {
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e(TAG, "RESPUESTA DE ERROR (${response.code()}): $errorBody")
+                    // FALLO: La API respondió pero no encontró la transacción.
+                    showFailureDialog("Transacción no encontrada. Por favor, verifica que los datos sean correctos.")
                     binding.textViewResult.text = "Error al consultar: ${response.code()}"
                 }
             } catch (e: Exception) {
@@ -312,17 +329,23 @@ class MercantilSearchActivity : AppCompatActivity() {
         }
     }
     private fun showSuccessDialog() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("¡Pago Verificado!")
-            .setMessage("Tu suscripción '${planSeleccionado ?: "Premium"}' ha sido activada.")
-            .setPositiveButton("Aceptar") { dialog, _ ->
+        // 1. Inflar el layout personalizado usando View Binding.
+        val dialogBinding = DialogSuccessLayoutBinding.inflate(layoutInflater)
 
-                // --- ¡AQUÍ ESTÁ EL CAMBIO! ---
-                // Ahora llamamos a nuestra función centralizada en AppPreferences.
+        // 2. (Opcional) Personalizar el mensaje con el nombre del plan.
+        val message = "Tu suscripción '${planSeleccionado ?: "Premium"}' ha sido activada."
+        dialogBinding.successMessage.text = message
+
+        MaterialAlertDialogBuilder(this)
+            // .setTitle() y .setMessage() ya no son necesarios, están en el XML.
+
+            // 3. Establecer nuestra vista personalizada como el contenido del diálogo.
+            .setView(dialogBinding.root)
+
+            .setPositiveButton("Aceptar") { dialog, _ ->
                 AppPreferences.setUserAsPremium(planSeleccionado)
                 Log.d(TAG, "Estado Premium guardado a través de AppPreferences.")
 
-                // El resto de la navegación no cambia.
                 val intent = Intent(this, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(intent)
@@ -330,6 +353,69 @@ class MercantilSearchActivity : AppCompatActivity() {
             }
             .setCancelable(false)
             .show()
+    }
+    /**
+     * Muestra un diálogo de error/fallo al usuario.
+     * @param message El mensaje específico que se mostrará en el diálogo.
+     */
+    private fun showFailureDialog(message: String) {
+        // Inflamos el layout personalizado de error.
+        val dialogBinding = DialogFailureLayoutBinding.inflate(layoutInflater)
+
+        // Asignamos el mensaje de error dinámico.
+        dialogBinding.failureMessage.text = message
+
+        MaterialAlertDialogBuilder(this)
+            .setView(dialogBinding.root)
+            .setPositiveButton("Entendido") { dialog, _ ->
+                // Simplemente cierra el diálogo para que el usuario pueda corregir los datos.
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun validateFields(): Boolean {
+        // Usamos una bandera para rastrear la validez general.
+        var isValid = true
+
+        // 1. Validar el número de teléfono
+        if (binding.editTextPhoneNumber.text.isNullOrEmpty()) {
+            binding.textFieldLayoutPhoneNumber.error = "Campo requerido"
+            isValid = false
+        } else {
+            binding.textFieldLayoutPhoneNumber.error = null // Limpiar error si está lleno
+        }
+
+        // 2. Validar el número de Cédula/RIF
+        if (binding.editTextCustomerIdNumber.text.isNullOrEmpty()) {
+            binding.textFieldLayoutCustomerIdNumber.error = "Campo requerido"
+            isValid = false
+        } else {
+            binding.textFieldLayoutCustomerIdNumber.error = null
+        }
+
+        // 3. Validar el número de referencia
+        if (binding.editTextReference.text.isNullOrEmpty()) {
+            binding.textFieldLayoutReference.error = "Campo requerido"
+            isValid = false
+        } else if (binding.editTextReference.text.toString().length < 5) {
+            // Mantenemos la validación de longitud que ya tenías.
+            binding.textFieldLayoutReference.error = "Debe tener al menos 5 dígitos"
+            isValid = false
+        } else {
+            binding.textFieldLayoutReference.error = null
+        }
+
+        // 4. Validar la fecha
+        if (selectedDateForApi.isEmpty()) {
+            binding.textFieldLayoutTransactionDate.error = "Campo requerido"
+            isValid = false
+        } else {
+            binding.textFieldLayoutTransactionDate.error = null
+        }
+
+        return isValid
     }
 
 }

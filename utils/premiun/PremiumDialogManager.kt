@@ -13,7 +13,7 @@ class PremiumDialogManager(context: Context) {
         val  TAG = "PremiumDialogManager"
 
         // ¡Puedes ajustar este número! El diálogo se mostrará cada 3 anuncios.
-        private const val AD_SHOW_THRESHOLD = 1
+        private const val AD_SHOW_THRESHOLD = 2
     }
 
     // Obtenemos una instancia de SharedPreferences.

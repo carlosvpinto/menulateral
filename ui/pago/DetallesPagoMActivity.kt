@@ -109,40 +109,15 @@ class DetallesPagoMActivity : AppCompatActivity() {
         }
 
 
-        // --- ¡AQUÍ ESTÁ LA MODIFICACIÓN! ---
-        binding.buttonPaid.setOnClickListener {
-            // Verificamos que tengamos un monto válido antes de continuar.
-            if (montoEnBolivares > 0.0) {
-                // 1. Crear el Intent para iniciar MercantilSearchActivity.
-                val intent = Intent(this, MercantilSearchActivity::class.java)
-
-                // 2. Añadir el monto como un "extra".
-                //    Lo convertimos a String para que coincida con lo que el campo de texto espera.
-                //    Usamos Locale.US para asegurar que el decimal sea un punto.
-                val montoComoString = String.format(Locale.US, "%.2f", montoEnBolivares)
-                intent.putExtra(Constants.EXTRA_AMOUNT_TO_PAY, montoComoString)
-
-                // 3. Iniciar la nueva actividad.
-                startActivity(intent)
-
-                // 4. (Opcional) Si quieres que esta pantalla se cierre después
-                //    de ir a la siguiente, puedes llamar a finish().
-                // finish()
-
-            } else {
-                Toast.makeText(this, "Error: El monto a pagar no es válido.", Toast.LENGTH_SHORT).show()
-            }
-        }
-
         binding.buttonPaid.setOnClickListener {
             // Verificamos que tengamos un monto y un plan válidos.
             if (montoEnBolivares > 0.0 && !planSeleccionado.isNullOrEmpty()) {
                 // Creamos el Intent para la siguiente pantalla.
                 val searchIntent = Intent(this, MercantilSearchActivity::class.java)
-
+                val montoComoString = String.format(Locale.US, "%.2f", montoEnBolivares)
                 // Empaquetamos los datos que necesita la siguiente actividad.
                 searchIntent.putExtra(Constants.SUBSCRIPTION_PLAN_NAME, planSeleccionado)
-                searchIntent.putExtra(Constants.PRICE_BS, montoEnBolivares)
+                searchIntent.putExtra(Constants.PRICE_BS, montoComoString)
 
                 // Iniciamos la actividad.
                 startActivity(searchIntent)

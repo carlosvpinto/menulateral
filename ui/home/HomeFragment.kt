@@ -199,6 +199,14 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        // 1. Llama a la función para actualizar la visibilidad del ícono premium.
+        updatePremiumIconVisibility()
+
+        // 2. Configura el OnClickListener para el ícono.
+        binding.imgpremium.setOnClickListener {
+            showPremiumExpirationDate()
+        }
+
         //ImagenSlider
 //        imageSlider = binding.imageSlider
 //        shakeDetector = ShakeDetector(requireContext()) {
@@ -656,17 +664,7 @@ class HomeFragment : Fragment() {
 
     }
 
-    private fun initializeMobileAdsSdk(context: Context) {
-        if (isMobileAdsInitializeCalled.getAndSet(true)) {
-            return
-        }
 
-        // Initialize the Mobile Ads SDK.
-        MobileAds.initialize(context) {}
-
-        // Load an ad.
-        (requireActivity().application as MyApplication).loadAd(context)
-    }
 
     //PUBLICIDAD INTERNA*****************************
 
@@ -2219,11 +2217,47 @@ class HomeFragment : Fragment() {
         //   eliminarListener()
         _binding = null
     }
+    private fun updatePremiumIconVisibility() {
+        // Usamos nuestra función centralizada en AppPreferences.
+        if (AppPreferences.isUserPremiumActive()) {
+            // Si el usuario es premium activo, hacemos visible el ícono.
+            binding.imgpremium.visibility = View.VISIBLE
+        } else {
+            // Si no lo es, lo ocultamos.
+            binding.imgpremium.visibility = View.GONE
+        }
+    }
+
+    private fun showPremiumExpirationDate() {
+        // Obtenemos el nombre del plan y la fecha de vencimiento.
+        val planName = AppPreferences.getPremiumPlan()
+        val expirationDateMillis = AppPreferences.getPremiumExpirationDate()
+
+        val message: String
+
+        if (expirationDateMillis == -1L) {
+            // Caso especial para el plan vitalicio.
+            message = "Tienes una suscripción '$planName' que no vence."
+        } else if (expirationDateMillis > 0L) {
+            // Formateamos la fecha para que sea legible.
+            val dateFormat = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("es", "ES"))
+            val formattedDate = dateFormat.format(Date(expirationDateMillis))
+            message = "Tu plan '$planName' vence el: $formattedDate"
+        } else {
+            // Caso de respaldo por si algo sale mal.
+            message = "No se pudo obtener la información de tu suscripción."
+        }
+
+        // Mostramos el mensaje en un Toast de larga duración.
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+    }
+
 
     override fun onResume() {
         super.onResume()
      //   if (binding.progressBar.visibility != View.VISIBLE) binding.swipeRefreshLayout.isRefreshing = true
         comenzarCarga()
+        updatePremiumIconVisibility()
         llamarApiTipoCambio { isSuccessful ->
 
             // Solo habilitar el botón si ambas APIs responden

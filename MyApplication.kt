@@ -47,6 +47,9 @@ private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" /
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 
+// para que se muestre un anuncio al volver. 20 minutos = 20 * 60 * 1000 = 1,200,000 milisegundos.
+private const val MIN_BACKGROUND_TIME_MS = 1_200_000L
+
 
 /** Application class that initializes, loads and show ads when activities change states. */
 
@@ -55,8 +58,13 @@ class MyApplication :
 
     private lateinit var appOpenAdManager: AppOpenAdManager
     private var currentActivity: Activity? = null
-    // ¡NUEVO! Bandera para controlar la primera muestra.
-    private var isFirstAdAttempted = false
+    private var isAppInForeground = false
+    private var adLoadCallback: OnShowAdCompleteListener? = null
+
+
+
+    // Almacena la marca de tiempo de cuándo la app pasó a segundo plano.
+    private var appBackgroundTime: Long = 0L
 
     // --- INICIO DE LA SECCIÓN PARA LA BASE DE DATOS DE NOTIFICACIONES ---
 
@@ -106,14 +114,17 @@ class MyApplication :
         }
     }
 
-    // CAMBIO 2: Creamos el objeto Callback
+    //Creamos el objeto Callback Para las Notificaciones
     private val databaseCallback = object : RoomDatabase.Callback() {
         /**
          * Se llama una única vez, cuando la base de datos es creada por primera vez.
          */
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            Log.d("RoomDatabase", "Base de datos creada por primera vez. Insertando notificación de bienvenida.")
+            Log.d(
+                "RoomDatabase",
+                "Base de datos creada por primera vez. Insertando notificación de bienvenida."
+            )
             // Usamos una corutina para insertar los datos en un hilo de fondo.
             CoroutineScope(Dispatchers.IO).launch {
                 insertWelcomeNotification()
@@ -121,7 +132,7 @@ class MyApplication :
         }
     }
 
-    // CAMBIO 3: Creamos una función para la inserción
+    //Creamos una función para la inserción
     private suspend fun insertWelcomeNotification() {
         // Creamos la notificación de bienvenida
         val welcomeNotification = NotificationEntity(
@@ -133,14 +144,12 @@ class MyApplication :
         database.notificationDao().insert(welcomeNotification)
     }
 
-    // --- FIN DE LA SECCIÓN ---
+    // --- FIN DE LA SECCIÓN DE NOTIFICACIONES ---
 
     private val PREFS_NAME = "MyAppPrefs"
     private val TOPIC_SUBSCRIBED_KEY = "isSubscribedToTopic"
 
     private val TOKEN_KEY = "fcmToken"
-
-
 
 
     override fun onCreate() {
@@ -152,7 +161,7 @@ class MyApplication :
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         appOpenAdManager = AppOpenAdManager()
 
-
+        // La carga inicial y proactiva del anuncio
         appOpenAdManager.loadAd(this)
         // Forzamos la inicialización de la base de datos aquí para que el callback se ejecute al inicio.
         // Esto es una buena práctica.
@@ -167,13 +176,17 @@ class MyApplication :
             }
         } catch (e: Exception) {
             // Maneja el error, por ejemplo, registrándolo localmente o mostrando un mensaje al usuario
-            Log.e("Firestore", " Crashlity Error initializing Firebase Crashlytics mandado por la app", e)
+            Log.e(
+                "Firestore",
+                " Crashlity Error initializing Firebase Crashlytics mandado por la app",
+                e
+            )
             FirebaseCrashlytics.getInstance().recordException(e)
             // Opcional: notificar al usuario o enviar el error a otra herramienta de monitoreo
         }
 
         try {
-           // crearTopicPrueba()
+            // crearTopicPrueba()
             getOrRequestToken()
             // borraTokenYcrear()  // Si este método es necesario, asegúrate de manejar posibles errores dentro de él también
             // checkAndSubscribeToTopic()  // Asegúrate de manejar los errores en este método si es necesario
@@ -186,7 +199,7 @@ class MyApplication :
 
     }
 
-// excessive call to the Firestore database* NO ACTIVAR NUNCA SOLO RECUERDO!!*********************************************************************
+    // excessive call to the Firestore database* NO ACTIVAR NUNCA SOLO RECUERDO!!*********************************************************************
     fun countDeviceTokens() {
         val db = FirebaseFirestore.getInstance()
         val tokensCollection = db.collection("device_tokens")
@@ -239,7 +252,7 @@ class MyApplication :
     }
 
 
-    private fun borrraTokenYcrear(){
+    private fun borrraTokenYcrear() {
         FirebaseMessaging.getInstance().deleteToken()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -264,10 +277,10 @@ class MyApplication :
             db.collection("device_tokens")
                 .add(userTokenMap)
                 .addOnSuccessListener { documentReference ->
-                   // Log.d("Firestore", "Token registrado con ID: ${documentReference.id}")
+                    // Log.d("Firestore", "Token registrado con ID: ${documentReference.id}")
                 }
                 .addOnFailureListener { e ->
-                  //  Log.w("Firestore", "Error añadiendo token", e)
+                    //  Log.w("Firestore", "Error añadiendo token", e)
                     // Opcional: Registrar el error en Crashlytics para análisis posterior
                     FirebaseCrashlytics.getInstance().recordException(e)
                 }
@@ -279,7 +292,6 @@ class MyApplication :
     }
 
 
-
     private fun crearTopic() {
         try {
             FirebaseMessaging.getInstance().subscribeToTopic("general")
@@ -289,11 +301,11 @@ class MyApplication :
                     } else {
                         "Suscripción fallida"
                     }
-                  //  Log.d("FirebaseTopic", "Creación de Topic: $msg")
+                    //  Log.d("FirebaseTopic", "Creación de Topic: $msg")
                 }
                 .addOnFailureListener { e ->
                     // Registra el error específico de suscripción
-                 //   Log.e("FirebaseTopic", "Error al suscribirse al Topic", e)
+                    //   Log.e("FirebaseTopic", "Error al suscribirse al Topic", e)
                     // Opcional: Puedes enviar el error a Crashlytics o notificar al usuario
                     FirebaseCrashlytics.getInstance().recordException(e)
                 }
@@ -306,7 +318,7 @@ class MyApplication :
 
 
     // Para crear Topic de Prueba de Notificaciones*********************
-/*
+    /*
     private fun crearTopicPrueba() {
         try {
             FirebaseMessaging.getInstance().subscribeToTopic("prueba")
@@ -364,75 +376,56 @@ class MyApplication :
         return claveId
     }
 
-
-    //    /**Método LifecycleObserver que muestra el anuncio de apertura de la aplicación cuando la aplicación pasa al primer plano. */
-//    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-//    fun onMoveToForeground() {
-//        // Muestra el anuncio (si está disponible) cuando la aplicación pasa al primer plano.
-//        currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
-//    }
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onMoveToForeground() {
-        // Este método ahora solo se encarga de mostrar el anuncio
-        // CUANDO LA APP VUELVE DESDE SEGUNDO PLANO, no en el primer inicio.
-        if (isFirstAdAttempted) {
-            currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
+        isAppInForeground = true
+
+        // --- ¡LÓGICA DE TIEMPO ACTUALIZADA! ---
+        // Verificamos si ha pasado el tiempo suficiente desde que la app se fue a segundo plano.
+        val timeInBackground = System.currentTimeMillis() - appBackgroundTime
+        if (appBackgroundTime > 0 && timeInBackground >= MIN_BACKGROUND_TIME_MS) {
+            Log.d(LOG_TAG, "App ha vuelto a primer plano después de ${timeInBackground / 60000} minutos. Intentando mostrar anuncio.")
+            currentActivity?.let { appOpenAdManager.showAdIfAvailableOnResume(it) }
+        } else {
+            Log.d(LOG_TAG, "App ha vuelto a primer plano, pero no ha pasado el tiempo mínimo. No se mostrará anuncio.")
         }
     }
 
-//    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-//    fun onStart() {
-//        currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
-//        // Acciones que deseas realizar cuando el LifecycleOwner pasa a estado STARTED
-//    }
-
-
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        // La primera vez que se crea una actividad, iniciamos la carga del anuncio.
-        if (!isFirstAdAttempted) {
-            appOpenAdManager.loadAd(activity)
-        }
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onMoveToBackground() {
+        isAppInForeground = false
+        // --- ¡AQUÍ GUARDAMOS LA HORA! ---
+        // Guardamos la marca de tiempo actual cuando la app pasa a segundo plano.
+        appBackgroundTime = System.currentTimeMillis()
+        Log.d(LOG_TAG, "App movida a segundo plano.")
     }
 
-    override fun onActivityStarted(activity: Activity) {
-        if (!appOpenAdManager.isShowingAd) {
-            currentActivity = activity
-        }
-    }
-    override fun onActivityResumed(activity: Activity) {
-        currentActivity = activity
-        // Intentamos mostrar el anuncio en el onResume de la PRIMERA actividad.
-        if (!isFirstAdAttempted) {
-            Log.d(LOG_TAG, "Primer onResume, intentando mostrar anuncio.")
-            isFirstAdAttempted = true // Marcamos que ya hemos hecho el primer intento.
-            currentActivity?.let { appOpenAdManager.showAdIfAvailable(it) }
-        }
-    }
+
+    // --- MÉTODOS DE CICLO DE VIDA DE ACTIVIDADES ---
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+    override fun onActivityStarted(activity: Activity) { if (!appOpenAdManager.isShowingAd) { currentActivity = activity } }
+    override fun onActivityResumed(activity: Activity) { if (!appOpenAdManager.isShowingAd) { currentActivity = activity } }
     override fun onActivityPaused(activity: Activity) {}
     override fun onActivityStopped(activity: Activity) {}
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
     override fun onActivityDestroyed(activity: Activity) {}
 
+    // --- INTERFAZ Y FUNCIÓN PÚBLICA PARA EL ANUNCIO INICIAL ---
+    interface OnShowAdCompleteListener {
+        fun onShowAdComplete()
+        fun onAdLoaded()
+    }
 
     fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
-        // Ajustamos el anuncio del programa si está disponible para exigir que otras clases solo interactúen con MiAplicación
-        // clase.
+        this.adLoadCallback = onShowAdCompleteListener
         appOpenAdManager.showAdIfAvailable(activity, onShowAdCompleteListener)
     }
 
-    fun loadAd(activity: Context) {
-        // We wrap the loadAd to enforce that other classes only interact with MyApplication
-        // class.
-        appOpenAdManager.loadAd(activity)
-    }
-
-    interface OnShowAdCompleteListener {
-        fun onShowAdComplete()
-    }
 
 
 
-    // --- CLASE INTERNA AppOpenAdManager (DEPURADA) ---
+    //123456789
+    // --- CLASE INTERNA AppOpenAdManager (CON LÓGICA ANTI-CICLOS) ---
     private inner class AppOpenAdManager {
         private var appOpenAd: AppOpenAd? = null
         private var isLoadingAd = false
@@ -440,9 +433,7 @@ class MyApplication :
         private var loadTime: Long = 0
 
         fun loadAd(context: Context) {
-            if (isLoadingAd || isAdAvailable()) {
-                return
-            }
+            if (isLoadingAd || isAdAvailable()) { return }
             isLoadingAd = true
             Log.d(LOG_TAG, "Iniciando carga del anuncio...")
             val request = AdRequest.Builder().build()
@@ -454,75 +445,71 @@ class MyApplication :
                         isLoadingAd = false
                         loadTime = Date().time
                         Log.d(LOG_TAG, "¡Anuncio cargado y listo!")
+                        // Notificamos al callback que el anuncio se cargó.
+                        adLoadCallback?.onAdLoaded()
                     }
-
-                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                        isLoadingAd = false
-                        appOpenAd = null
-                        Log.e(LOG_TAG, "Fallo al cargar el anuncio: ${loadAdError.message}")
+                    override fun onAdFailedToLoad(loadError: LoadAdError) {
+                        isLoadingAd = false; appOpenAd = null
+                        Log.e(LOG_TAG, "Fallo al cargar el anuncio: ${loadError.message}")
                     }
                 }
             )
         }
 
         private fun isAdAvailable(): Boolean = appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
+
         private fun wasLoadTimeLessThanNHoursAgo(numHours: Long): Boolean {
+            // Calcula la diferencia en milisegundos entre la hora actual y la hora de carga.
             val dateDifference: Long = Date().time - loadTime
+
+            // Define cuántos milisegundos hay en una hora.
             val numMilliSecondsPerHour: Long = 3600000
-            return dateDifference < numMilliSecondsPerHour * numHours
+
+            // Devuelve 'true' si la diferencia es menor que el umbral de horas permitido.
+            return dateDifference < (numMilliSecondsPerHour * numHours)
         }
 
-
-        fun showAdIfAvailable(activity: Activity) {
-            // Pasamos un callback vacío por defecto
+        // Función para mostrar el anuncio al VOLVER a la app.
+        fun showAdIfAvailableOnResume(activity: Activity) {
             showAdIfAvailable(activity, object: OnShowAdCompleteListener {
                 override fun onShowAdComplete() {}
+                override fun onAdLoaded() {}
             })
         }
 
         fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
-            if (AppPreferences.isUserPremiumActive()) {
-                Log.d(LOG_TAG, "showAdIfAvailable: Plan : ${AppPreferences.getPremiumPlan()} Vence: ${AppPreferences.getPremiumExpirationDate()}")
-                Log.d(LOG_TAG, "Usuario premium. No se mostrará anuncio.")
-                onShowAdCompleteListener.onShowAdComplete()
+            if (AppPreferences.isUserPremiumActive() || isShowingAd) {
+                if (AppPreferences.isUserPremiumActive()) onShowAdCompleteListener.onShowAdComplete()
+                Log.d(LOG_TAG, "Anuncio PREMIUN NO SE MUESTRA.... ")
                 return
             }
-            if (isShowingAd) {
-                Log.d(LOG_TAG, "Intento de mostrar abortado: ya se está mostrando un anuncio.")
-                return
-            }
-            if (!isAdAvailable()) {
-                Log.d(LOG_TAG, "Intento de mostrar abortado: no hay un anuncio disponible.")
-                onShowAdCompleteListener.onShowAdComplete()
-                // Ya no cargamos aquí, la carga se maneja en onActivityCreated.
-                return
-            }
+            if (isAdAvailable()) {
+                Log.d(LOG_TAG, "Anuncio disponible. Mostrando...")
+                appOpenAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+                    override fun onAdDismissedFullScreenContent() {
+                        appOpenAd = null; isShowingAd = false
 
-            Log.d(LOG_TAG, "Anuncio disponible. Mostrando...")
-            appOpenAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-                override fun onAdDismissedFullScreenContent() {
-                    appOpenAd = null
-                    isShowingAd = false
-                    if (premiumDialogManager.shouldShowPremiumDialog()) {
-                        showPremiumDialog(activity)
+                        //llama a la funcion para mostrar el dialogo
+                        if (premiumDialogManager.shouldShowPremiumDialog()) { showPremiumDialog(activity) }
+                        onShowAdCompleteListener.onShowAdComplete()
+                        loadAd(activity)
                     }
-                    onShowAdCompleteListener.onShowAdComplete()
-                    loadAd(activity) // Precargamos el siguiente.
+                    override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                        appOpenAd = null; isShowingAd = false
+                        Log.e(LOG_TAG, "Fallo al mostrar el anuncio: ${adError.message}")
+                        onShowAdCompleteListener.onShowAdComplete()
+                        loadAd(activity)
+                    }
+                    override fun onAdShowedFullScreenContent() {
+                        isShowingAd = true
+                        Log.d(LOG_TAG, "Anuncio mostrado.")
+                    }
                 }
-
-                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                    appOpenAd = null
-                    isShowingAd = false
-                    Log.e(LOG_TAG, "Fallo al mostrar el anuncio: ${adError.message}")
-                    onShowAdCompleteListener.onShowAdComplete()
-                    loadAd(activity)
-                }
-                override fun onAdShowedFullScreenContent() {
-                    Log.d(LOG_TAG, "Anuncio mostrado.")
-                }
+                appOpenAd?.show(activity)
+            } else {
+                Log.d(LOG_TAG, "Anuncio no disponible. Esperando a que onAdLoaded lo dispare.")
+                loadAd(activity)
             }
-            isShowingAd = true
-            appOpenAd?.show(activity)
         }
     }
 }

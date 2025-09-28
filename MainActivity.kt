@@ -137,7 +137,8 @@ class MainActivity : AppCompatActivity() {
     //Propiedad para guardar una referencia al menú ---
     private var optionsMenu: Menu? = null
 
-
+    // ¡NUEVO! Bandera para controlar el ciclo de reintento.
+    private var isInitialAdFlowDone = false
 
 
 
@@ -154,6 +155,34 @@ class MainActivity : AppCompatActivity() {
 //            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
 //            insets
 //        }
+
+        val application = application as? MyApplication ?: return
+
+        // Inicia el flujo del anuncio de apertura.
+        application.showAdIfAvailable(
+            this,
+            object : MyApplication.OnShowAdCompleteListener {
+                override fun onShowAdComplete() {
+                    // Marcamos que el flujo ha terminado, ya sea por éxito o por fallo.
+                    isInitialAdFlowDone = true
+                    Log.d("MainActivity", "Flujo de anuncio de inicio completado.")
+                }
+
+                override fun onAdLoaded() {
+                    // --- ¡AQUÍ ESTÁ LA LÓGICA ANTI-CICLOS! ---
+                    // Solo reintentamos mostrar el anuncio si el flujo inicial AÚN NO ha terminado.
+                    if (!isInitialAdFlowDone) {
+                        Log.d("MainActivity", "El anuncio se cargó, reintentando mostrar ahora.")
+                        // Marcamos que ya no necesitamos más reintentos.
+                        isInitialAdFlowDone = true
+                        application.showAdIfAvailable(this@MainActivity, this)
+                    } else {
+                        Log.d("MainActivity", "El anuncio se cargó, pero el flujo inicial ya terminó. No se mostrará ahora.")
+                    }
+                }
+            }
+        )
+
 
         // 1. Configurar la Toolbar
         setSupportActionBar(binding.toolbar)
@@ -176,7 +205,6 @@ class MainActivity : AppCompatActivity() {
         // --- El resto de tu lógica de onCreate ---
         MobileAds.initialize(this) {}
         AppPreferences.init(this)
-        verificasiLeyoMsj()
         versionUltima()
         movilidadPantalla()
     }
@@ -382,24 +410,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun initializeMobileAdsSdk() {
-        val activado = isSubscriptionActive(this)
-        //Verifica si la suscripcion esta activa CAMBIALLLOOOO PRODUCCION
-        if (!isSubscriptionActive(this)) {
-           // Log.d(TAG, "initializeMobileAdsSdk: isSubscriptionActive $activado ENTRO A PUBLICIDAD")
-            if (isMobileAdsInitializeCalled.getAndSet(true)) {
-                return
-            }
 
-            // Initialize the Mobile Ads SDK.
-            MobileAds.initialize(this) {}
-
-            // Load an ad.
-            (application as MyApplication).loadAd(this)
-
-        }
-
-    }
 
     private fun salirdelApp() {
 
@@ -502,66 +513,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    // LLma alm uso del pago Movil
-    private fun llamaElMsjUsoPagoMovil() {
-        val rootView = findViewById<View>(android.R.id.content)
-        val snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
-
-        // Inflar el diseño personalizado
-        val customView = LayoutInflater.from(this).inflate(R.layout.custom_toast_informacion, null)
-
-        // Configurar el ícono y el texto
-        val snackbarTextView: TextView = customView.findViewById(R.id.txtContenido)
-        snackbarTextView.textSize = 16f
-        snackbarTextView.text = getCustomSpannableString(this)
-
-        // Configurar el botón de cierre
-        val btnRecordarDespues: Button = customView.findViewById(R.id.btnRecordarDespues)
-        btnRecordarDespues.setOnClickListener {
-            snackbar.dismiss()
-            initializeMobileAdsSdk()
-        }
-
-        // Configurar el botón de Envio Pago movil
-        val btnOkEntendi: Button = customView.findViewById(R.id.btnOkEntendi)
-        btnOkEntendi.setOnClickListener {
-            // Guardar que el usuario ha leído el mensaje
-            saveMessageReadState(this, true)
-            snackbar.dismiss()
-            initializeMobileAdsSdk()
-        }
-
-        // Obtener el ViewGroup del Snackbar y agregar el diseño personalizado
-        val snackbarView = snackbar.view as ViewGroup
-        snackbarView.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
-        snackbarView.addView(customView, 0)
-
-        // Mostrar el Snackbar
-        snackbar.show()
-
-        // Ajustar la posición del Snackbar al centro de la pantalla
-        val params = snackbar.view.layoutParams as FrameLayout.LayoutParams
-        params.gravity = Gravity.TOP // or Gravity.CENTER_HORIZONTAL
-        val marginTop = 250 // Cambia este valor según la separación que desees desde la parte superior
-        params.setMargins(0, marginTop, 0, 0)
-        snackbar.view.layoutParams = params
-    }
-
-
-    private fun verificasiLeyoMsj() {
-
-        // Para verificar si el usuario ha leído el mensaje
-        val hasRead = hasUserReadMessage(this)
-        if (hasRead) {
-            // El usuario ya ha leído el mensaje
-            initializeMobileAdsSdk()
-
-        } else {
-            // El usuario no ha leído el mensaje
-         //   llamaElMsjUsoPagoMovil()
-
-        }
-    }
 
     fun getCustomSpannableString(context: Context): SpannableString {
         // El texto que deseas mostrar
