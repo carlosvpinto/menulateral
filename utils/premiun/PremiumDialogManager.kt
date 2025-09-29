@@ -49,4 +49,15 @@ class PremiumDialogManager(context: Context) {
             return false
         }
     }
+
+    // --- ¡NUEVA FUNCIÓN AÑADIDA! ---
+    /**
+     * [SOLO PARA DEPURACIÓN] Borra el contador de anuncios vistos del archivo de preferencias.
+     * Esto forzará a que el diálogo de oferta premium aparezca la próxima vez
+     * que se cierre un anuncio, ya que el contador volverá a ser 1.
+     */
+    fun clearAdCountForDevelopment() {
+        prefs.edit().remove(AD_VIEW_COUNT_KEY).apply()
+        Log.d(TAG, "[DEBUG] Contador de anuncios borrado.")
+    }
 }

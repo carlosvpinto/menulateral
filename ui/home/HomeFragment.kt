@@ -107,6 +107,7 @@ import com.carlosv.dolaraldia.services.NotificationProvider
 import com.carlosv.dolaraldia.utils.Constants
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnError
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnSuccess
+import com.carlosv.dolaraldia.utils.premiun.PremiumDialogManager
 import com.denzcoskun.imageslider.ImageSlider
 import com.denzcoskun.imageslider.constants.ScaleTypes
 import com.denzcoskun.imageslider.models.SlideModel
@@ -187,6 +188,10 @@ class HomeFragment : Fragment() {
     private var diaActual: Boolean= false
 
     private val notificationProvider = NotificationProvider()
+
+    private val premiumDialogManager: PremiumDialogManager by lazy {
+        PremiumDialogManager(requireContext())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -293,12 +298,6 @@ class HomeFragment : Fragment() {
             //******************************
 
         }
-        //Para Borrar la memoria de los mensajes
-        binding.imglogo.setOnClickListener {
-            borrarEstadoDialogoPagoMovil()
-            borrarEstadoDialogoPlatformas()
-        }
-
         binding.btnRefres.setOnClickListener {
             comenzarCarga()
             llamarApiTipoCambio { isSuccessful ->
@@ -378,14 +377,19 @@ class HomeFragment : Fragment() {
             copiarBs()
         }
 
-        //MODO DESRROLLLO BORRAR**********
-        binding.imglogo.setOnClickListener {
-            AppPreferences.clearPremiumStatus()
-            Toast.makeText(requireContext(), "[DEBUG] Estado Premium borrado.", Toast.LENGTH_LONG).show()
-
-            // Devuelve 'true' para indicar que el evento de clic largo ha sido manejado.
-            true
-        }
+        //MODO DESRROLLLO BORRAR datos PREMIUN Y CONTADOR**********
+//        binding.imglogo.setOnClickListener {
+//            AppPreferences.clearPremiumStatus()
+//            Toast.makeText(requireContext(), "[DEBUG] Estado Premium borrado.", Toast.LENGTH_LONG).show()
+//
+//            // Llama a la nueva función del gestor.
+//            premiumDialogManager.clearAdCountForDevelopment()
+//            // También puedes llamar a la función para limpiar el estado premium si la tienes.
+//            AppPreferences.clearPremiumStatus()
+//            Log.d("MyApplication", "[DEBUG] Todos los datos de desarrollo han sido borrados.")
+//            // Devuelve 'true' para indicar que el evento de clic largo ha sido manejado.
+//            true
+//        }
 
 
 
