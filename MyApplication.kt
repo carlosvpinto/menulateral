@@ -86,31 +86,33 @@ class MyApplication :
         NotificationsRepository(database.notificationDao())
     }
 
-    // --- FUNCIÓN ACTUALIZADA PARA MOSTRAR EL DIÁLOGO DE MATERIAL 3 ---
     private fun showPremiumDialog(activity: Activity) {
+        // --- ¡AQUÍ ESTÁ LA CORRECCIÓN CLAVE! ---
+        // 1. Verificamos si la actividad está finalizando o ya ha sido destruida.
+        //    'isFinishing' y 'isDestroyed' son las comprobaciones de seguridad más importantes.
+        if (activity.isFinishing || activity.isDestroyed) {
+            Log.e(LOG_TAG, "showPremiumDialog abortado: La actividad ya no es válida.")
+            return // Detenemos la función si la actividad no es válida.
+        }
+
+        // 2. Mantenemos el runOnUiThread para asegurar que se ejecute en el hilo principal.
         activity.runOnUiThread {
-            MaterialAlertDialogBuilder(activity)
-                // 1. Usa el nuevo string para el título, que ahora es el gancho principal.
-                .setTitle(R.string.premium_dialog_title)
-
-                // 2. Usa el nuevo string para el mensaje, que da más detalles.
-                .setMessage(R.string.premium_dialog_message_v3)
-
-                // 3. El botón positivo ahora es más claro sobre su acción.
-                .setPositiveButton(R.string.premium_dialog_positive_button) { dialog, _ ->
-                    val intent = Intent(activity, PlanesPagoActivity::class.java)
-                    activity.startActivity(intent)
-                    dialog.dismiss()
-                }
-
-                // 4. El botón negativo no cambia.
-                .setNegativeButton(R.string.premium_dialog_negative_button) { dialog, _ ->
-                    dialog.dismiss()
-                }
-
-                .setIcon(R.drawable.premiun) // El ícono se mantiene
-
-                .show()
+            // Re-verificamos por si acaso el estado cambió en el último instante.
+            if (!activity.isFinishing && !activity.isDestroyed) {
+                MaterialAlertDialogBuilder(activity)
+                    .setTitle(R.string.premium_dialog_title)
+                    .setMessage(R.string.premium_dialog_message_v3)
+                    .setPositiveButton(R.string.premium_dialog_positive_button) { dialog, _ ->
+                        val intent = Intent(activity, PlanesPagoActivity::class.java)
+                        activity.startActivity(intent)
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(R.string.premium_dialog_negative_button) { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .setIcon(R.drawable.premiun)
+                    .show()
+            }
         }
     }
 

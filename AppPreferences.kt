@@ -177,5 +177,51 @@ object AppPreferences {
         }
     }
 
+   /* @param hours La cantidad de horas de premium que se otorgarán.
+    */
+    fun grantTemporaryPremium(hours: Int) {
+        val calendar = Calendar.getInstance()
+        // Establecemos la nueva fecha de vencimiento sumando las horas.
+        calendar.add(Calendar.HOUR, hours)
+
+        val newExpirationDate = calendar.timeInMillis
+
+        // Guardamos la nueva fecha de vencimiento.
+        // También nos aseguramos de que la bandera is_premium esté en true.
+        preferences.edit().apply {
+            putBoolean(IS_USER_PREMIUM, true) // Activa el estado premium
+            putLong(PREMIUM_EXPIRATION_DATE, newExpirationDate)
+            apply()
+        }
+
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+        Log.d("AppPreferences", "Premium temporal otorgado. Nueva fecha de vencimiento: ${dateFormat.format(Date(newExpirationDate))}")
+    }
+
+    // --- ¡NUEVAS CLAVES Y LÓGICA PARA EL CACHE DE TIEMPO! ---
+    private const val LAST_API_REFRESH_TIMESTAMP = "last_api_refresh_timestamp"
+    // Tiempo mínimo en milisegundos entre actualizaciones (15 minutos)
+    private const val REFRESH_INTERVAL_MS = 15 * 60 * 1000
+
+    /**
+     * Guarda la marca de tiempo actual como la última vez que la API se actualizó.
+     */
+    fun updateLastRefreshTimestamp() {
+        preferences.edit().putLong(LAST_API_REFRESH_TIMESTAMP, System.currentTimeMillis()).apply()
+    }
+
+    /**
+     * Comprueba si ha pasado el tiempo suficiente para permitir un nuevo refresco.
+     * @return `true` si se debe refrescar, `false` si no.
+     */
+    fun shouldRefreshApi(): Boolean {
+        val lastRefresh = preferences.getLong(LAST_API_REFRESH_TIMESTAMP, 0L)
+        val timeSinceLastRefresh = System.currentTimeMillis() - lastRefresh
+
+        // Si es la primera vez (lastRefresh es 0) o si ha pasado el intervalo,
+        // entonces sí debemos refrescar.
+        return lastRefresh == 0L || timeSinceLastRefresh >= REFRESH_INTERVAL_MS
+    }
+
 
 }
