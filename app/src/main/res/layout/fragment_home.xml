@@ -614,6 +614,18 @@
                 android:layout_height="70dp"
                 android:visibility="gone"
                 android:scaleType="fitCenter" />
+            <!-- Dentro del layout de tu HomeFragment -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_rewarded_ad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ver Anuncio por Recompensa"
+                app:icon="@drawable/ic_video_file_24"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                />
 
 
 
