@@ -240,34 +240,28 @@ class HomeFragment : Fragment() {
             comenzarCarga()
 
 //            eliminarListener()
-            llamarApiTipoCambio { isSuccessful ->
-
-                // Solo habilitar el botón si ambas APIs responden
-                if (isSuccessful) {
-                    finalizarCarga()
-                } else {
-                    finalizarCarga()
-                }
-            }
+            refreshAllApis()
 
             actualizarEuro()
 
 
         }
 
+      //  refreshAllApis()
+
         //MODO DESRROLLLO BORRAR datos PREMIUN Y CONTADOR**********
-//        binding.imglogo.setOnClickListener {
-//            AppPreferences.clearPremiumStatus()
-//            Toast.makeText(requireContext(), "[DEBUG] Estado Premium borrado.", Toast.LENGTH_LONG).show()
-//
-//            // Llama a la nueva función del gestor.
-//            premiumDialogManager.clearAdCountForDevelopment()
-//            // También puedes llamar a la función para limpiar el estado premium si la tienes.
-//            AppPreferences.clearPremiumStatus()
-//            Log.d("MyApplication", "[DEBUG] Todos los datos de desarrollo han sido borrados.")
-//            // Devuelve 'true' para indicar que el evento de clic largo ha sido manejado.
-//            true
-//        }
+        binding.imglogo.setOnClickListener {
+            AppPreferences.clearPremiumStatus()
+            Toast.makeText(requireContext(), "[DEBUG] Estado Premium borrado.", Toast.LENGTH_LONG).show()
+
+            // Llama a la nueva función del gestor.
+            premiumDialogManager.clearAdCountForDevelopment()
+            // También puedes llamar a la función para limpiar el estado premium si la tienes.
+            AppPreferences.clearPremiumStatus()
+            Log.d("MyApplication", "[DEBUG] Todos los datos de desarrollo han sido borrados.")
+            // Devuelve 'true' para indicar que el evento de clic largo ha sido manejado.
+            true
+        }
 
 
 
@@ -332,12 +326,15 @@ class HomeFragment : Fragment() {
         binding.SwUtimaAct.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 val resposeGuardadoApiTipoCambio = ApiResponseHolder.getResponseEuroTipoCambio()
-                cambioSwictValor(resposeGuardadoApiTipoCambio, true)
-
+                val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
+                cambioSwictValor(savedResponseDolar, true)
+                Log.d(TAG, "setupClickListeners: true, resposeGuardadoApiTipoCambio $resposeGuardadoApiTipoCambio ")
             } else {
 
                 val resposeGuardadoApiTipoCambio = ApiResponseHolder.getResponseEuroTipoCambio()
-                cambioSwictValor(resposeGuardadoApiTipoCambio, false)
+                val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
+                cambioSwictValor(savedResponseDolar, false)
+                Log.d(TAG, "setupClickListeners: False, resposeGuardadoApiTipoCambio $resposeGuardadoApiTipoCambio")
             }
         }
 
@@ -2090,10 +2087,6 @@ class HomeFragment : Fragment() {
             finalizarCarga()
         }
 
-        // 2. --- ¡CORRECCIÓN! ---
-        //    Las otras llamadas a la API ahora también están DENTRO de esta función.
-       // llamarApiCriptoDolar()
-        //llamarApiPaginaBCV()
         actualizarEuro() // La función de scraping también es una llamada de red.
     }
 
@@ -2107,6 +2100,8 @@ class HomeFragment : Fragment() {
             ApiResponseHolder.setResponse(savedResponseDolar)
             llenarDolarEuro(savedResponseDolar, diaActual) // Asume que 'diaActual' se guarda o recalcula
             llenarCampoBCVNew(savedResponseDolar, diaActual)
+            visibilidadSwicheDiaManana(savedResponseDolar)
+            finalizarCarga()
         }
 
         // Cargamos los datos de las otras APIs desde su respectivo cache.
