@@ -43,7 +43,6 @@ android {
 
         }
 
-        // --- ¡AÑADE ESTE BLOQUE COMPLETO DENTRO DE buildTypes! ---
         // Esto crea campos en BuildConfig para todas tus variantes de build (debug, release, etc.)
         all {
             buildConfigField("String", "MERCANTIL_MERCHANT_ID", "\"${localProperties.getProperty("MERCANTIL_MERCHANTID")}\"")
@@ -53,7 +52,7 @@ android {
             buildConfigField("String", "MERCANTIL_TERMINAL_ID", "\"${localProperties.getProperty("MERCANTIL_TERMINALID")}\"")
             buildConfigField("String", "MERCANTIL_PHONE_NUMBER", "\"${localProperties.getProperty("MERCANTIL_PHONE_NUMBER")}\"")
         }
-        // --- FIN DEL BLOQUE A AÑADIR ---
+
 
 
     }
