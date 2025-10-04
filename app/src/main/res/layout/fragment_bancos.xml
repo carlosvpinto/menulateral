@@ -4,45 +4,61 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     tools:context="com.carlosv.dolaraldia.ui.bancos.BancosFragment">
 
-
+    <!-- El campo de búsqueda se queda como está -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textFieldLayoutFiltroC"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:hint="@string/banco_a_buscar"
-
+        app:boxStrokeColor="?attr/colorPrimary"
+        app:endIconDrawable="@drawable/ic_buscar_24"
         app:endIconMode="custom"
-
-    app:boxStrokeColor="?attr/colorPrimary"
-    app:hintTextColor="?attr/colorOnSurface"
-    android:textColorHint="?attr/colorOnSurfaceVariant"
-    app:endIconTint="?attr/colorOnSurfaceVariant"
-        app:endIconDrawable="@drawable/ic_buscar_24">
+        app:endIconTint="?attr/colorOnSurfaceVariant"
+        app:hintTextColor="?attr/colorOnSurface"
+        android:textColorHint="?attr/colorOnSurfaceVariant">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editTexFiltroC"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:imeOptions="actionSearch"
+            android:inputType="text"
             android:maxLines="1"
             android:singleLine="true"
-            android:inputType="text"
-
             tools:text="Buscar Bancos" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerOtrasBancos"
-        android:layout_marginTop="80dp"
+    <!--
+    PASO 1: Añadimos el SwipeRefreshLayout.
+    Este widget envolverá al RecyclerView y le dará la funcionalidad de deslizar para actualizar.
+    Le damos un ID para poder controlarlo desde el código.
+    -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="80dp">
 
-        />
+        <!-- El RecyclerView ahora va DENTRO del SwipeRefreshLayout -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerOtrasBancos"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/item_banco" /> <!-- Opcional: añade tu layout de item para la previsualización -->
 
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Añadimos de nuevo el ProgressBar para la carga inicial -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        tools:visibility="visible" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

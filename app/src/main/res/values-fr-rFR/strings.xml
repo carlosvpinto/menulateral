@@ -142,7 +142,7 @@
     <string name="premium_dialog_negative_button">Plus tard</string>
 
     <string name="payment_details_full">Pour activer la version Premium, effectuez un Paiement Mobile avec les données suivantes et envoyez le reçu à notre e-mail.\n\n• Téléphone : 0412-1234567\n• CI : 12.345.678\n• Banque : Nom de la Banque\n\nE-mail : soporte@dolaraldia.com</string>
-    <string name="rif_banco">J-5068188172</string>
+    <string name="rif_banco">J-506818817</string>
 
     <string name="verificar_pago_m_vil">Vérifier le Paiement Mobile</string>
     <string name="ingresa_los_datos_de_la_transacci_n_para_validarla">Saisissez les données du Paiement Mobile pour le valider.</string>

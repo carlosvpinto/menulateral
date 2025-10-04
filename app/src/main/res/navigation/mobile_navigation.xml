@@ -7,27 +7,31 @@
     android:id="@+id/mobile_navigation"
     app:startDestination="@+id/nav_home">
 
-    <!-- Tus destinos existentes (home, platforms, bancos, etc.) se quedan igual -->
     <fragment
         android:id="@+id/nav_home"
         android:name="com.carlosv.dolaraldia.ui.home.HomeFragment"
         android:label="@string/menu_inicio"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
 
-    <!-- ... otros fragments ... -->
+        <!-- ... aquí pueden estar tus otras acciones ... -->
 
-    <!-- CAMBIO CLAVE AQUÍ: Usa la etiqueta <dialog> para el destino "Más" -->
+        <!-- ¡NUEVA ACCIÓN! Para ir desde Home al estado Premium -->
+        <action
+            android:id="@+id/action_nav_home_to_premiumStatusFragment"
+            app:destination="@id/nav_premium_status"
+          /> <!-- Animación opcional -->
+
+    </fragment>
+
+
+
     <dialog
         android:id="@+id/nav_more"
         android:name="com.carlosv.dolaraldia.utils.MoreOptionsBottomSheetFragment"
         android:label="Más Opciones"
         tools:layout="@layout/fragment_more_options" />
 
-    <!-- ASEGÚRATE DE QUE LOS DESTINOS A LOS QUE NAVEGAS DESDE EL MENÚ EXISTAN AQUÍ -->
 
-
-    <!-- ... y así para notificaciones y acerca de ... -->
-    <!-- AÑADE ESTE BLOQUE PARA EL NUEVO FRAGMENTO -->
     <fragment
         android:id="@+id/nav_platforms"
         android:name="com.carlosv.dolaraldia.ui.platforms.PlatformRatesFragment"
@@ -82,5 +86,26 @@
         android:name="com.carlosv.dolaraldia.ui.notificaciones.FragmentGuardarNotifications"
         android:label="Notificaciones"
         tools:layout="@layout/fragment_guardar_notifications"/>
+
+    <!-- ==========> AÑADE ESTE BLOQUE <========== -->
+    <fragment
+        android:id="@+id/nav_debug_premium"
+        android:name="com.carlosv.dolaraldia.ui.debug.DebugPremiumFragment"
+        android:label="Debug Premium"
+        tools:layout="@layout/fragment_debug_premium" />
+
+    <fragment
+        android:id="@+id/nav_premium_status"
+        android:name="com.carlosv.dolaraldia.ui.pago.PremiumStatusFragment"
+        android:label="Mi Suscripción"
+        tools:layout="@layout/fragment_premium_status" />
+
+    <fragment
+        android:id="@+id/nav_purchase_premium"
+        android:name="com.carlosv.dolaraldia.ui.pago.PremiumOptionsBottomSheet"
+        android:label="Opcion Suscripcion"
+        tools:layout="@layout/fragment_premium_status" />
+
+
 
    </navigation>

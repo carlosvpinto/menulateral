@@ -69,7 +69,7 @@
                 android:layout_height="wrap_content"
                 android:text="TASA UTILIZADA"
                 android:textAppearance="?attr/textAppearanceLabelMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:textColor="?attr/colorBackgroundFloating" />
 
             <TextView
                 android:id="@+id/tv_tasa_valor"
@@ -78,7 +78,7 @@
                 android:layout_marginTop="4dp"
                 android:fontFamily="sans-serif-medium"
                 android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="?attr/colorBackgroundFloating"
                 tools:text="Bs. 36.54" />
 
             <TextView
@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="?attr/colorBackgroundFloating"
                 tools:text="(Tasa BCV)" />
 
         </LinearLayout>

@@ -85,5 +85,6 @@
     <color name="md_theme_dark_scrim">#000000</color>
     <color name="premium_gold">#FFD700</color>
     <color name="text_secondary_light">#808080</color> <!-- Un color gris para el texto secundario -->
+    <color name="orange_500">#FF9800</color>
 
 </resources>

@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 121
-        versionName = "PremiunPM2"
+        versionCode = 126
+        versionName = "PremiunDepu"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
