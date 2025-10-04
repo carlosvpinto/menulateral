@@ -40,6 +40,7 @@ import android.widget.Toast
 import android.widget.ToggleButton
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.ApiService
 
@@ -86,7 +87,7 @@ import com.carlosv.dolaraldia.AppPreferences
 
 import com.carlosv.dolaraldia.model.FCMBody
 import com.carlosv.dolaraldia.model.FCMResponse
-import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiEuroTipoCambio
+import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiOficialTipoCambio
 import com.carlosv.dolaraldia.model.apicontoken.ApiConTokenResponse
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseCripto
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseBCV
@@ -96,6 +97,7 @@ import com.carlosv.dolaraldia.model.history.HistoryModelResponse
 import com.carlosv.dolaraldia.provider.ClickAnuncioProvider
 import com.carlosv.dolaraldia.provider.RegistroPubliProvider
 import com.carlosv.dolaraldia.services.NotificationProvider
+import com.carlosv.dolaraldia.ui.debug.DebugPremiumFragment
 import com.carlosv.dolaraldia.utils.Constants
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnError
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnSuccess
@@ -197,12 +199,6 @@ class HomeFragment : Fragment() {
 
 
         visibleLayoutProxBcv += 1
-        //  llamarDolarApiNew()
-//        llamarApiCriptoDolar()
-//        llamarApiPaginaBCV()
-
-        //llama al end Points que actualiza el BCV a las 4pm
-       // llamarDolarBcvAdelantado()
 
         configurarBannerWhatsApp()
         //cargarDisponibleIOs()
@@ -238,30 +234,22 @@ class HomeFragment : Fragment() {
         // setDayNight(modoDark())
         binding.swipeRefreshLayout.setOnRefreshListener {
             comenzarCarga()
-
-//            eliminarListener()
             refreshAllApis()
-
-            actualizarEuro()
-
-
         }
 
-      //  refreshAllApis()
 
         //MODO DESRROLLLO BORRAR datos PREMIUN Y CONTADOR**********
-        binding.imglogo.setOnClickListener {
-            AppPreferences.clearPremiumStatus()
-            Toast.makeText(requireContext(), "[DEBUG] Estado Premium borrado.", Toast.LENGTH_LONG).show()
-
-            // Llama a la nueva función del gestor.
-            premiumDialogManager.clearAdCountForDevelopment()
-            // También puedes llamar a la función para limpiar el estado premium si la tienes.
-            AppPreferences.clearPremiumStatus()
-            Log.d("MyApplication", "[DEBUG] Todos los datos de desarrollo han sido borrados.")
-            // Devuelve 'true' para indicar que el evento de clic largo ha sido manejado.
-            true
-        }
+//        binding.imglogo.setOnClickListener {
+//
+//            // 1. Obtenemos el NavController del fragmento actual.
+//            val navController = findNavController()
+//
+//            // 2. Le pedimos que navegue al ID del nuevo destino que definimos en el XML.
+//            navController.navigate(R.id.nav_debug_premium)
+//
+//            // Devuelve 'true' para indicar que el evento ha sido manejado.
+//            true
+//        }
 
 
 
@@ -270,9 +258,9 @@ class HomeFragment : Fragment() {
         //PARA ACTUALIZAR EL PRECIO DEL DOLAR SOLO CUANDO CARGA POR PRIMERA VEZ
         if (savedInstanceState == null) {
 
-            disableSSLVerification()
+            //disableSSLVerification()
 
-            actualizarEuro()
+            //actualizarEuro()
         }
 
 
@@ -287,9 +275,9 @@ class HomeFragment : Fragment() {
     private fun setupClickListeners() {
 
         binding.imgpremium.setOnClickListener {
-            showPremiumExpirationDate()
+           // showPremiumExpirationDate()
+            findNavController().navigate(R.id.action_nav_home_to_premiumStatusFragment)
         }
-        binding.imgpremium.setOnClickListener { showPremiumExpirationDate() }
 
         binding.buttonRewardedAd.setOnClickListener {
             // Le pedimos al gestor que muestre el anuncio.
@@ -297,7 +285,7 @@ class HomeFragment : Fragment() {
 
                 override fun onRewardEarned() {
                     // ¡Éxito! El usuario vio el video. Otorgamos la recompensa.
-                    AppPreferences.grantTemporaryPremium(4) // 4 horas
+                    AppPreferences.setUserAsPremium("Recompensa",4) // 4 horas
                     Toast.makeText(requireContext(), "¡Recompensa obtenida! Disfruta de 4 horas sin publicidad.", Toast.LENGTH_LONG).show()
 
                     // (Opcional) Actualizamos la UI inmediatamente para ocultar el ícono de premium.
@@ -314,27 +302,21 @@ class HomeFragment : Fragment() {
             })
         }
         binding.swipeRefreshLayout.setOnRefreshListener {
-            // El refresco manual siempre debe forzar una actualización.
-            Log.d(TAG, "Refresco manual iniciado por el usuario.")
             refreshAllApis()
         }
         binding.btnRefres.setOnClickListener {
-            Log.d(TAG, "Refresco manual iniciado por el usuario (botón).")
             refreshAllApis()
         }
 
         binding.SwUtimaAct.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                val resposeGuardadoApiTipoCambio = ApiResponseHolder.getResponseEuroTipoCambio()
-                val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
+
+                val savedResponseDolar = getResponseApiDolar(requireContext())
                 cambioSwictValor(savedResponseDolar, true)
-                Log.d(TAG, "setupClickListeners: true, resposeGuardadoApiTipoCambio $resposeGuardadoApiTipoCambio ")
             } else {
 
-                val resposeGuardadoApiTipoCambio = ApiResponseHolder.getResponseEuroTipoCambio()
-                val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
+                val savedResponseDolar = getResponseApiDolar(requireContext())
                 cambioSwictValor(savedResponseDolar, false)
-                Log.d(TAG, "setupClickListeners: False, resposeGuardadoApiTipoCambio $resposeGuardadoApiTipoCambio")
             }
         }
 
@@ -387,7 +369,7 @@ class HomeFragment : Fragment() {
 
         binding.btnRefres.setOnClickListener {
             comenzarCarga()
-            llamarApiTipoCambio { isSuccessful ->
+            llamarApiDolar { isSuccessful ->
 
                 // Solo habilitar el botón si ambas APIs responden
                 if (isSuccessful) {
@@ -396,8 +378,6 @@ class HomeFragment : Fragment() {
                     finalizarCarga()
                 }
             }
-
-            actualizarEuro()
 
 
         }
@@ -423,61 +403,6 @@ class HomeFragment : Fragment() {
     }
 
 
-    //NOTIFICACIONES PUSH
-    private fun sendNotification() {
-        val map = HashMap<String, String>()
-        map.put("title", "SOLICITUD DE VIAJE")
-        map.put(
-            "body",
-            "Un cliente esta solicitando un viaje a "
-        )
-
-        map.put("token", Constants.TOKEN_AS21)
-
-        val body = FCMBody(
-            to = Constants.TOKEN_AS21,
-            priority = "high",
-            ttl = "4500s",
-            data = map
-        )
-
-        Log.d(TAG, "sendNotification:body: $body map $map ")
-
-        notificationProvider.sendNotification(body).enqueue(object : Callback<FCMResponse> {
-            override fun onResponse(call: Call<FCMResponse>, response: Response<FCMResponse>) {
-                Log.d(TAG, "onResponse: $response response.body(): ${response.body()} ")
-                if (response.body() != null) {
-
-                    if (response.body()!!.success == 1) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Se envio la notificacion",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "No se pudo enviar la notificacion",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "hubo un error enviando la notificacion",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-
-            override fun onFailure(call: Call<FCMResponse>, t: Throwable) {
-                Log.d("NOTIFICATION", "ERROR Notificacion: ${t.message}")
-            }
-
-        })
-    }
-
-
     fun finalizarCarga() {
         // Habilitar el botón nuevamente
         binding.btnRefres.isEnabled = true
@@ -496,7 +421,7 @@ class HomeFragment : Fragment() {
     }
 
     //Muestra el reposense segun seal el Swict
-    private fun cambioSwictValor(responseMostrar: ApiEuroTipoCambio?, diaActualTem: Boolean) {
+    private fun cambioSwictValor(responseMostrar: ApiOficialTipoCambio?, diaActualTem: Boolean) {
 
         if (responseMostrar != null) {
             llenarCampoBCVNew(responseMostrar,diaActualTem)
@@ -724,10 +649,10 @@ class HomeFragment : Fragment() {
     //INTERFACE PARA COMUNICAR CON EL ACTIVITY
     object ApiResponseHolder {
         private var response: ApiConTokenResponse? = null
-        private var responseApiNew: ApiEuroTipoCambio? = null
-        private var responseApiEuroBcv: ApiEuroTipoCambio? = null
+        private var responseApiNew: ApiOficialTipoCambio? = null
+        private var responseApiEuroBcv: ApiOficialTipoCambio? = null
 
-        private var responseApiOriginal: ApiEuroTipoCambio? = null
+        private var responseApiOriginal: ApiOficialTipoCambio? = null
         private var responseApiNew2: ApiModelResponseCripto? = null
         private var responseApiBancoNew2: ApiModelResponseBCV? = null
         private var responseHistoryBcv: HistoryModelResponse? = null
@@ -751,37 +676,37 @@ class HomeFragment : Fragment() {
         }
 
 
-        fun getResponse(): ApiEuroTipoCambio? {
+        fun getResponse(): ApiOficialTipoCambio? {
             return responseApiNew
         }
 
-        fun getResponseEuroTipoCambio(): ApiEuroTipoCambio? {
+        fun getResponseEuroTipoCambio(): ApiOficialTipoCambio? {
             return responseApiEuroBcv
         }
 
 
-        fun getResponseApiAlCambio(): ApiEuroTipoCambio? {
+        fun getResponseApiAlCambio(): ApiOficialTipoCambio? {
             return responseApiNew
         }
 
 
-        fun setResponse(newResponse: ApiEuroTipoCambio) {
+        fun setResponse(newResponse: ApiOficialTipoCambio) {
             responseApiNew = newResponse
         }
 
-        fun setResponseOriginal(newResponse: ApiEuroTipoCambio) {
+        fun setResponseOriginal(newResponse: ApiOficialTipoCambio) {
             responseApiOriginal = newResponse
         }
 
-        fun setResponseApiAlCambio(newResponse: ApiEuroTipoCambio) {
+        fun setResponseApiAlCambio(newResponse: ApiOficialTipoCambio) {
             responseApiNew = newResponse
         }
 
-        fun setResponseApiEurosTipoCambio(ResponseEuroBcv: ApiEuroTipoCambio) {
+        fun setResponseApiEurosTipoCambio(ResponseEuroBcv: ApiOficialTipoCambio) {
             responseApiEuroBcv = ResponseEuroBcv
         }
 
-        fun setResponseHistory(newResponse: ApiEuroTipoCambio) {
+        fun setResponseHistory(newResponse: ApiOficialTipoCambio) {
             responseApiNew = newResponse
         }
 
@@ -818,14 +743,6 @@ class HomeFragment : Fragment() {
         }
 
 
-        fun guardarEuro(context: Context, numero: Float) {
-            val prefs: SharedPreferences =
-                context.getSharedPreferences(VALOR_EURO, Context.MODE_PRIVATE)
-            val editor = prefs.edit()
-            editor.putFloat(NUMERO_EURO, numero)
-            editor.apply()
-        }
-
         fun recuperarEuro(context: Context): Float {
             val prefs: SharedPreferences =
                 context.getSharedPreferences(VALOR_EURO, Context.MODE_PRIVATE)
@@ -835,31 +752,6 @@ class HomeFragment : Fragment() {
             ) // 0 es el valor predeterminado si no se encuentra el número
         }
 
-        fun guadarDolar(context: Context, numero: Float) {
-            val prefs: SharedPreferences =
-                context.getSharedPreferences(VALOR_DOLAR, Context.MODE_PRIVATE)
-            val editor = prefs.edit()
-            editor.putFloat(NUMERO_DOLAR, numero)
-            editor.apply()
-        }
-
-
-        fun recuperarDolar(context: Context): Float {
-            val prefs: SharedPreferences =
-                context.getSharedPreferences(VALOR_DOLAR, Context.MODE_PRIVATE)
-            return prefs.getFloat(
-                NUMERO_DOLAR,
-                0.0f
-            ) // 0 es el valor predeterminado si no se encuentra el número
-        }
-
-        fun guardarEuroFecha(context: Context, fecha: String) {
-            val prefs: SharedPreferences =
-                context.getSharedPreferences(VALOR_EURO, Context.MODE_PRIVATE)
-            val editor = prefs.edit()
-            editor.putString(FECHA_EURO, fecha)
-            editor.apply()
-        }
 
         fun recuperarEuroFecha(context: Context): String? {
             val prefs: SharedPreferences =
@@ -869,42 +761,6 @@ class HomeFragment : Fragment() {
 
     }
 
-    private fun initListeners() {
-        interstitial?.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() {
-            }
-
-            override fun onAdFailedToShowFullScreenContent(p0: AdError) {
-
-            }
-
-            override fun onAdShowedFullScreenContent() {
-                interstitial = null
-            }
-        }
-    }
-
-    private fun initAds() {
-        var adRequest = AdRequest.Builder().build()
-        InterstitialAd.load(
-            requireContext(),
-            "ca-app-pub-5303101028880067/5189629725",
-            adRequest,
-            object : InterstitialAdLoadCallback() {
-                override fun onAdLoaded(interstitialAd: InterstitialAd) {
-                    interstitial = interstitialAd
-                }
-
-                override fun onAdFailedToLoad(p0: LoadAdError) {
-                    interstitial = null
-                }
-            })
-    }
-
-
-    private fun showAds() {
-        interstitial?.show(requireActivity())
-    }
 
 
     override fun onAttach(context: Context) {
@@ -917,111 +773,6 @@ class HomeFragment : Fragment() {
         isFragmentAttached = false
     }
 
-    //SCRAPING PARA WW.BCV **************************************************
-
-
-    //**********************************************************************************
-
-    private fun actualizarEuro() {
-        try {
-            // Recuperar el valor del euro guardado
-            val savedEuro = ApiResponseHolder.recuperarEuro(requireContext())
-
-            // Actualizar el valor del euro desde la web
-            CoroutineScope(Dispatchers.IO).launch {
-                var intentos = 0
-                val maxIntentos = 3
-                var obtenido = false
-                while (!obtenido && intentos < maxIntentos) {
-                    try {
-                        val document = Jsoup.connect("https://www.bcv.org.ve/").timeout(60000).get()
-                        val precioEuro = document.select("#euro strong").first()?.text()
-                        val valorEuro = precioEuro?.replace(",", ".")?.toFloatOrNull()
-                        val precioDolarBcv = document.select("#dolar strong").first()?.text()
-                        val valorDolar = precioDolarBcv?.replace(",", ".")?.toFloatOrNull()
-
-
-                        // Extraer la fecha del elemento span con la clase date-display-single
-                        val fechaElement = document.select("span.date-display-single").firstOrNull()
-                        val fecha = fechaElement?.text()
-
-                        withContext(Dispatchers.Main) {
-                            if (isAdded) { // Verifica si el Fragment está adjunto
-                                if (valorEuro != null) {
-                                    // Guardar el nuevo valor del euro y la fecha de actualización
-                                    if (valorDolar != null) {
-                                        ApiResponseHolder.guadarDolar(requireContext(), valorDolar)
-                                    }
-
-                                    ApiResponseHolder.guardarEuro(requireContext(), valorEuro)
-                                    ApiResponseHolder.guardarEuroFecha(
-                                        requireContext(),
-                                        fecha.toString()
-                                    )
-
-
-                                    // Marcar como obtenido y salir del bucle
-                                    obtenido = true
-                                } else {
-                                    Log.d(TAG, "actualizarEuro: en false!!")
-                                    Toast.makeText(
-                                        requireContext(),
-                                        "Problemas de Internet. No se actualizó el Euro",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-                        }
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                        Log.d(
-                            "EUROACTU",
-                            "ERRRRORRRR $e "
-                        )
-                    }
-
-                    // Incrementar el contador de intentos
-                    intentos++
-
-                    // Esperar un tiempo antes de realizar el próximo intento
-                    delay(10000) // Esperar 10 segundos antes de volver a intentar obtener el precio del euro
-                }
-            }
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Problemas de Conexión $e", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    //PARA LA SEGURIDAD*****************
-    fun disableSSLVerification() {
-        try {
-            val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-                override fun checkClientTrusted(
-                    chain: Array<out X509Certificate>?,
-                    authType: String?,
-                ) {
-                }
-
-                override fun checkServerTrusted(
-                    chain: Array<out X509Certificate>?,
-                    authType: String?,
-                ) {
-                }
-
-                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-            })
-
-            val sslContext = SSLContext.getInstance("TLS")
-            sslContext.init(null, trustAllCerts, SecureRandom())
-
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
-            HttpsURLConnection.setDefaultHostnameVerifier { _, _ -> true }
-        } catch (e: NoSuchAlgorithmException) {
-            e.printStackTrace()
-        } catch (e: KeyManagementException) {
-            e.printStackTrace()
-        }
-    }
 
 
     private fun actualzarMultiplicacion(valorActualDolar: Double?) {
@@ -1148,7 +899,7 @@ class HomeFragment : Fragment() {
 
 
 
-    private fun visibilidadSwicheDiaManana(resposeApiTipoCambio: ApiEuroTipoCambio ) {
+    private fun visibilidadSwicheDiaManana(resposeApiTipoCambio: ApiOficialTipoCambio ) {
         Log.d(TAG, "visibilidadSwicheDiaManana:resposeApiTipoCambio: $resposeApiTipoCambio ")
         if (!diaActual) {
             if (visibleLayoutProxBcv < 2) {
@@ -1178,88 +929,17 @@ class HomeFragment : Fragment() {
 //*************************************
 //LLAMADO APISS*************************************************************APIS**********************
 //*************************************
-    private fun llamarApiPaginaBCV() {
-        //Recupera los datos de la memoria Preference del dispositivo******************************
-        try {
-            val savedResponseBCV = getResponseSharedPreferencesBCV(requireContext())
 
-            //Publico en el Api Holder
-            if (savedResponseBCV != null) {
-                ApiResponseHolder.setResponseBCV(savedResponseBCV)
-
-            }
-        } catch (e: Exception) {
-
-            Log.d(TAG, "llamarDolarApiNew: erre $e")
-        } finally {
-            binding.swipeRefreshLayout.isRefreshing =
-                false // Asegura que se detenga el refresco siempre
-        }
-        //******************************************************************************************
-        val baseUrl = Constants.URL_BASE  // URL base sin la última parte
-
-        val client = OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer 2x9Qjpxl5F8CoKK6T395KA") // Token añadido
-                    .build()
-                chain.proceed(request)
-            }
-            .build()
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(client)
-            .build()
-
-        val apiService = retrofit.create(ApiService::class.java)
-
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                // Realizar la solicitud a la API con el parámetro de consulta
-                val response = apiService.getDollarBancosBcv("bcv")
-                Log.d(TAG, "llamarApiPaginaBCV: RESPONSE $response")
-
-                if (response != null) {
-
-                    // Procesa la respuesta según tu lógica
-                    withContext(Dispatchers.Main) {
-                        // Actualizar la UI en el hilo principal si es necesario
-                        ApiResponseHolder.setResponseBCV(response)
-                        guardarResponseBancoBCV(requireContext(), response)
-                    }
-                } else {
-                    // Manejar errores HTTP
-                    Log.e("API_ERROR", "Error HTTP: del response}")
-                }
-            } catch (e: Exception) {
-                // Manejo de errores generales
-
-                Log.e("API_CALL", "Error: ${e.message}")
-            } finally {
-                withContext(Dispatchers.Main) {
-                    // Detener cualquier indicador de carga si es necesario
-
-                }
-            }
-        }
-    }
+    fun llamarApiDolar(callback: (Boolean) -> Unit) {
 
 
-
-
-
-    //LLAMAR A LAS APIS*****************************************************************
-
-    fun llamarApiTipoCambio(callback: (Boolean) -> Unit) {
-
-
-        val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
-
+        val savedResponseDolar = getResponseApiDolar(requireContext())
+        Log.d(TAG, "llamarApiTipoCambio: ENTRO AL LLAMADO DEL API")
         try {
             if (savedResponseDolar != null) {
+
                 ApiResponseHolder.setResponse(savedResponseDolar)
+                diaActual = verificafechaActBcv(savedResponseDolar)
                 valorActualEuro = savedResponseDolar.monitors.eur.price
 
                 llenarDolarEuro(savedResponseDolar, diaActual)
@@ -1359,10 +1039,10 @@ class HomeFragment : Fragment() {
 
                     // 1. Verificamos si el dispositivo tiene conexión a internet.
                     if (isInternetAvailable(requireContext())) {
-                        // 2. SI HAY INTERNET: El problema es del servidor.
+                        //SI HAY INTERNET: El problema es del servidor.
                         showServerErrorDialog()
                     } else {
-                        // 3. SI NO HAY INTERNET: El problema es del usuario.
+                        // SI NO HAY INTERNET: El problema es del usuario.
                         //    Mostramos el mensaje de conexión y la vibración de error.
                         binding.txtFechaActualizacionPara.setTextColor(ContextCompat.getColor(requireContext(), R.color.red))
                         binding.txtFechaActualizacionBcv.setTextColor(ContextCompat.getColor(requireContext(), R.color.red))
@@ -1383,77 +1063,6 @@ class HomeFragment : Fragment() {
             }
         }
     }
-
-
-    private fun llamarApiCriptoDolar() {
-        //Recupera los datos de la memoria Preference del dispositivo******************************
-        try {
-            val savedResponseCriptoDolar = getResponseSharedPreferencesCriptodolar(requireContext())
-
-            //Publico en el Api Holder
-            if (savedResponseCriptoDolar != null) {
-                ApiResponseHolder.setResponseCripto(savedResponseCriptoDolar)
-
-            }
-        } catch (e: Exception) {
-
-            Log.d(TAG, "llamarDolarApiNew: error $e")
-        } finally {
-            binding.swipeRefreshLayout.isRefreshing =
-                false // Asegura que se detenga el refresco siempre
-        }
-        //******************************************************************************************
-
-        val baseUrl = Constants.URL_BASE // URL base sin la última parte
-
-        val client = OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer 2x9Qjpxl5F8CoKK6T395KA") // Token añadido
-                    .build()
-                chain.proceed(request)
-            }
-            .build()
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(client)
-            .build()
-        val apiService = retrofit.create(ApiService::class.java)
-
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                // Realizar la solicitud a la API con el parámetro de consulta
-                val response = apiService.getDollarcriptodolar("criptodolar")
-
-                if (response != null) {
-
-                    // Procesa la respuesta según tu lógica
-                    withContext(Dispatchers.Main) {
-                        // Actualizar la UI en el hilo principal si es necesario
-                        ApiResponseHolder.setResponseCripto(response)
-                        guardarResponseCripto(requireContext(), response)
-
-                    }
-                } else {
-                    // Manejar errores HTTP
-                    Log.e("API_ERROR", "Error HTTP: del response}")
-                }
-            } catch (e: Exception) {
-                // Manejo de errores generales
-                Log.e("API_CALL", "Error: ${e.message}")
-            } finally {
-                withContext(Dispatchers.Main) {
-                    // Detener cualquier indicador de carga si es necesario
-                }
-            }
-        }
-    }
-
-
-
-
 
     fun isInternetAvailable(context: Context): Boolean {
         val connectivityManager =
@@ -1564,7 +1173,7 @@ class HomeFragment : Fragment() {
 
 
     //Guarda en SharePreference los Respose de cada solicitud al API
-    private fun guardarResponse(context: Context, responseBCV: ApiEuroTipoCambio) {
+    private fun guardarResponse(context: Context, responseBCV: ApiOficialTipoCambio) {
         val gson = Gson()
         val responseJson = gson.toJson(responseBCV)
 
@@ -1573,6 +1182,21 @@ class HomeFragment : Fragment() {
         val editor = sharedPreferences.edit()
         editor.putString("dolarBCVResponse", responseJson)
         editor.apply()
+    }
+
+    // Define una función para recuperar la respuesta de SharedPreferences
+    private fun getResponseApiDolar(context: Context): ApiOficialTipoCambio? {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+        val responseJson = sharedPreferences.getString("dolarBCVResponse", null)
+
+        if (responseJson != null) {
+            val gson = Gson()
+
+            return gson.fromJson(responseJson, ApiOficialTipoCambio::class.java)
+        }
+
+        return null // Retorna null si no se encontró la respuesta en SharedPreferences
     }
 
 
@@ -1603,21 +1227,9 @@ class HomeFragment : Fragment() {
 
 
     //*********************************************************************************************
+    //***************************getResponseFromSharedPreferences******************************************************************
 
-    // Define una función para recuperar la respuesta de SharedPreferences
-    private fun getResponseFromSharedPreferences(context: Context): ApiEuroTipoCambio? {
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
-        val responseJson = sharedPreferences.getString("dolarBCVResponse", null)
 
-        if (responseJson != null) {
-            val gson = Gson()
-
-            return gson.fromJson(responseJson, ApiEuroTipoCambio::class.java)
-        }
-
-        return null // Retorna null si no se encontró la respuesta en SharedPreferences
-    }
 
 
     // Define una función para recuperar la respuesta de SharedPreferences
@@ -1636,7 +1248,7 @@ class HomeFragment : Fragment() {
     }
 
     // Define una función para recuperar la respuesta de SharedPreferences
-    private fun getResponseSharedPreferencesBCV(context: Context): ApiModelResponseBCV? {
+    private fun getBancosBCV(context: Context): ApiModelResponseBCV? {
         val sharedPreferences: SharedPreferences =
             context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
         val responseJson = sharedPreferences.getString("dolarResponseBCV", null)
@@ -1653,7 +1265,7 @@ class HomeFragment : Fragment() {
 
 
     // verifica Si la actualizacion del dolar es diferente a la fecha actual
-    fun verificafechaActBcv(response: ApiEuroTipoCambio): Boolean {
+    fun verificafechaActBcv(response: ApiOficialTipoCambio): Boolean {
         try {
             // Cambia el locale a Locale.US para que acepte "AM/PM"
             val dateFormat = SimpleDateFormat("dd/MM/yyyy, hh:mm a", Locale.US)
@@ -1693,7 +1305,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    fun llenarCampoBCVNew(response: ApiEuroTipoCambio,diaActual: Boolean) {
+    fun llenarCampoBCVNew(response: ApiOficialTipoCambio,diaActual: Boolean) {
         // DATOS DEL BCV
 
         if (diaActual || binding.SwUtimaAct.isChecked) {
@@ -1733,7 +1345,7 @@ class HomeFragment : Fragment() {
     }
 
 
-    fun llenarDolarEuro(response: ApiEuroTipoCambio,diaActual: Boolean) {
+    fun llenarDolarEuro(response: ApiOficialTipoCambio,diaActual: Boolean) {
 
         if (diaActual || binding.SwUtimaAct.isChecked) {
 
@@ -2028,6 +1640,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun showPremiumExpirationDate() {
+
+
         // Obtenemos el nombre del plan y la fecha de vencimiento.
         val planName = AppPreferences.getPremiumPlan()
         val expirationDateMillis = AppPreferences.getPremiumExpirationDate()
@@ -2078,7 +1692,7 @@ class HomeFragment : Fragment() {
         comenzarCarga()
         Log.d(TAG, "refreshAllApis: llamando api")
         // 1. Llamada a la API principal.
-        llamarApiTipoCambio { isSuccessful ->
+        llamarApiDolar { isSuccessful ->
             if (isSuccessful) {
                 // Actualizamos la marca de tiempo SOLO si la llamada principal fue exitosa.
                 AppPreferences.updateLastRefreshTimestamp()
@@ -2087,7 +1701,7 @@ class HomeFragment : Fragment() {
             finalizarCarga()
         }
 
-        actualizarEuro() // La función de scraping también es una llamada de red.
+       // actualizarEuro() // La función de scraping también es una llamada de red.
     }
 
     /**
@@ -2095,7 +1709,7 @@ class HomeFragment : Fragment() {
      */
     private fun loadDataFromCache() {
         // Cargamos los datos de la API principal desde el cache.
-        val savedResponseDolar = getResponseFromSharedPreferences(requireContext())
+        val savedResponseDolar = getResponseApiDolar(requireContext())
         if (savedResponseDolar != null) {
             ApiResponseHolder.setResponse(savedResponseDolar)
             llenarDolarEuro(savedResponseDolar, diaActual) // Asume que 'diaActual' se guarda o recalcula
@@ -2111,7 +1725,7 @@ class HomeFragment : Fragment() {
             // Aquí iría la función que usa los datos de CriptoDolar, si la tienes.
         }
 
-        val savedResponseBCV = getResponseSharedPreferencesBCV(requireContext())
+        val savedResponseBCV = getBancosBCV(requireContext())
         if (savedResponseBCV != null) {
             ApiResponseHolder.setResponseBCV(savedResponseBCV)
             // Aquí iría la función que usa los datos de la página del BCV.

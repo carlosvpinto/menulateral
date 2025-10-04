@@ -1,6 +1,6 @@
 package com.carlosv.dolaraldia.model.apiAlcambioEuro
 
-data class ApiEuroTipoCambio(
+data class ApiOficialTipoCambio(
     var datetime: Datetime,
     var monitors: Monitors
 )

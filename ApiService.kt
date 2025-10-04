@@ -1,6 +1,6 @@
 package com.carlosv.dolaraldia
 
-import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiEuroTipoCambio
+import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiOficialTipoCambio
 import com.carlosv.dolaraldia.model.apiBcvEuro.ApiBcvEuroResponse
 import com.carlosv.dolaraldia.model.apiPlatforms.PlatformResponse
 import com.carlosv.dolaraldia.model.apicontoken.ApiConTokenResponse
@@ -31,12 +31,12 @@ interface ApiService {
     suspend fun getDollar(): ApiConTokenResponse
 
     @GET("tipo-cambio")
-    suspend fun tipocambio(): ApiEuroTipoCambio
+    suspend fun tipocambio(): ApiOficialTipoCambio
 
     @GET("dollar")
     suspend fun getDollarcriptodolar(@Query("page") page: String): ApiModelResponseCripto
     @GET("dollar")
-    suspend fun getDollarAlCambio(@Query("page") page: String): ApiEuroTipoCambio
+    suspend fun getDollarAlCambio(@Query("page") page: String): ApiOficialTipoCambio
 
     @GET("dollar")
     suspend fun getDollarBancosBcv(@Query("page") page: String): ApiModelResponseBCV

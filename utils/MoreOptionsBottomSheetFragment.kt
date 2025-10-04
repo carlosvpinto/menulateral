@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import com.carlosv.dolaraldia.ui.pago.PlanesPagoActivity
+import com.carlosv.dolaraldia.ui.pago.PremiumOptionsBottomSheet
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentMoreOptionsBinding // Importa el ViewBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -34,19 +35,25 @@ class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
             dismiss() // Cierra el BottomSheet después de la selección
         }
 
+        binding.optionPremium.setOnClickListener {
+            // En lugar de navegar, mostramos nuestro nuevo BottomSheet
+            PremiumOptionsBottomSheet.newInstance()
+                .show(parentFragmentManager, PremiumOptionsBottomSheet.TAG)
+        }
+
 
 
         // --- ¡AQUÍ ESTÁ LA MODIFICACIÓN! ---
-        binding.optionPremium.setOnClickListener {
-            // 1. Crear un Intent para especificar qué Activity queremos abrir.
-            val intent = Intent(requireContext(), PlanesPagoActivity::class.java)
-
-            // 2. Iniciar la Activity.
-            startActivity(intent)
-
-            // 3. Cerrar el BottomSheet después de la selección.
-            dismiss()
-        }
+//        binding.optionPremium.setOnClickListener {
+//            // 1. Crear un Intent para especificar qué Activity queremos abrir.
+//            val intent = Intent(requireContext(), PlanesPagoActivity::class.java)
+//
+//            // 2. Iniciar la Activity.
+//            startActivity(intent)
+//
+//            // 3. Cerrar el BottomSheet después de la selección.
+//            dismiss()
+//        }
         // --- FIN DE LA MODIFICACIÓN ---
 
 

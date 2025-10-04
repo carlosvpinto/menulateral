@@ -79,56 +79,7 @@ object AppPreferences {
      * Guarda el estado premium, el plan y calcula las fechas de inicio y vencimiento.
      * @param plan El nombre del plan ("Mensual", "Anual", "Vitalicio").
      */
-    fun setUserAsPremium(plan: String?) {
-        val planName = plan ?: "Desconocido"
-        val editor = preferences.edit()
 
-        val calendar = Calendar.getInstance()
-        val startDate = calendar.timeInMillis // Fecha de inicio: ahora mismo
-
-        // --- ¡AQUÍ ESTÁ LA LÓGICA DE CÁLCULO Y LOGGING! ---
-
-        // 1. Creamos un formateador para mostrar las fechas de forma legible.
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
-
-        // 2. Imprimimos la fecha de inicio.
-        Log.d("PremiumStatus", "Plan seleccionado: $planName")
-        Log.d("PremiumStatus", "Fecha de Inicio (ms): $startDate")
-        Log.d("PremiumStatus", "Fecha de Inicio (formateada): ${dateFormat.format(Date(startDate))}")
-
-        // 3. Calculamos la fecha de vencimiento basándonos en el nombre del plan.
-        when (planName) {
-            "Mensual" -> {
-                calendar.add(Calendar.MONTH, 1) // Añade 1 mes
-            }
-            "Anual" -> {
-                calendar.add(Calendar.YEAR, 1) // Añade 1 año
-            }
-            "Vitalicio" -> {
-                // Usamos -1L como convención para "nunca expira".
-                calendar.timeInMillis = -1L
-            }
-        }
-        val expirationDate = calendar.timeInMillis
-
-        // 4. Imprimimos la fecha de vencimiento.
-        Log.d("PremiumStatus", "Fecha de Vencimiento (ms): $expirationDate")
-        if (expirationDate == -1L) {
-            Log.d("PremiumStatus", "Fecha de Vencimiento (formateada): NUNCA (Vitalicio)")
-        } else {
-            Log.d("PremiumStatus", "Fecha de Vencimiento (formateada): ${dateFormat.format(Date(expirationDate))}")
-        }
-
-        // --- FIN DE LA LÓGICA DE LOGGING ---
-
-        // Guardamos todos los datos
-        editor.putBoolean(IS_USER_PREMIUM, true)
-        editor.putString(PREMIUM_PLAN_NAME, planName)
-        editor.putLong(PREMIUM_START_DATE, startDate)
-        editor.putLong(PREMIUM_EXPIRATION_DATE, expirationDate)
-
-        editor.apply()
-    }
 
 
     /**
@@ -177,31 +128,71 @@ object AppPreferences {
         }
     }
 
-   /* @param hours La cantidad de horas de premium que se otorgarán.
-    */
-    fun grantTemporaryPremium(hours: Int) {
+
+    //GUARDA EL TIPO DE PLAN Y LA FECHA DE INICIO Y VENCIMIENTO********************
+    fun setUserAsPremium(plan: String?, durationInHours: Int? = null) {
+        val planName = plan ?: "Desconocido"
+        val editor = preferences.edit()
+
         val calendar = Calendar.getInstance()
-        // Establecemos la nueva fecha de vencimiento sumando las horas.
-        calendar.add(Calendar.HOUR, hours)
+        val startDate = calendar.timeInMillis
+        var expirationDate: Long
 
-        val newExpirationDate = calendar.timeInMillis
+        // --- LÓGICA DE CÁLCULO DE VENCIMIENTO ---
 
-        // Guardamos la nueva fecha de vencimiento.
-        // También nos aseguramos de que la bandera is_premium esté en true.
-        preferences.edit().apply {
-            putBoolean(IS_USER_PREMIUM, true) // Activa el estado premium
-            putLong(PREMIUM_EXPIRATION_DATE, newExpirationDate)
-            apply()
+        if (durationInHours != null && durationInHours > 0) {
+            // Caso 1: Es un plan temporal definido en horas.
+            calendar.add(Calendar.HOUR, durationInHours)
+            expirationDate = calendar.timeInMillis
+        } else {
+            // Caso 2: Es un plan fijo basado en el nombre.
+            when (planName) {
+                "Mensual" -> {
+                    calendar.add(Calendar.MONTH, 1)
+                    expirationDate = calendar.timeInMillis
+                }
+                "Anual" -> {
+                    calendar.add(Calendar.YEAR, 1)
+                    expirationDate = calendar.timeInMillis
+                }
+                "Vitalicio" -> {
+                    expirationDate = -1L // Convención para "nunca expira"
+                }
+                else -> {
+                    // Si el plan no es reconocido y no se dieron horas, no hacemos nada.
+                    Log.w("PremiumStatus", "Plan '$planName' no reconocido y sin duración especificada. No se aplicó el estado premium.")
+                    return
+                }
+            }
         }
 
+        // --- LÓGICA DE LOGGING ---
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
-        Log.d("AppPreferences", "Premium temporal otorgado. Nueva fecha de vencimiento: ${dateFormat.format(Date(newExpirationDate))}")
+        Log.d("PremiumStatus", "==================== ESTADO PREMIUM ACTUALIZADO ====================")
+        Log.d("PremiumStatus", "Plan Aplicado: $planName")
+        Log.d("PremiumStatus", "Fecha de Inicio: ${dateFormat.format(Date(startDate))}")
+
+        val expirationFormatted = if (expirationDate == -1L) {
+            "NUNCA (Vitalicio)"
+        } else {
+            dateFormat.format(Date(expirationDate))
+        }
+        Log.d("PremiumStatus", "Fecha de Vencimiento: $expirationFormatted")
+        Log.d("PremiumStatus", "==================================================================")
+
+        // --- GUARDADO DE DATOS ---
+        editor.putBoolean(IS_USER_PREMIUM, true)
+        editor.putString(PREMIUM_PLAN_NAME, planName)
+        editor.putLong(PREMIUM_START_DATE, startDate)
+        editor.putLong(PREMIUM_EXPIRATION_DATE, expirationDate)
+        editor.apply()
     }
+
 
     // --- ¡NUEVAS CLAVES Y LÓGICA PARA EL CACHE DE TIEMPO! ---
     private const val LAST_API_REFRESH_TIMESTAMP = "last_api_refresh_timestamp"
     // Tiempo mínimo en milisegundos entre actualizaciones (15 minutos)
-    private const val REFRESH_INTERVAL_MS = 15 * 60 * 1000
+    private const val REFRESH_INTERVAL_MS =  30 * 1000
 
     /**
      * Guarda la marca de tiempo actual como la última vez que la API se actualizó.

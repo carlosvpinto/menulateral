@@ -74,6 +74,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
@@ -145,16 +146,39 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Esta línea es CRUCIAL. Le dice a la app que dibuje detrás de las barras del sistema.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        //enableEdgeToEdge()
+        window.statusBarColor = Color.TRANSPARENT
+
+        // 3. (Opcional pero recomendado) Controlar el color de los iconos de la barra de estado
+        // Usa el Controller para decirle si los iconos deben ser claros u oscuros.
+        // Como tu fondo es azul oscuro, quieres iconos blancos (apariencia clara en falso).
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        // isAppearanceLightStatusBars = false significa iconos BLANCOS
+        // isAppearanceLightStatusBars = true significa iconos NEGROS
+        windowInsetsController.isAppearanceLightStatusBars = false
+
+        enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        ViewCompat.setOnApplyWindowInsetsListener(binding.mainAcyivity) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-//            insets
-//        }
+
+        val appBar = binding.appBarLayout // O findViewById(R.id.app_bar_layout)
+
+        ViewCompat.setOnApplyWindowInsetsListener(appBar) { view, windowInsets ->
+            // Obtiene los insets (espacios) de las barras del sistema (status bar, etc.)
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            // Aplica el inset superior como padding a la parte superior de la vista
+            view.setPadding(view.paddingLeft, insets.top, view.paddingRight, view.paddingBottom)
+
+            // Devuelve los insets para que otros vistas también puedan usarlos si es necesario
+            windowInsets
+        }
+
+
+
 
         val application = application as? MyApplication ?: return
 
@@ -201,6 +225,26 @@ class MainActivity : AppCompatActivity() {
         // 4. Conectar TODO.
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                // Fragmentos donde el menú SÍ debe ser visible
+                R.id.nav_home,
+                R.id.nav_Personal,
+                R.id.nav_platforms,
+                R.id.nav_bancos,
+                R.id.nav_more
+                    -> {
+                    navView.visibility = View.VISIBLE
+                }
+                // Para todos los demás fragmentos, se oculta
+                else -> {
+                    navView.visibility = View.GONE
+                }
+            }
+        }
 
         // --- El resto de tu lógica de onCreate ---
         MobileAds.initialize(this) {}
