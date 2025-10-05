@@ -178,4 +178,5 @@
 
     <string name="c_dula_de_identidad">Cédula de Identidad</string>
     <string name="fecha_de_la_transacci_n">Fecha de la Transacción</string>
+    <string name="solo_uni_europea">Solo disponible para usuarios en la Unión Europea.</string>
 </resources>

@@ -614,6 +614,7 @@
                 android:layout_height="70dp"
                 android:visibility="gone"
                 android:scaleType="fitCenter" />
+
             <!-- Dentro del layout de tu HomeFragment -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_rewarded_ad"

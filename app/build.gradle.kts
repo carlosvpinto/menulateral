@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 126
-        versionName = "PremiunDepu"
+        versionCode = 128
+        versionName = "PremiumEurNoti"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -187,7 +187,7 @@ dependencies {
     // Opcional - Test helpers para Lifecycle runtime
     testImplementation("androidx.lifecycle:lifecycle-runtime-testing:$lifecycle_version")
 
-    implementation("com.google.android.ump:user-messaging-platform:2.2.0")
+
 
     //Imagen
     implementation ("de.hdodenhof:circleimageview:3.1.0")

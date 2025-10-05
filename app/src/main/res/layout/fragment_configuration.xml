@@ -21,4 +21,41 @@
         android:text="@string/activar_notificaciones"
         android:checked="true" />
 
+    <!-- En tu layout de configuración o ajustes -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Otros ajustes que puedas tener... -->
+
+        <!-- TU BOTÓN DE PRIVACIDAD (SIN CAMBIOS) -->
+        <TextView
+            android:id="@+id/privacy_settings_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Configuración de privacidad"
+            android:textSize="18sp"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:drawableStart="@drawable/ic_privacy_tip_24"
+            android:drawablePadding="16dp"/>
+
+        <!-- ¡NUEVO TEXTVIEW AÑADIDO! -->
+        <!-- Este es el mensaje descriptivo que aparecerá debajo del botón. -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/solo_uni_europea"
+            android:textSize="11sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:paddingStart="52dp"
+            android:paddingEnd="12dp"/>
+
+    </LinearLayout>
+
+
 </LinearLayout>

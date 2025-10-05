@@ -153,4 +153,5 @@
     <string name="logo_del_banco">Logo de la Banque</string>
     <string name="c_dula_de_identidad">Carte d\'Identité</string>
     <string name="fecha_de_la_transacci_n">Date de la Transaction</string>
+    <string name="solo_uni_europea">Solo disponible para usuarios en la Unión Europea.</string>
 </resources>
