@@ -159,7 +159,8 @@ class MainActivity : AppCompatActivity() {
         // isAppearanceLightStatusBars = true significa iconos NEGROS
         windowInsetsController.isAppearanceLightStatusBars = false
 
-        enableEdgeToEdge()
+
+        //enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

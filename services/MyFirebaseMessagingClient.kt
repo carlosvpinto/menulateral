@@ -6,11 +6,13 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.carlosv.dolaraldia.MainActivity
 import com.carlosv.dolaraldia.MyApplication
 import com.carlosv.dolaraldia.utils.roomDB.NotificationEntity
 import com.carlosv.menulateral.R
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
@@ -76,6 +78,18 @@ class MyFirebaseMessagingClient: FirebaseMessagingService() {
             manager.createNotificationChannel(channel)
         }
         manager.notify(Random.nextInt(), notificationBuilder.build())
+
+
+    }
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        Log.d("FCM", "Nuevo token generado: $token")
+
+        // Aquí es donde deberías enviar el nuevo token a tu propio servidor si
+        // necesitaras enviar notificaciones a usuarios específicos.
+        // Si solo usas tópicos (como "general"), suscribirse de nuevo puede ser una buena idea.
+        FirebaseMessaging.getInstance().subscribeToTopic("general")
     }
 
     companion object {
