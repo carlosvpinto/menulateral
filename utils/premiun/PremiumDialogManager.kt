@@ -50,7 +50,6 @@ class PremiumDialogManager(context: Context) {
         }
     }
 
-    // --- ¡NUEVA FUNCIÓN AÑADIDA! ---
     /**
      * [SOLO PARA DEPURACIÓN] Borra el contador de anuncios vistos del archivo de preferencias.
      * Esto forzará a que el diálogo de oferta premium aparezca la próxima vez

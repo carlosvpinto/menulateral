@@ -81,6 +81,7 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.carlosv.dolaraldia.model.datosPMovil.DatosPMovilModel
 import com.carlosv.dolaraldia.utils.Constants.URL_DESCARGA
+import com.carlosv.dolaraldia.utils.ReviewManager
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
@@ -178,7 +179,8 @@ class MainActivity : AppCompatActivity() {
             windowInsets
         }
 
-
+// Llama a la lógica del ReviewManager cada vez que la actividad principal se crea.
+        ReviewManager.trackSession(this)
 
 
         val application = application as? MyApplication ?: return

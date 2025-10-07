@@ -252,18 +252,6 @@ class HomeFragment : Fragment() {
 //        }
 
 
-
-
-
-        //PARA ACTUALIZAR EL PRECIO DEL DOLAR SOLO CUANDO CARGA POR PRIMERA VEZ
-        if (savedInstanceState == null) {
-
-            //disableSSLVerification()
-
-            //actualizarEuro()
-        }
-
-
         // Aplicar la animación
         val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
         root.startAnimation(animation)
