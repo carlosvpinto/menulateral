@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+android:shape="rectangle">
+
+<!-- Color de fondo. Puedes usar un color sólido o un gradiente. -->
+<!-- Este es un azul oscuro, cámbialo para que coincida con tu app. -->
+<solid android:color="#1D2A3E" />
+
+<!-- Define el radio de las esquinas. 28dp es un buen valor para Material You. -->
+<corners android:radius="28dp" />
+<stroke
+    android:width="2dp"
+    android:color="?attr/colorPrimary" /> <!-- Azul intenso -->
+
+</shape>

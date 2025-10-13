@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 128
-        versionName = "PremiumEurNoti"
+        versionCode = 130
+        versionName = "PremiumCalificacion1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -200,7 +200,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.24")
 
     implementation ("com.google.android.gms:play-services-base:18.5.0")
-    //implementation 'com.google.android.gms:play-services-ads:20.4.0' // Ejemplo para servicios de anuncios
+
+
 
 
 

@@ -84,7 +84,12 @@
     <color name="md_theme_dark_outlineVariant">#44464F</color>
     <color name="md_theme_dark_scrim">#000000</color>
     <color name="premium_gold">#FFD700</color>
-    <color name="text_secondary_light">#808080</color> <!-- Un color gris para el texto secundario -->
+    <color name="text_secondary_light">#808080
+    </color> <!-- Un color gris para el texto secundario -->
     <color name="orange_500">#FF9800</color>
+    <color name="light_blue_50">#FFE1F5FE</color>
+    <color name="light_blue_200">#FF81D4FA</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
 
 </resources>

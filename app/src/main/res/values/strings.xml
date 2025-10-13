@@ -164,7 +164,6 @@
     <!-- Strings used for fragments for navigation -->
 
 
-
     <string name="rif_banco">J506818817</string>
 
     <string name="verificar_pago_m_vil">Verificar Pago Móvil</string>
@@ -179,4 +178,7 @@
     <string name="c_dula_de_identidad">Cédula de Identidad</string>
     <string name="fecha_de_la_transacci_n">Fecha de la Transacción</string>
     <string name="solo_uni_europea">Solo disponible para usuarios en la Unión Europea.</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="app_widget_description">This is an app widget description</string>
 </resources>
