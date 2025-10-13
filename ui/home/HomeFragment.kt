@@ -549,30 +549,6 @@ class HomeFragment : Fragment() {
     }
 
 
-    private fun techadoDesplegado(): Boolean {
-
-        // Obtén el contexto de la actividad
-        val context: Context = requireContext()
-
-        // Verifica si el teclado está desplegado
-        val inputMethodManager =
-            context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        val isKeyboardVisible = inputMethodManager.isActive
-
-        if (isKeyboardVisible) {
-            Log.d(TAG, "onCreateView: El teclado está desplegado")  // El teclado está desplegado
-            // Realiza las acciones que necesites
-            return true
-        } else {
-            // El teclado no está desplegado
-            Log.d(TAG, "onCreateView:El teclado no está desplegado ")
-            // Realiza las acciones que necesites
-            return false
-        }
-
-    }
-
-
 
     //PUBLICIDAD INTERNA*****************************
 
@@ -769,10 +745,7 @@ class HomeFragment : Fragment() {
             val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
             var valorDolares = 0.0
             val inputPDolar = binding.inputDolares.text.toString()
-            Log.d(
-                TAG,
-                "actualzarMultiplicacion: valor valorActualDolar $valorActualDolar ultimoTecleado $ultimoTecleado"
-            )
+
             if (inputPDolar.isNotEmpty()) {
 
                 try {
@@ -981,6 +954,7 @@ class HomeFragment : Fragment() {
                     withContext(Dispatchers.Main) {
 
                         ApiResponseHolder.setResponseApiEurosTipoCambio(apiResponseTipoCambio)
+
                         diaActual = verificafechaActBcv(apiResponseTipoCambio)
 
                         visibilidadSwicheDiaManana(apiResponseTipoCambio)
@@ -1053,20 +1027,20 @@ class HomeFragment : Fragment() {
     }
 
     fun isInternetAvailable(context: Context): Boolean {
+        // Obtenemos el servicio de conectividad del sistema.
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
+        // Obtenemos la red activa actual. Si no hay ninguna, no hay conexión.
         val network = connectivityManager.activeNetwork ?: return false
-        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
 
-        return when {
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-            else -> false
-        }
+        // Obtenemos las capacidades de esa red activa.
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        // La clave está aquí: comprobamos si la red tiene la capacidad de 'VALIDATED'.
+        // Esto significa que el sistema ha verificado que esta conexión puede alcanzar Internet.
+        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
-
 
     private fun animacionCrecerTexto(texto: TextView, texto2: TextView) {
         val scaleUpAnimation = ScaleAnimation(
@@ -1400,7 +1374,7 @@ class HomeFragment : Fragment() {
                     val entradaDolares = binding.inputDolares.text.toString()
                     if (entradaDolares.isNotEmpty()) {
                         if (binding.btnEuroP.isChecked) {
-                          
+
                             if (valorActualParalelo != null) {
                                 val cleanedText =
                                     entradaDolares.replace(
@@ -1408,26 +1382,27 @@ class HomeFragment : Fragment() {
                                         ""
                                     ) // Elimina puntos y comas
                                 val dolarLimpio = cleanedText.toDoubleOrNull() ?: 0.0
-
                                 valorDolares = dolarLimpio * dolarParalelo!!.toDouble()
                             }
                         }
 
                         if (binding.btnBcv.isChecked) {
-                         
+
                             val cleanedText =
                                 entradaDolares.replace(
                                     "[,]".toRegex(),
                                     ""
                                 ) // Elimina puntos y comas
-                            val parsedValue = cleanedText.toDoubleOrNull() ?: 0.0
+                            val entradadolarBcvLimpio = cleanedText.toDoubleOrNull() ?: 0.0
+
+
                             if (dolarBcv != null) {
-                                valorDolares = parsedValue * dolarBcv!!.toDouble()
+                                valorDolares = entradadolarBcvLimpio * dolarBcv!!.toDouble()
                             }
 
                         }
                         if (binding.btnPromedio.isChecked) {
-                    
+
                             val cleanedText =
                                 entradaDolares.replace(
                                     "[,]".toRegex(),
@@ -1439,6 +1414,7 @@ class HomeFragment : Fragment() {
                             }
 
                         }
+
                         val formattedValorDolares = decimalFormat.format(valorDolares)
                         binding.inputBolivares.setText(formattedValorDolares)
 

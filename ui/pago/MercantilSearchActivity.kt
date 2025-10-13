@@ -1,6 +1,8 @@
 package com.carlosv.dolaraldia.ui.pago
 
 import android.app.DatePickerDialog
+import android.content.ClipDescription
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -56,10 +58,38 @@ class MercantilSearchActivity : AppCompatActivity() {
         planSeleccionado = intent.getStringExtra(Constants.SUBSCRIPTION_PLAN_NAME)
         val montoRecibido = intent.getStringExtra(Constants.PRICE_BS)
 
-
+        binding.textViewPaste.setOnClickListener {
+            pegarDesdePortapapeles()
+        }
 
         binding.editTextAmount.setText(montoRecibido.toString())
 
+    }
+
+    private fun pegarDesdePortapapeles() {
+
+        // En una Actividad, usamos 'getSystemService' directamente (o 'this.getSystemService').
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        // Verificamos si el portapapeles tiene contenido y si es texto plano
+        if (clipboard.hasPrimaryClip() && clipboard.primaryClipDescription?.hasMimeType(
+                ClipDescription.MIMETYPE_TEXT_PLAIN) == true) {
+
+            val textoPegado = clipboard.primaryClip?.getItemAt(0)?.text?.toString()
+
+            if (!textoPegado.isNullOrEmpty()) {
+
+                binding.editTextReference.setText(textoPegado)
+                // Opcional: movemos el cursor al final del texto pegado
+                binding.editTextReference.setSelection(textoPegado.length)
+            } else {
+
+                Toast.makeText(this, "El portapapeles está vacío", Toast.LENGTH_SHORT).show()
+            }
+
+        } else {
+            Toast.makeText(this, "No hay texto para pegar en el portapapeles", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupToolbar() {
@@ -90,30 +120,43 @@ class MercantilSearchActivity : AppCompatActivity() {
     /**
      * Configura el campo de fecha para mostrar un diálogo con opciones rápidas.
      */
+    // En MercantilSearchActivity.kt
+
     private fun setupDateSelection() {
 
-        // --- ¡AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL! ---
-        // 1. Asignamos el OnClickListener al CONTENEDOR (TextInputLayout).
-        //    Esto captura el clic en cualquier parte del campo, incluido el ícono.
-        binding.textFieldLayoutTransactionDate.setOnClickListener {
+        binding.autoCompleteTransactionDate.setOnClickListener {
+            // Ocultamos el teclado por si algún otro campo lo tenía abierto.
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(it.windowToken, 0)
+
             showDateSelectionDialog()
         }
 
-        // 2. Asignamos el OnFocusChangeListener al EditText INTERNO.
-        //    Esto se disparará si el usuario navega al campo usando el teclado, por ejemplo.
+        // 2. Mantenemos el OnFocusChangeListener para manejar la navegación por teclado.
         binding.autoCompleteTransactionDate.setOnFocusChangeListener { view, hasFocus ->
-            // Solo mostramos el diálogo si el campo HA GANADO el foco
-            // y si el teclado no está visible (para evitar conflictos).
+            // Si el campo GANA el foco...
             if (hasFocus) {
-                // Ocultamos el teclado por si acaso se abrió.
+                // Ocultamos el teclado inmediatamente.
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(view.windowToken, 0)
 
+                // Mostramos nuestro diálogo de selección de fecha.
                 showDateSelectionDialog()
+
+                // ¡ESTA ES LA CLAVE!
+                // Justo después de mostrar el diálogo, le decimos al sistema que
+                // este campo ya no debe tener el foco. Esto lo "libera" y permite
+                // que el próximo clic sea detectado correctamente por el OnClickListener.
+                view.clearFocus()
             }
         }
-    }
 
+        // 3. Mantenemos el listener en el layout contenedor por si el usuario toca el borde.
+        // Esto es una buena práctica de UX.
+        binding.textFieldLayoutTransactionDate.setOnClickListener {
+            binding.autoCompleteTransactionDate.performClick()
+        }
+    }
     /**
      * Muestra un diálogo con opciones de fecha: Hoy, Ayer, Anteayer y un selector de calendario.
      */
