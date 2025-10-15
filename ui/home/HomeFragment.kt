@@ -97,7 +97,6 @@ import com.carlosv.dolaraldia.model.history.HistoryModelResponse
 import com.carlosv.dolaraldia.provider.ClickAnuncioProvider
 import com.carlosv.dolaraldia.provider.RegistroPubliProvider
 import com.carlosv.dolaraldia.services.NotificationProvider
-import com.carlosv.dolaraldia.ui.debug.DebugPremiumFragment
 import com.carlosv.dolaraldia.utils.Constants
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnError
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnSuccess
@@ -107,9 +106,6 @@ import com.denzcoskun.imageslider.ImageSlider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -177,6 +173,18 @@ class HomeFragment : Fragment() {
         PremiumDialogManager(requireContext())
     }
 
+    // 1. Definimos cuántos toques son necesarios.
+    private val SECRET_TAP_COUNT = 7
+
+    // 2. Un contador para llevar la cuenta de los toques.
+    private var tapCounter = 0
+
+    // 3. Un 'Handler' para resetear el contador si el usuario tarda mucho entre toques.
+    private val resetHandler = Handler(Looper.getMainLooper())
+    private val resetRunnable = Runnable {
+        tapCounter = 0
+        Log.d("EasterEgg", "Contador de toques reseteado por tiempo.")
+    }
     // ¡NUEVO! Creamos una instancia del gestor de anuncios bonificados.
     private lateinit var rewardedAdManager: RewardedAdManager
 
@@ -239,17 +247,42 @@ class HomeFragment : Fragment() {
 
 
         //MODO DESRROLLLO BORRAR datos PREMIUN Y CONTADOR**********
-//        binding.imglogo.setOnClickListener {
-//
-//            // 1. Obtenemos el NavController del fragmento actual.
-//            val navController = findNavController()
-//
-//            // 2. Le pedimos que navegue al ID del nuevo destino que definimos en el XML.
-//            navController.navigate(R.id.nav_debug_premium)
-//
-//            // Devuelve 'true' para indicar que el evento ha sido manejado.
-//            true
-//        }
+        binding.imglogo.setOnClickListener {
+
+
+
+            // Devuelve 'true' para indicar que el evento ha sido manejado.
+            true
+
+            resetHandler.removeCallbacks(resetRunnable)
+
+            // Incrementamos el contador.
+            tapCounter++
+
+            Log.d("EasterEgg", "Toque número: $tapCounter")
+
+            // Comprobamos si se ha alcanzado el número secreto de toques.
+            if (tapCounter == SECRET_TAP_COUNT) {
+                // ¡Éxito!
+                Log.d("EasterEgg", "¡Secreto activado!")
+
+                // 1. Obtenemos el NavController del fragmento actual.
+                val navController = findNavController()
+
+                // 2. Le pedimos que navegue al ID del nuevo destino que definimos en el XML.
+                navController.navigate(R.id.nav_debug_premium)
+                // Lanzamos la actividad secreta.
+
+                tapCounter = 0
+
+            } else {
+                // Si aún no se alcanza el objetivo, programamos un reseteo del contador
+                // para dentro de 1.5 segundos. Si el usuario no vuelve a tocar en ese
+                // tiempo, la cuenta vuelve a cero.
+                resetHandler.postDelayed(resetRunnable, 1500) // 1.5 segundos
+            }
+        }
+
 
 
         // Aplicar la animación
@@ -1171,18 +1204,6 @@ class HomeFragment : Fragment() {
             context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("dolarCripto", responseJson)
-        editor.apply()
-
-    }
-
-    private fun guardarResponseBancoBCV(context: Context, responseBCV: ApiModelResponseBCV) {
-        val gson = Gson()
-        val responseJson = gson.toJson(responseBCV)
-
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("dolarResponseBCV", responseJson)
         editor.apply()
 
     }

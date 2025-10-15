@@ -38,6 +38,15 @@ object Constants {
     const val EXTRA_AMOUNT_TO_PAY = "AMOUNT_TO_PAY_BS"
     const val SUBSCRIPTION_PLAN_NAME = "SUBSCRIPTION_PLAN_NAME"
 
+    const val MOSTRAR_PRIMER_DIALOGO = 5 // El primer diálogo aparecerá en la 5ta publicidad
+    const val MOSTRAR_DESPUES_NRO_VECES = 20 // Los siguientes diálogos, cada 20 publicidades
+
+    const val DEBUG_PASSWORD = "12901924"     // Contraseña para acceder a la pantalla de depuración.
+
+    // --- CLAVES PARA LA LÓGICA DEL PERMISO DE NOTIFICACIONES ---
+    const val CONTEO_INICIOS_TRAS_DENEGAR_PERMISO = "conteoIniciosTrasDenegarPermiso"
+    const val UMBRAL_RECORDATORIO_PERMISO = 15 // Mostrar recordatorio cada 15 inicios
+
 
 
 }

@@ -3,6 +3,11 @@ package com.carlosv.dolaraldia
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiOficialTipoCambio
+import com.carlosv.dolaraldia.utils.Constants.CONTEO_INICIOS_TRAS_DENEGAR_PERMISO
+import com.carlosv.dolaraldia.utils.Constants.UMBRAL_RECORDATORIO_PERMISO
+import com.google.gson.Gson
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -214,5 +219,56 @@ object AppPreferences {
         return lastRefresh == 0L || timeSinceLastRefresh >= REFRESH_INTERVAL_MS
     }
 
+
+
+    /**
+     * Incrementa el contador de inicios de la app y devuelve el nuevo valor.
+     * Este contador se usa para saber cuándo volver a mostrar el diálogo de permiso.
+     * @return El número de inicios desde la última vez que se denegó el permiso.
+     */
+    fun incrementarYObtenerConteoInicios(): Int {
+        var conteoActual = preferences.getInt(CONTEO_INICIOS_TRAS_DENEGAR_PERMISO, 0)
+        conteoActual++
+        preferences.edit().putInt(CONTEO_INICIOS_TRAS_DENEGAR_PERMISO, conteoActual).apply()
+        return conteoActual
+    }
+
+    /**
+     * Resetea el contador de inicios de la app a 0.
+     * Se debe llamar cuando el permiso es concedido o cuando se muestra el recordatorio.
+     */
+    fun resetearConteoInicios() {
+        preferences.edit().putInt(CONTEO_INICIOS_TRAS_DENEGAR_PERMISO, 0).apply()
+    }
+
+    /**
+     * Comprueba si se ha alcanzado el umbral para mostrar el recordatorio de permiso.
+     * @param conteoActual El número actual de inicios.
+     * @return `true` si se debe mostrar el recordatorio, `false` en caso contrario.
+     */
+    fun debeMostrarRecordatorioPermiso(conteoActual: Int): Boolean {
+        return conteoActual >= UMBRAL_RECORDATORIO_PERMISO
+    }
+
+    fun leerResponse(context: Context): ApiOficialTipoCambio? {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+
+        // Obtenemos el JSON guardado. Si no existe, devolvemos null.
+        val responseJson = sharedPreferences.getString("dolarBCVResponse", null)
+
+        // Si encontramos un JSON, lo convertimos de nuevo a nuestro objeto de datos.
+        return if (responseJson != null) {
+            val gson = Gson()
+            try {
+                gson.fromJson(responseJson, ApiOficialTipoCambio::class.java)
+            } catch (e: Exception) {
+                // En caso de que el JSON guardado esté corrupto, devolvemos null.
+                null
+            }
+        } else {
+            null
+        }
+    }
 
 }

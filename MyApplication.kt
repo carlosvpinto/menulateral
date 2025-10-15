@@ -197,6 +197,24 @@ class MyApplication :
             Log.e("firestore", "Error during initialization Mandado por la app", e)
             FirebaseCrashlytics.getInstance().recordException(e)
         }
+        //*****************************************************
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("FCM_TOKEN", "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            // Obtén el nuevo token de registro de FCM
+            val token = task.result
+
+            // ¡ESTA ES LA PARTE CLAVE PARA DEPURAR!
+            // Imprime el token en Logcat para que puedas copiarlo.
+            Log.d("FCM_TOKEN", "Este es el token del dispositivo: $token")
+
+
+        }
+
+        //*******************************************************
 
 
     }
@@ -217,6 +235,7 @@ class MyApplication :
     }
 
 //********End funcion************************************************************************
+
 
     // Función para obtener el token solo si no se tiene uno o si es necesario solicitar uno nuevo
     // Usa coroutines para ejecutar tareas largas fuera del hilo principal

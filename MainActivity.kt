@@ -67,6 +67,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.ToggleButton
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 
 
@@ -103,6 +104,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import android.provider.Settings
+import com.google.firebase.messaging.FirebaseMessaging
+
+
 import java.text.NumberFormat
 import java.text.ParseException
 
@@ -142,6 +147,21 @@ class MainActivity : AppCompatActivity() {
     // ¡NUEVO! Bandera para controlar el ciclo de reintento.
     private var isInitialAdFlowDone = false
 
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // El usuario CONCEDIÓ el permiso.
+                // Puedes mostrar un mensaje de agradecimiento o simplemente continuar.
+                Log.d("Permission", "Permiso de notificaciones concedido.")
+                Toast.makeText(this, "¡Gracias! Recibirás las últimas actualizaciones.", Toast.LENGTH_SHORT).show()
+            } else {
+                // El usuario DENEGÓ el permiso.
+                // Es una buena práctica explicarle por qué es importante y cómo puede activarlo manualmente.
+                Log.d("Permission", "Permiso de notificaciones denegado.")
+                showPermissionDeniedSnackbar()
+            }
+        }
+
 
 
 
@@ -152,7 +172,6 @@ class MainActivity : AppCompatActivity() {
 
         window.statusBarColor = Color.TRANSPARENT
 
-        // 3. (Opcional pero recomendado) Controlar el color de los iconos de la barra de estado
         // Usa el Controller para decirle si los iconos deben ser claros u oscuros.
         // Como tu fondo es azul oscuro, quieres iconos blancos (apariencia clara en falso).
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
@@ -249,11 +268,112 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        solicitarPermisoDeNotificaciones()
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("FCM_TOKEN", "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            // Obtén el nuevo token de registro de FCM
+            val token = task.result
+
+            // ¡ESTA ES LA PARTE CLAVE PARA DEPURAR!
+            // Imprime el token en Logcat para que puedas copiarlo.
+            Log.d("FCM_TOKEN", "Este es el token del dispositivo: $token")
+
+
+        }
+
         // --- El resto de tu lógica de onCreate ---
         MobileAds.initialize(this) {}
         AppPreferences.init(this)
         versionUltima()
         movilidadPantalla()
+    }
+
+    //PERMISOS DE NOTIDICACION
+    private fun solicitarPermisoDeNotificaciones() {
+        // La lógica solo se ejecuta en Android 13 (API 33) o superior.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                // Caso A: El permiso ya ha sido concedido.
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    // Si ya tenemos el permiso, nos aseguramos de que el contador esté en 0.
+                    AppPreferences.resetearConteoInicios()
+                    Log.d("PermisoNotificaciones", "El permiso ya está concedido.")
+                }
+
+                // Caso B: El usuario ya ha denegado el permiso antes.
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                    // Ahora la lógica de decisión está en AppPreferences.
+                    gestionarLogicaDeRecordatorio()
+                }
+
+                // Caso C: Es la primera vez que se pide.
+                else -> {
+                    Log.d("PermisoNotificaciones", "Solicitando permiso por primera vez.")
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Gestiona la lógica de cuándo mostrar la explicación (rationale) al usuario,
+     * utilizando AppPreferences para el conteo.
+     */
+    private fun gestionarLogicaDeRecordatorio() {
+        // 1. Incrementamos y obtenemos el conteo en un solo paso.
+        val conteoActual = AppPreferences.incrementarYObtenerConteoInicios()
+        Log.d("PermisoNotificaciones", "Inicio de app n.º $conteoActual desde que se denegó el permiso.")
+
+        // 2. Le preguntamos a AppPreferences si se debe mostrar el diálogo.
+        if (AppPreferences.debeMostrarRecordatorioPermiso(conteoActual)) {
+            // Si se cumple el umbral, mostramos la explicación.
+            mostrarDialogoExplicativoDelPermiso()
+            // Y reseteamos el contador para el próximo ciclo de 20.
+            AppPreferences.resetearConteoInicios()
+        }
+        // Si no se cumple el umbral, no hacemos nada y no molestamos al usuario.
+    }
+
+    /**
+     * Muestra una UI explicativa (diálogo de alerta) al usuario sobre por qué
+     * se necesita el permiso antes de volver a solicitarlo.
+     */
+    private fun mostrarDialogoExplicativoDelPermiso() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Permiso de Notificaciones")
+            .setMessage("Para recibir las últimas tasas del dólar y alertas importantes, por favor, permite las notificaciones en el siguiente diálogo.")
+            .setPositiveButton("Entendido") { _, _ ->
+                // Después de que el usuario entiende, lanzamos la solicitud de permiso.
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            .setNegativeButton("Ahora no", null) // El botón "Ahora no" simplemente cierra el diálogo.
+            .show()
+    }
+    /**
+     * Muestra un Snackbar cuando el usuario deniega el permiso, explicándole
+     * cómo puede activarlo manualmente desde los ajustes.
+     */
+    private fun showPermissionDeniedSnackbar() {
+        Snackbar.make(
+            findViewById(android.R.id.content),
+            "Has denegado las notificaciones. Puedes activarlas en los Ajustes.",
+            Snackbar.LENGTH_LONG
+        ).setAction("Ajustes") {
+            // Abre los ajustes de la aplicación para que el usuario pueda cambiar el permiso.
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            val uri = Uri.fromParts("package", packageName, null)
+            intent.data = uri
+            startActivity(intent)
+        }.show()
     }
 
 
@@ -875,79 +995,6 @@ class MainActivity : AppCompatActivity() {
 
         editText.addTextChangedListener(textWatcher)
     }
-//Logica para Compartr el pago movil con el texto y la imagen
-//    private fun shareLogic(
-//    enviarDatosPM: Boolean,
-//    enviarImagenP: Boolean,
-//    enviarMontoP: Boolean,
-//    montoPersonalizado: String,
-//) {
-//        pagoMovilListTrue = obtenerPagoMovilListTrue(this@MainActivity)
-//        Log.d(TAG, "Decidiendo lógica para: DatosPM=$enviarDatosPM, ImagenP=$enviarImagenP, MontoP=$enviarMontoP")
-//
-//        // Usamos una expresión 'when' sobre una Triple para evaluar todas las combinaciones.
-//        // El formato es (enviarDatosPM, enviarImagenP, enviarMontoP)
-//        when (Triple(enviarDatosPM, enviarImagenP, enviarMontoP)) {
-//
-//
-//
-//
-//            Triple(true, true, true) -> {
-//                // CASO 1:
-//                val texto = crearTextoCapture(enviarDatosPM, enviarMontoP,enviarImagenP,  pagoMovilListTrue, montoPersonalizado)
-//                shareImageWithText(pagoMovilListTrue!!.imagen!!, texto)
-//            }
-//
-//            // CASO 2: Datos + Imagen (true, true, false)
-//            Triple(true, true, false) -> {
-//
-//                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP  , pagoMovilListTrue, montoPersonalizado)
-//                shareImageWithText(pagoMovilListTrue!!.imagen!!, texto)
-//            }
-//
-//            // CASO 3: Datos + Monto (true, false, true)
-//            Triple(true, false, true) -> {
-//                val texto = crearTextoCapture(enviarDatosPM,enviarImagenP, enviarMontoP,  pagoMovilListTrue, montoPersonalizado)
-//                shareImageWithText(capturarPantalla()!!, texto) // Ejemplo de llamada a otra función
-//            }
-//
-//            // CASO 4: Solo Datos (true, false, false)
-//            Triple(true, false, false) -> {
-//                Log.d(TAG, "CASO 4: Solo Datos")
-//                // Reemplaza esto con la función que desees
-//                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP, pagoMovilListTrue, montoPersonalizado)
-//                shareImageWithText(capturarPantalla()!!, texto)
-//            }
-//
-//            // CASO 5: Imagen + Monto (false, true, true)
-//            Triple(false, true, true) -> {
-//                // Reemplaza esto con la función que desees
-//                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP, pagoMovilListTrue, montoPersonalizado)
-//                shareImageWithText(pagoMovilListTrue!!.imagen!!, texto)
-//            }
-//
-//            // CASO 6: Solo Imagen (false, true, false)
-//            Triple(false, true, false) -> {
-//                // Reemplaza esto con la función que desees
-//                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP, pagoMovilListTrue, montoPersonalizado)// Texto podría ser vacío o un título
-//                shareImageWithText(pagoMovilListTrue!!.imagen!!, texto)
-//            }
-//
-//            // CASO 7: Solo Monto (false, false, true)
-//            Triple(false, false, true) -> {
-//                // Reemplaza esto con la función que desees
-//                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP,  pagoMovilListTrue, montoPersonalizado)// Texto podría ser vacío o un título
-//                shareImageWithText(capturarPantalla()!!, texto)
-//            }
-//
-//            // CASO 8: NADA seleccionado (false, false, false)
-//            Triple(false, false, false) -> {
-//                // Reemplaza esto con la función que desees
-//                val texto = crearTextoCapture(enviarDatosPM, enviarImagenP, enviarMontoP,  pagoMovilListTrue, montoPersonalizado)// Texto podría ser vacío o un título
-//                shareImageWithText(capturarPantalla()!!, texto)
-//            }
-//        }
-//    }
 
 
     //Obtiene el pago Movil Activo
@@ -1379,64 +1426,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    //funcio para llamar a la Class SubsCripcionCkeckWorker para verificas si esta vencida la Suscripcion******
-//    fun verificaciondeSuscripcion() {
-//        // Crear un objeto Data para enviar parámetros al Worker
-//        val data = Data.Builder()
-//            .putString("param1", "valor1")  // Puedes añadir tantos parámetros como necesites
-//            .putInt("param2", 123)
-//            .build()
-//
-//// Crear el WorkRequest para que se ejecute todos los días, con los parámetros
-//        val subscriptionCheckRequest = PeriodicWorkRequestBuilder<SubscriptionCheckWorker>(
-//            1, TimeUnit.DAYS
-//        )
-//            .setInputData(data)  // Añadir los parámetros al WorkRequest
-//            .build()
-//
-//// Encolar el trabajo con WorkManager
-//        WorkManager.getInstance(this).enqueue(subscriptionCheckRequest)
-//    }
-
-    //***********final del usao del work
-
-    fun isSubscriptionActive(context: Context): Boolean {
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("UserSubscription", Context.MODE_PRIVATE)
-
-        // Verificar si el usuario tiene una suscripción de por vida
-        val hasLifetimeSubscription = sharedPreferences.getBoolean("lifetime_subscription", false)
-
-        if (hasLifetimeSubscription) {
-            // Si tiene una suscripción de por vida, retorna false (es decir, sí tiene una suscripción activa)
-            return true
-        }
-
-        // Obtener la fecha actual
-        val currentDate = Calendar.getInstance().timeInMillis
-
-        // Obtener la fecha de expiración de la suscripción
-        val subscriptionExpiration = sharedPreferences.getLong("subscription_expiration", 0)
-
-
-
-        if (currentDate >= subscriptionExpiration) {
-
-            return false
-        } else {
-
-            return true
-        }
-
-    }
-
-    // Función auxiliar para convertir milisegundos a una fecha legible
-    fun convertMillisToDate(millis: Long): String {
-        val format = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = millis
-        return format.format(calendar.time)
-    }
 
     //GENERAR NUEVA RECIBO MEJORADO*****************************
 
@@ -1519,7 +1508,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-// ... (tus imports)
 private fun generarReciboYObtenerPath(): String? {
     try {
         val currentFragmentTag = getCurrentFragmentTag()

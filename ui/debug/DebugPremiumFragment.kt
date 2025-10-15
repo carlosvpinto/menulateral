@@ -2,15 +2,19 @@ package com.carlosv.dolaraldia.ui.debug
 
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
-import com.carlosv.dolaraldia.AppPreferences // ¡Asegúrate de que la ruta a tu AppPreferences sea correcta!
+import com.carlosv.dolaraldia.AppPreferences
+import com.carlosv.dolaraldia.utils.Constants.DEBUG_PASSWORD
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentDebugPremiumBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -19,7 +23,8 @@ class DebugPremiumFragment : Fragment() {
     private var _binding: FragmentDebugPremiumBinding? = null
     private val binding get() = _binding!!
 
-    // Formateador de fechas para mostrar los datos de forma legible
+
+
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
 
     override fun onCreateView(
@@ -34,13 +39,62 @@ class DebugPremiumFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Al crear la vista, lo primero es cargar y mostrar los datos actuales
-        refreshDisplayedData()
-
-        // Configura los listeners para los botones de acción
-        setupActionButtons()
+        // ¡CAMBIO IMPORTANTE!
+        // En lugar de mostrar el contenido directamente, primero pedimos la contraseña.
+        showPasswordDialog()
     }
 
+    /**
+     * Muestra un diálogo que solicita una contraseña.
+     */
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun showPasswordDialog() {
+        // Hacemos el contenido principal INVISIBLE mientras se pide la contraseña.
+        binding.root.visibility = View.INVISIBLE
+
+        // Creamos un EditText para que el usuario pueda escribir la contraseña.
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            hint = "Ingresa la clave de acceso"
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Acceso Restringido")
+            .setMessage("Esta es una pantalla de depuración. Se requiere autorización.")
+            .setView(input) // Añadimos el EditText al diálogo
+            .setCancelable(false) // El usuario no puede cerrar el diálogo tocando fuera.
+            .setPositiveButton("Verificar") { dialog, _ ->
+                val enteredPassword = input.text.toString()
+                if (enteredPassword == DEBUG_PASSWORD) {
+                    // Contraseña CORRECTA: Muestra el contenido y configura la pantalla.
+                    Toast.makeText(requireContext(), "Acceso concedido", Toast.LENGTH_SHORT).show()
+                    initializeDebugScreen()
+                } else {
+                    // Contraseña INCORRECTA: Muestra un error y cierra el fragmento.
+                    Toast.makeText(requireContext(), "Clave incorrecta", Toast.LENGTH_SHORT).show()
+                    parentFragmentManager.popBackStack() // Cierra este fragmento.
+                }
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                // Si el usuario cancela, cierra el fragmento.
+                parentFragmentManager.popBackStack()
+            }
+            .show()
+    }
+
+    /**
+     * Inicializa la pantalla de depuración solo después de que se ha ingresado
+     * la contraseña correcta.
+     */
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun initializeDebugScreen() {
+        // Hacemos visible el contenido del fragmento.
+        binding.root.visibility = View.VISIBLE
+
+        // Ahora sí, cargamos los datos y configuramos los botones.
+        refreshDisplayedData()
+        setupActionButtons()
+    }
     /**
      * Lee los datos desde AppPreferences y actualiza los TextViews en la pantalla.
      */

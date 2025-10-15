@@ -3,17 +3,19 @@ package com.carlosv.dolaraldia.utils.premiun
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.carlosv.dolaraldia.utils.Constants.MOSTRAR_DESPUES_NRO_VECES
+import com.carlosv.dolaraldia.utils.Constants.MOSTRAR_PRIMER_DIALOGO
 
 class PremiumDialogManager(context: Context) {
 
     companion object {
         private const val PREFS_NAME = "ad_dialog_prefs"
         private const val AD_VIEW_COUNT_KEY = "ad_view_count"
+
+
         val  TAG = "PremiumDialogManager"
 
-        // El diálogo se mostrará la primera vez (conteo 1) y en el conteo máximo (20).
-        // Se reiniciará después de llegar a este número.
-        private const val AD_SHOW_THRESHOLD = 20
+
     }
 
     // Obtenemos una instancia de SharedPreferences.
@@ -24,30 +26,34 @@ class PremiumDialogManager(context: Context) {
      * @return `true` si el diálogo debe mostrarse, `false` en caso contrario.
      */
     fun shouldShowPremiumDialog(): Boolean {
-        // 1. Obtenemos el conteo actual. Si no existe, empezamos en 0.
+        // 1. Obtenemos el conteo actual de publicidades vistas.
         var currentCount = prefs.getInt(AD_VIEW_COUNT_KEY, 0)
 
-        // 2. Incrementamos el contador.
+
         currentCount++
-        Log.d(TAG, "shouldShowPremiumDialog:currentCount $currentCount ")
+        Log.d(TAG, "Conteo de anuncios para diálogo Premium: $currentCount")
 
-        // 3. Verificamos la lógica: Mostrar si es 1 O si alcanza el umbral (20).
-        val shouldShow = (currentCount == 1) || (currentCount >= AD_SHOW_THRESHOLD)
+        // 3. Guardamos el nuevo conteo inmediatamente.
+        // Esto simplifica la lógica, ya que no necesitamos guardarlo en cada 'if/else'.
+        prefs.edit().putInt(AD_VIEW_COUNT_KEY, currentCount).apply()
 
-        if (shouldShow) {
-            // Si el conteo es 20 (el umbral), lo reiniciamos a 0 para empezar de nuevo.
-            if (currentCount == AD_SHOW_THRESHOLD) {
-                prefs.edit().putInt(AD_VIEW_COUNT_KEY, 0).apply()
-            } else {
-                // Si el conteo fue 1, solo guardamos el nuevo valor (1).
-                prefs.edit().putInt(AD_VIEW_COUNT_KEY, currentCount).apply()
-            }
+        // 4. Verificamos la lógica principal:
+        // ¿El conteo es EXACTAMENTE 5? (Para la primera vez)
+        // O
+        // ¿El conteo ha alcanzado o superado el umbral de 20? (Para las veces siguientes)
+        if (currentCount == MOSTRAR_PRIMER_DIALOGO || currentCount >= MOSTRAR_DESPUES_NRO_VECES) {
+
+            // Si se va a mostrar el diálogo, reiniciamos el contador a 0.
+            // Esto funciona para ambos casos (cuando es 5 y cuando es >= 20).
+            Log.d(TAG, "¡Umbral alcanzado! Mostrando diálogo Premium y reseteando contador.")
+            prefs.edit().putInt(AD_VIEW_COUNT_KEY, 0).apply()
+
+            // Devolvemos 'true' para indicar que se debe mostrar el diálogo.
             return true
-        } else {
-            // Si no se muestra, solo guardamos el nuevo conteo.
-            prefs.edit().putInt(AD_VIEW_COUNT_KEY, currentCount).apply()
-            return false
         }
+
+        // 5. Si no se cumplió ninguna de las condiciones, no mostramos el diálogo.
+        return false
     }
 
     /**
