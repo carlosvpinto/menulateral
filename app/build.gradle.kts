@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 130
-        versionName = "PremiumCalificacion1.1"
+        versionCode = 131
+        versionName = "Widget"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
