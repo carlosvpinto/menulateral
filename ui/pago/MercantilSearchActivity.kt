@@ -68,22 +68,24 @@ class MercantilSearchActivity : AppCompatActivity() {
 
     private fun pegarDesdePortapapeles() {
 
-        // En una Actividad, usamos 'getSystemService' directamente (o 'this.getSystemService').
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
-        // Verificamos si el portapapeles tiene contenido y si es texto plano
-        if (clipboard.hasPrimaryClip() && clipboard.primaryClipDescription?.hasMimeType(
-                ClipDescription.MIMETYPE_TEXT_PLAIN) == true) {
+        if (clipboard.hasPrimaryClip() && clipboard.primaryClipDescription?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) == true) {
 
             val textoPegado = clipboard.primaryClip?.getItemAt(0)?.text?.toString()
 
             if (!textoPegado.isNullOrEmpty()) {
 
+                // Esta línea establece el texto. El EditText lo truncará si es necesario.
                 binding.editTextReference.setText(textoPegado)
-                // Opcional: movemos el cursor al final del texto pegado
-                binding.editTextReference.setSelection(textoPegado.length)
-            } else {
 
+                // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+                // Le pedimos la longitud al EditText MISMO, no al texto original del portapapeles.
+                // De esta forma, la longitud siempre será la correcta (máximo 20).
+                val longitudReal = binding.editTextReference.text?.length ?: 0
+                binding.editTextReference.setSelection(longitudReal)
+
+            } else {
                 Toast.makeText(this, "El portapapeles está vacío", Toast.LENGTH_SHORT).show()
             }
 

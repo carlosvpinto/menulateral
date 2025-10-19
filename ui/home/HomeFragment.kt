@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.graphics.Rect
 
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -27,6 +28,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.ScaleAnimation
@@ -104,6 +106,7 @@ import com.carlosv.dolaraldia.utils.ads.RewardedAdManager
 import com.carlosv.dolaraldia.utils.premiun.PremiumDialogManager
 import com.denzcoskun.imageslider.ImageSlider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
@@ -115,7 +118,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.Calendar
 
 
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
 
     private var _binding: FragmentHomeBinding? = null
 
@@ -185,8 +188,14 @@ class HomeFragment : Fragment() {
         tapCounter = 0
         Log.d("EasterEgg", "Contador de toques reseteado por tiempo.")
     }
+
+    //Boton Extendible para premium por recompensa
+    private lateinit var extendedFab: ExtendedFloatingActionButton
+
     // ¡NUEVO! Creamos una instancia del gestor de anuncios bonificados.
     private lateinit var rewardedAdManager: RewardedAdManager
+
+    private var isRewardedAdReady = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -205,13 +214,19 @@ class HomeFragment : Fragment() {
         //Llama a la función para actualizar la visibilidad del ícono premium.
         updatePremiumIconVisibility()
 
-
         visibleLayoutProxBcv += 1
 
         configurarBannerWhatsApp()
         //cargarDisponibleIOs()
         MobileAds.initialize(requireContext()) {}
         // cargarImagendelConfig()
+
+
+
+        // Inicia la precarga del anuncio.
+        binding.buttonRewardedAd.isExtended = false // Inicia contraído
+        binding.buttonRewardedAd.isEnabled = false   // Inicia deshabilitado
+        rewardedAdManager.loadAd(this)             // Inicia la carga del primer anuncio
 
 
         //PARA CARGAR ADMOB
@@ -227,7 +242,7 @@ class HomeFragment : Fragment() {
             FirebaseCrashlytics.getInstance().recordException(e)
         }
 
-
+        binding.buttonRewardedAd.isExtended = false
         setupClickListeners() // Una nueva función para organizar los listeners.
 
         // Obtén una referencia a SharedPreferences
@@ -293,6 +308,25 @@ class HomeFragment : Fragment() {
         return root
     }
 
+    override fun onAdLoaded() {
+        // El anuncio está listo. Habilitamos el botón y levantamos nuestra bandera.
+        activity?.runOnUiThread {
+            binding.buttonRewardedAd.isEnabled = true
+            binding.buttonRewardedAd.extend()
+            isRewardedAdReady = true // ¡Importante!
+        }
+    }
+
+    override fun onAdLoadFailed() {
+        // El anuncio falló. Mantenemos el botón deshabilitado y la bandera baja.
+        activity?.runOnUiThread {
+            binding.buttonRewardedAd.isEnabled = false
+            isRewardedAdReady = false // ¡Importante!
+        }
+    }
+
+
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupClickListeners() {
 
         binding.imgpremium.setOnClickListener {
@@ -300,28 +334,35 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.action_nav_home_to_premiumStatusFragment)
         }
 
-        binding.buttonRewardedAd.setOnClickListener {
-            // Le pedimos al gestor que muestre el anuncio.
-            rewardedAdManager.showAd(requireActivity(), object : RewardedAdManager.RewardListener {
-
-                override fun onRewardEarned() {
-                    // ¡Éxito! El usuario vio el video. Otorgamos la recompensa.
-                    AppPreferences.setUserAsPremium("Recompensa",4) // 4 horas
-                    Toast.makeText(requireContext(), "¡Recompensa obtenida! Disfruta de 4 horas sin publicidad.", Toast.LENGTH_LONG).show()
-
-                    // (Opcional) Actualizamos la UI inmediatamente para ocultar el ícono de premium.
-                    updatePremiumIconVisibility()
+        binding.nestedScrollView.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                if (binding.buttonRewardedAd.isExtended) {
+                    val outRect = Rect()
+                    binding.buttonRewardedAd.getGlobalVisibleRect(outRect)
+                    if (!outRect.contains(event.rawX.toInt(), event.rawY.toInt())) {
+                        binding.buttonRewardedAd.shrink()
+                    }
                 }
-
-                override fun onAdFailedToLoad() {
-                    Toast.makeText(requireContext(), "El anuncio no se pudo cargar. Intenta más tarde.", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onAdNotReady() {
-                    Toast.makeText(requireContext(), "El anuncio no está listo todavía. Intenta de nuevo en unos segundos.", Toast.LENGTH_SHORT).show()
-                }
-            })
+            }
+            if (event.action == MotionEvent.ACTION_UP) {
+                view.performClick()
+            }
+            false
         }
+
+        //Hacer clic al Botoen de recompensas de 4 horas
+        binding.buttonRewardedAd.setOnClickListener {
+
+            if (binding.buttonRewardedAd.isExtended) {
+                showPremiumRewardDialog()
+            } else {
+                // SI ESTÁ CONTRAÍDO -> Solo lo expande
+                (binding.buttonRewardedAd.extend())
+            }
+
+        }
+
+
         binding.swipeRefreshLayout.setOnRefreshListener {
             refreshAllApis()
         }
@@ -420,8 +461,128 @@ class HomeFragment : Fragment() {
         }
 
 
-        // ... (Copia aquí el resto de tus setOnClickListener de onCreateView)
     }
+
+    // ¡NUEVO! Una función dedicada para mostrar u ocultar el botón de recompensa.
+    private fun updateRewardButtonVisibility() {
+        if (AppPreferences.isUserPremiumActive()) {
+            binding.buttonRewardedAd.visibility = View.GONE // Oculta el botón
+        } else {
+            binding.buttonRewardedAd.visibility = View.VISIBLE // Muestra el botón
+        }
+    }
+
+
+    /**
+     * Muestra un diálogo informativo antes de que el usuario vea el anuncio.
+     */
+    private fun showPremiumRewardDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("¿Disfrutar sin anuncios?")
+            .setMessage("Al ver un anuncio corto, obtendrás 4 horas de la versión Premium sin publicidad.")
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setPositiveButton("Ver Anuncio") { dialog, _ ->
+
+                if (isRewardedAdReady) {
+                    showRewardedAd()
+                } else {
+                    // Este mensaje es un seguro en caso de que el usuario sea extremadamente rápido.
+                    Toast.makeText(requireContext(), "El anuncio aún no está listo, espera un momento.", Toast.LENGTH_SHORT).show()
+                }
+                binding.buttonRewardedAd.shrink()
+            }
+            .show()
+    }
+
+    // La función showRewardedAd ahora es mucho más simple
+    private fun showRewardedAd() {
+        if (!isRewardedAdReady) return
+        isRewardedAdReady = false
+        // El botón principal se oculta aquí como parte de la lógica de visibilidad general
+        updateRewardButtonVisibility()
+
+        rewardedAdManager.showAd(requireActivity(), object : RewardedAdManager.RewardListener {
+            override fun onRewardEarned() {
+                // La recompensa se da, pero el diálogo y la recarga ocurren al cerrar.
+            }
+
+            override fun onAdDismissed() {
+                // ¡LÓGICA PRINCIPAL! Esto se ejecuta cuando el usuario cierra el anuncio.
+                handleAdDismissed()
+            }
+
+            override fun onAdFailedToLoad() {
+                Toast.makeText(requireContext(), "El anuncio no se pudo mostrar. Intenta más tarde.", Toast.LENGTH_SHORT).show()
+                // Si falla al mostrarse, intentamos cargar otro.
+                rewardedAdManager.loadAd(this@HomeFragment)
+            }
+
+            override fun onAdNotReady() {
+                // Este caso es ahora casi imposible, pero por si acaso, intentamos recargar.
+                Toast.makeText(requireContext(), "El anuncio no está listo todavía.", Toast.LENGTH_SHORT).show()
+                rewardedAdManager.loadAd(this@HomeFragment)
+            }
+        })
+    }
+
+    // ¡NUEVO! Función que maneja la lógica DESPUÉS de ver un anuncio.
+    private fun handleAdDismissed() {
+        // Averiguamos cuántos videos ha visto el usuario.
+        val videosWatched = AppPreferences.getRewardVideosWatched()
+
+        if (videosWatched == 0) {
+            // Es la primera vez que ve un video en este ciclo. Le damos 4 horas.
+            AppPreferences.setUserAsPremium("Recompensa", 4)
+            showSecondChanceDialog() // Le ofrecemos la oportunidad de ver otro por 12 horas más.
+        } else {
+            // Ya había visto uno, así que este es el segundo. Le damos 12 horas adicionales.
+            AppPreferences.setUserAsPremium("Recompensa", 12)
+            showFinalRewardDialog() // Le informamos que la recompensa total fue aplicada.
+        }
+
+        // En ambos casos, actualizamos la UI para ocultar el botón.
+        updateRewardButtonVisibility()
+    }
+
+    // ¡NUEVO! Diálogo que aparece después del PRIMER video.
+    private fun showSecondChanceDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("¡Recompensa Obtenida!")
+            .setMessage("Disfruta de 4 horas sin publicidad. ¿Quieres ver otro anuncio ahora para extender tu recompensa a 16 horas en total?")
+            .setNegativeButton("No, gracias") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setPositiveButton("¡Claro!") { dialog, _ ->
+                // El usuario quiere ver el segundo video. Lo precargamos y lo mostramos.
+                binding.buttonRewardedAd.isEnabled = false // Deshabilitamos temporalmente
+                rewardedAdManager.loadAd(object : RewardedAdManager.AdLoadListener {
+                    override fun onAdLoaded() {
+                        isRewardedAdReady = true
+                        showRewardedAd() // Mostramos el segundo anuncio inmediatamente
+                    }
+                    override fun onAdLoadFailed() {
+                        Toast.makeText(requireContext(), "No se pudo cargar el segundo anuncio.", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
+            .setCancelable(false) // Evita que el usuario lo cierre tocando fuera.
+            .show()
+    }
+
+    // ¡NUEVO! Diálogo que aparece después del SEGUNDO video.
+    private fun showFinalRewardDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("¡Recompensa Máxima!")
+            .setMessage("¡Excelente! Ahora tienes un total de 16 horas sin publicidad. ¡Disfrútalo!")
+            .setPositiveButton("Entendido") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
 
 
     fun finalizarCarga() {
@@ -440,6 +601,8 @@ class HomeFragment : Fragment() {
         // Ocultar el ProgressBar
         binding.progressBarBoton.visibility = View.VISIBLE
     }
+
+
 
     //Muestra el reposense segun seal el Swict
     private fun cambioSwictValor(responseMostrar: ApiOficialTipoCambio?, diaActualTem: Boolean) {
@@ -522,64 +685,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-
-    private fun irAlArticulo() {
-        if (!linkAfiliado.isNullOrEmpty()) {
-
-
-            val aliexpressPackage = "com.alibaba.aliexpresshd"
-            val amazonPackage = "com.amazon.mShop.android.shopping"
-            val packageManager = requireActivity().packageManager
-
-            // Intent implícito para abrir el enlace en un navegador web
-            val intentWeb = Intent(Intent.ACTION_VIEW, Uri.parse(linkAfiliado))
-
-            // Verifica si AliExpress está instalado
-            val isAliExpressInstalled = try {
-                packageManager.getPackageInfo(aliexpressPackage, 0)
-                true
-            } catch (e: PackageManager.NameNotFoundException) {
-                false
-            }
-
-            // Verifica si Amazon está instalado
-            val isAmazonInstalled = try {
-                packageManager.getPackageInfo(amazonPackage, 0)
-                true
-            } catch (e: PackageManager.NameNotFoundException) {
-                false
-            }
-
-            // Intent explícito para abrir el enlace en la app de AliExpress
-            if (isAliExpressInstalled) {
-                val intentAliExpress = Intent(Intent.ACTION_VIEW, Uri.parse(linkAfiliado))
-                intentAliExpress.`package` = aliexpressPackage
-
-                // Verifica si hay alguna actividad que pueda manejar este intent
-                if (intentAliExpress.resolveActivity(packageManager) != null) {
-                    startActivity(intentAliExpress)
-                    return
-                }
-            }
-
-            // Intent explícito para abrir el enlace en la app de Amazon
-            if (isAmazonInstalled) {
-                val intentAmazon = Intent(Intent.ACTION_VIEW, Uri.parse(linkAfiliado))
-                intentAmazon.`package` = amazonPackage
-
-                // Verifica si hay alguna actividad que pueda manejar este intent
-                if (intentAmazon.resolveActivity(packageManager) != null) {
-                    startActivity(intentAmazon)
-                    return
-                }
-            }
-
-            // Si ninguna de las aplicaciones está instalada o no pueden manejar el intent, abre en navegador
-            startActivity(intentWeb)
-        } else {
-            Log.d(TAG, "irAlArticulo: linkAfiliado está vacío o es nulo.")
-        }
-    }
 
 
 
@@ -673,17 +778,8 @@ class HomeFragment : Fragment() {
         }
 
 
-        fun getResponse(): ApiOficialTipoCambio? {
-            return responseApiNew
-        }
-
         fun getResponseEuroTipoCambio(): ApiOficialTipoCambio? {
             return responseApiEuroBcv
-        }
-
-
-        fun getResponseApiAlCambio(): ApiOficialTipoCambio? {
-            return responseApiNew
         }
 
 
@@ -695,16 +791,9 @@ class HomeFragment : Fragment() {
             responseApiOriginal = newResponse
         }
 
-        fun setResponseApiAlCambio(newResponse: ApiOficialTipoCambio) {
-            responseApiNew = newResponse
-        }
 
         fun setResponseApiEurosTipoCambio(ResponseEuroBcv: ApiOficialTipoCambio) {
             responseApiEuroBcv = ResponseEuroBcv
-        }
-
-        fun setResponseHistory(newResponse: ApiOficialTipoCambio) {
-            responseApiNew = newResponse
         }
 
         fun setResponseCripto(newResponse: ApiModelResponseCripto) {
@@ -727,18 +816,9 @@ class HomeFragment : Fragment() {
             responseHistoryBcv = ResponseHistory
         }
 
-        fun setResponseHistoryParalelo(ResponseHistory: HistoryModelResponse) {
-            responseHistoryParalelo = ResponseHistory
-        }
-
         fun getResponseHistoryBcv(): HistoryModelResponse? {
             return responseHistoryBcv
         }
-
-        fun getResponseHistoryParalelo(): HistoryModelResponse? {
-            return responseHistoryParalelo
-        }
-
 
         fun recuperarEuro(context: Context): Float {
             val prefs: SharedPreferences =
@@ -1613,6 +1693,7 @@ class HomeFragment : Fragment() {
         //   eliminarListener()
         _binding = null
     }
+
     private fun updatePremiumIconVisibility() {
         // Usamos nuestra función centralizada en AppPreferences.
         if (AppPreferences.isUserPremiumActive()) {
@@ -1656,6 +1737,9 @@ class HomeFragment : Fragment() {
 
         comenzarCarga()
         updatePremiumIconVisibility()
+
+        //Elimina el boton de anuncios por recompensa
+        updateRewardButtonVisibility()
    
         // La lógica principal ahora está aquí y es la única que decide si llamar a la red.
         if (AppPreferences.shouldRefreshApi()) {

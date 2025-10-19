@@ -33,8 +33,21 @@ object AppPreferences {
     private const val PREMIUM_START_DATE = "premium_start_date"
     private const val PREMIUM_EXPIRATION_DATE = "premium_expiration_date"
 
+    // ¡NUEVO! Clave para contar cuántos videos ha visto el usuario en el ciclo actual.
+    private const val REWARD_VIDEOS_WATCHED = "reward_videos_watched"
+
     fun init(context: Context) {
         preferences = context.getSharedPreferences(NAME, MODE)
+    }
+
+    // ¡NUEVO! Devuelve el número de videos que el usuario ha visto para la recompensa actual.
+    fun getRewardVideosWatched(): Int {
+        return preferences.getInt(REWARD_VIDEOS_WATCHED, 0)
+    }
+
+    // ¡NUEVO! Resetea el contador de videos. Se llamará cuando la recompensa expire.
+    private fun resetRewardVideosWatched() {
+        preferences.edit().remove(REWARD_VIDEOS_WATCHED).apply()
     }
 
     /**
@@ -94,19 +107,20 @@ object AppPreferences {
      */
     fun isUserPremiumActive(): Boolean {
         val isPremium = preferences.getBoolean(IS_USER_PREMIUM, false)
-        if (!isPremium) {
-            return false // Si nunca fue premium, no está activo.
-        }
+        if (!isPremium) return false
 
         val expirationDate = preferences.getLong(PREMIUM_EXPIRATION_DATE, 0L)
+        if (expirationDate == -1L) return true
 
-        // Si la fecha de vencimiento es -1, es vitalicio y siempre está activo.
-        if (expirationDate == -1L) {
-            return true
+        val isActive = expirationDate > System.currentTimeMillis()
+
+        // ¡NUEVO! Si la recompensa acaba de expirar, limpiamos el contador de videos.
+        if (!isActive && getPremiumPlan() == "Recompensa") {
+            clearPremiumStatus() // Limpia el estado premium
+            resetRewardVideosWatched() // Y el contador de videos
         }
 
-        // Comprueba si la fecha de vencimiento es en el futuro.
-        return expirationDate > System.currentTimeMillis()
+        return isActive
     }
 
     // --- FUNCIONES DE LECTURA (GETTERS) OPCIONALES PERO RECOMENDADAS ---
@@ -129,26 +143,34 @@ object AppPreferences {
             remove(PREMIUM_PLAN_NAME)
             remove(PREMIUM_START_DATE)
             remove(PREMIUM_EXPIRATION_DATE)
+            remove(REWARD_VIDEOS_WATCHED)
             apply()
         }
     }
 
 
-    //GUARDA EL TIPO DE PLAN Y LA FECHA DE INICIO Y VENCIMIENTO********************
+    // --- FUNCIÓN setUserAsPremium MODIFICADA PARA SER MÁS INTELIGENTE ---
     fun setUserAsPremium(plan: String?, durationInHours: Int? = null) {
         val planName = plan ?: "Desconocido"
         val editor = preferences.edit()
 
         val calendar = Calendar.getInstance()
-        val startDate = calendar.timeInMillis
         var expirationDate: Long
 
-        // --- LÓGICA DE CÁLCULO DE VENCIMIENTO ---
+        // ¡NUEVA LÓGICA! Si ya hay una recompensa activa, SUMAMOS el tiempo.
+        if (isUserPremiumActive() && getPremiumPlan() == "Recompensa") {
+            // Partimos de la fecha de expiración que ya existe.
+            calendar.timeInMillis = getPremiumExpirationDate()
+        }
+
+        val startDate = calendar.timeInMillis // La fecha de inicio ahora puede ser una fecha futura.
 
         if (durationInHours != null && durationInHours > 0) {
-            // Caso 1: Es un plan temporal definido en horas.
             calendar.add(Calendar.HOUR, durationInHours)
             expirationDate = calendar.timeInMillis
+            // ¡NUEVO! Incrementamos el contador de videos vistos.
+            val videosWatched = getRewardVideosWatched() + 1
+            editor.putInt(REWARD_VIDEOS_WATCHED, videosWatched)
         } else {
             // Caso 2: Es un plan fijo basado en el nombre.
             when (planName) {

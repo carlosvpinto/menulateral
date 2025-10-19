@@ -105,6 +105,7 @@ import com.google.android.material.textfield.TextInputLayout
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import android.provider.Settings
+import androidx.core.net.toUri
 import com.google.firebase.messaging.FirebaseMessaging
 
 
@@ -269,22 +270,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         solicitarPermisoDeNotificaciones()
+        // ¡AQUÍ ESTÁ LA LÓGICA CLAVE!
+        // Comprueba si la actividad fue iniciada por un Intent que contiene datos.
+        handleDeepLink(intent)
 
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                Log.w("FCM_TOKEN", "Fetching FCM registration token failed", task.exception)
-                return@addOnCompleteListener
-            }
-
-            // Obtén el nuevo token de registro de FCM
-            val token = task.result
-
-            // ¡ESTA ES LA PARTE CLAVE PARA DEPURAR!
-            // Imprime el token en Logcat para que puedas copiarlo.
-            Log.d("FCM_TOKEN", "Este es el token del dispositivo: $token")
-
-
-        }
 
         // --- El resto de tu lógica de onCreate ---
         MobileAds.initialize(this) {}
@@ -293,7 +282,26 @@ class MainActivity : AppCompatActivity() {
         movilidadPantalla()
     }
 
-    //PERMISOS DE NOTIDICACION
+    // Esta función se llama si la actividad ya estaba abierta y recibe una nueva notificación.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        // Buscamos nuestra clave personalizada "deep_link" en los extras del Intent.
+        val deepLinkUriString = intent?.getStringExtra("deep_link")
+
+        if (deepLinkUriString != null) {
+            Log.d("DeepLink", "Recibido deep link: $deepLinkUriString")
+            // Usamos el NavController para navegar a la URI.
+            // El Navigation Component se encargará de encontrar el fragmento correcto
+            // y pasarle los argumentos.
+            navController.navigate(deepLinkUriString.toUri())
+        }
+    }
+
+    //PERMISOS DE NOTIFICACION
     private fun solicitarPermisoDeNotificaciones() {
         // La lógica solo se ejecuta en Android 13 (API 33) o superior.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
