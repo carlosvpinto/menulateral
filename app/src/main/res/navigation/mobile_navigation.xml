@@ -24,7 +24,6 @@
     </fragment>
 
 
-
     <dialog
         android:id="@+id/nav_more"
         android:name="com.carlosv.dolaraldia.utils.MoreOptionsBottomSheetFragment"
@@ -36,18 +35,42 @@
         android:id="@+id/nav_platforms"
         android:name="com.carlosv.dolaraldia.ui.platforms.PlatformRatesFragment"
         android:label="@string/precio_en_plataformas"
-        tools:layout="@layout/fragment_platform_rates" />
+        tools:layout="@layout/fragment_platform_rates">
+    <!-- Definimos un argumento que este fragmento puede recibir -->
+    <argument
+        android:name="noticiaId"
+        app:argType="string" />
+
+    <!-- ¡AQUÍ ESTÁ LA MAGIA DEL DEEP LINK! -->
+    <!-- Definimos una URI única para este destino. -->
+    <deepLink
+        android:id="@+id/deepLinkDetalleNoticia"
+        app:uri="dolaraldia://noticia/{noticiaId}" />
+    </fragment>
+
 
     <fragment
         android:id="@+id/nav_Euros"
         android:name="com.carlosv.dolaraldia.ui.acerca.EuroFragment"
         android:label="@string/menu_Euros"
         tools:layout="@layout/fragment_paginas" />
+
     <fragment
         android:id="@+id/nav_bancos"
         android:name="com.carlosv.dolaraldia.ui.bancos.BancosFragment"
         android:label="@string/menu_Bancos"
-        tools:layout="@layout/fragment_bancos" />
+        tools:layout="@layout/fragment_bancos">
+
+        <!-- ¡AQUÍ AÑADIMOS EL DEEP LINK! -->
+        <!-- Definimos una URI única para este destino.
+             Puedes usar cualquier nombre, pero debe ser coherente. -->
+        <deepLink
+            android:id="@+id/deepLinkBancos"
+            app:uri="dolaraldia://fragment/bancos" />
+
+    </fragment>
+
+
     <fragment
         android:id="@+id/nav_acerca"
         android:name="com.carlosv.dolaraldia.ui.acerca.AcercaFragment"
@@ -100,12 +123,14 @@
         android:label="Mi Suscripción"
         tools:layout="@layout/fragment_premium_status" />
 
+    <!--
+
     <fragment
         android:id="@+id/nav_purchase_premium"
         android:name="com.carlosv.dolaraldia.ui.pago.PremiumOptionsBottomSheet"
         android:label="Opcion Suscripcion"
         tools:layout="@layout/fragment_premium_status" />
 
-
+-->
 
    </navigation>

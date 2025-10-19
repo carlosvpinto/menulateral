@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 131
-        versionName = "Widget"
+        versionCode = 133
+        versionName = "WidgetyPermisos1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -51,6 +51,7 @@ android {
             buildConfigField("String", "MERCANTIL_INTEGRATOR_ID", "\"${localProperties.getProperty("MERCANTIL_INTEGRATORID")}\"")
             buildConfigField("String", "MERCANTIL_TERMINAL_ID", "\"${localProperties.getProperty("MERCANTIL_TERMINALID")}\"")
             buildConfigField("String", "MERCANTIL_PHONE_NUMBER", "\"${localProperties.getProperty("MERCANTIL_PHONE_NUMBER")}\"")
+            buildConfigField("String", "FCM_SERVER_KEY", "\"${localProperties.getProperty("FCM_SERVER_KEY")}\"")
         }
 
 
