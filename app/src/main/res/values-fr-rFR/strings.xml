@@ -154,4 +154,5 @@
     <string name="c_dula_de_identidad">Carte d\'Identité</string>
     <string name="fecha_de_la_transacci_n">Date de la Transaction</string>
     <string name="solo_uni_europea">Solo disponible para usuarios en la Unión Europea.</string>
+    <string name="tasa_usdt">Tasa Usdt</string>
 </resources>

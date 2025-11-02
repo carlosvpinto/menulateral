@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 133
-        versionName = "WidgetyPermisos1.0"
+        versionCode = 134
+        versionName = "UsdtRecompensa"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
