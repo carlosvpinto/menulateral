@@ -155,4 +155,5 @@
     <string name="fecha_de_la_transacci_n">Transaction Date</string>
     <string name="solo_uni_europea">Solo disponible para usuarios en la Unión Europea.</string>
     <string name="tasa_usdt">Tasa Usdt</string>
+    <string name="act_usdt">Act. USDT</string>
 </resources>

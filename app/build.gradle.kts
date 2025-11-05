@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 134
-        versionName = "UsdtRecompensa"
+        versionCode = 140
+        versionName = "Reparacion"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -208,7 +208,7 @@ dependencies {
 
 
 
-    
+
 }
 
 // Aplicar el plugin de Google Services fuera del bloque dependencies
