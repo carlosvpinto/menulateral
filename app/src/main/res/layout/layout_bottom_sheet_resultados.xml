@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Cabecera -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/an_lisis_de_cambio"
+        android:layout_gravity="center"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvResumenBase"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="Calculado sobre: $100.00 USD"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- SECCION  (EURO) -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/vs_tasa_euro_bcv"
+        android:textSize="12sp"
+        android:textStyle="bold"
+
+        android:layout_marginTop="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        android:padding="12dp"
+        android:background="@drawable/borde"
+  > <!-- Opcional: crea un drawable o quita esta linea -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/diferencia_en_bs"
+                />
+            <TextView
+                android:id="@+id/tvDifBsEuro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="+ 500.00 Bs"
+                android:textStyle="bold"
+                />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text= "@string/dif_porcentual"
+                />
+            <TextView
+                android:id="@+id/tvPorcEuro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="15.4%"
+                android:textStyle="bold"
+               />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+
+        android:layout_marginVertical="16dp"/>
+
+    <!-- SECCION USDT -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/vs_tasa_usdt_crypto"
+        android:textSize="12sp"
+        android:textStyle="bold"
+    />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/borde"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/diferencia_en_bs"
+              />
+            <TextView
+                android:id="@+id/tvDifBsUsdt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="+ 480.00 Bs"
+                android:textStyle="bold"
+                />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/dif_porcentual"
+            />
+            <TextView
+                android:id="@+id/tvPorcUsdt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="14.2%"
+                android:textStyle="bold"
+                />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnCloseSheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Entendido"
+        android:layout_marginTop="24dp"
+       />
+
+</LinearLayout>

@@ -437,6 +437,7 @@ class MyApplication :
         fun onAdLoaded()
     }
 
+
     fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
         this.adLoadCallback = onShowAdCompleteListener
         appOpenAdManager.showAdIfAvailable(activity, onShowAdCompleteListener)

@@ -37,18 +37,21 @@
                     android:layout_width="80dp"
                     android:layout_height="20dp"
                     android:layout_marginBottom="4dp"
+                    android:contentDescription="@string/premiun_activa"
                     android:scaleType="fitCenter"
                     android:src="@drawable/premiun_ana"
                     app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.903"
+
                     app:layout_constraintStart_toStartOf="parent" />
 
                 <ImageView
                     android:id="@+id/imglogo"
                     android:layout_width="80dp"
                     android:layout_height="80dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="4dp"
+
                     android:clipToOutline="true"
                     android:scaleType="fitCenter"
                     android:src="@drawable/logoredondo"
@@ -63,13 +66,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
+                    android:layout_marginTop="3dp"
                     android:background="@drawable/borde"
                     android:orientation="vertical"
                     android:padding="4dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/imglogo"
-                  >
+                    >
 
                     <!-- Ya no necesitamos el linearLayout4, el contenido va directamente aquí -->
 
@@ -118,31 +122,41 @@
                             app:layout_constraintTop_toBottomOf="@+id/txtUsdt"
                             app:layout_constraintWidth_percent="0.4" />
 
-                        <LinearLayout
-                            android:id="@+id/linearVariacionUsdt"
+                        <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:orientation="horizontal"
-                            app:layout_constraintEnd_toEndOf="@+id/btnUsdt"
-                            app:layout_constraintStart_toStartOf="@+id/btnUsdt"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@+id/btnUsdt">
 
                             <ImageView
                                 android:id="@+id/imgflechaUsdt"
                                 android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:src="@drawable/ic_flechaverde" />
+                                android:layout_height="0dp"
+                                android:adjustViewBounds="true"
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/ic_flechaverde"
+
+                                app:layout_constraintBottom_toBottomOf="@+id/txtVariacionUsdt"
+                                app:layout_constraintEnd_toStartOf="@+id/txtVariacionUsdt"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="@+id/txtVariacionUsdt" />
 
                             <TextView
                                 android:id="@+id/txtVariacionUsdt"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="4dp"
-                                android:textSize="10sp"
                                 android:text="0.0"
-                                android:textStyle="bold" />
-                        </LinearLayout>
+                                android:textSize="11sp"
+
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintStart_toEndOf="@+id/imgflechaUsdt"
+                                app:layout_constraintTop_toTopOf="parent"
+                                tools:ignore="HardcodedText,SmallSp" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <!--
@@ -161,31 +175,31 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1.5"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                            android:gravity="center"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/txtPrecioBcv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/tasa_bcv"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
+                            <TextView
+                                android:id="@+id/txtPrecioBcv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/tasa_bcv"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
 
-                        <ToggleButton
-                            android:id="@+id/btnBcv"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/toggle_background"
-                            android:button="@drawable/toggle_button"
-                            android:checked="true"
-                            android:drawableStart="@drawable/ic_bssvg"
-                            android:drawablePadding="2dp"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:textColor="@drawable/toggle_text_colors"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            <ToggleButton
+                                android:id="@+id/btnBcv"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/toggle_background"
+                                android:button="@drawable/toggle_button"
+                                android:checked="true"
+                                android:drawableStart="@drawable/ic_bssvg"
+                                android:drawablePadding="2dp"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:textColor="@drawable/toggle_text_colors"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
 
                             <androidx.constraintlayout.widget.ConstraintLayout
                                 android:layout_width="wrap_content"
@@ -194,108 +208,108 @@
                                 <ImageView
                                     android:id="@+id/imgflechaBcv"
                                     android:layout_width="wrap_content"
-                                      android:layout_height="0dp"
-                                android:src="@drawable/ic_flechaverde"
-                                android:scaleType="fitCenter"
-                                android:adjustViewBounds="true"
+                                    android:layout_height="0dp"
+                                    android:src="@drawable/ic_flechaverde"
+                                    android:scaleType="fitCenter"
+                                    android:adjustViewBounds="true"
 
-                                app:layout_constraintTop_toTopOf="@+id/txtVariacionBcv"
-                                app:layout_constraintBottom_toBottomOf="@+id/txtVariacionBcv"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintEnd_toStartOf="@+id/txtVariacionBcv" />
+                                    app:layout_constraintTop_toTopOf="@+id/txtVariacionBcv"
+                                    app:layout_constraintBottom_toBottomOf="@+id/txtVariacionBcv"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintEnd_toStartOf="@+id/txtVariacionBcv" />
 
                                 <TextView
                                     android:id="@+id/txtVariacionBcv"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="0.0"
-                                    android:textSize="10sp"
+                                    android:textSize="11sp"
                                     android:layout_marginStart="4dp"
 
 
-                                app:layout_constraintStart_toEndOf="@+id/imgflechaBcv"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintStart_toEndOf="@+id/imgflechaBcv"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent" />
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
-                    </LinearLayout>
+                        </LinearLayout>
 
-                    <!-- Columna Central (SeekBar) - REDUCIMOS EL PESO -->
-                    <SeekBar
-                        android:id="@+id/seekBar"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.5"
-                    android:max="2"
-                    android:progress="0"
-                    android:thumbTint="?attr/colorPrimary" />
+                        <!-- Columna Central (SeekBar) - REDUCIMOS EL PESO -->
+                        <SeekBar
+                            android:id="@+id/seekBar"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0.5"
+                            android:max="2"
+                            android:progress="0"
+                            android:thumbTint="?attr/colorPrimary" />
 
-                    <!-- Columna Derecha (EURO) - AUMENTAMOS EL PESO -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1.5"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/txtPrecioParalelo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/tasa_euro"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <ToggleButton
-                        android:id="@+id/btnEuroP"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/toggle_background"
-                        android:button="@drawable/toggle_button"
-                        android:checked="false"
-                        android:drawableStart="@drawable/ic_bssvg"
-                        android:drawablePadding="4dp"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:textColor="@drawable/toggle_text_colors"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content">
-
-                            <ImageView
-                                android:id="@+id/imgflechaEuro"
-                                android:layout_width="wrap_content"
-                                android:layout_height="0dp"
-                                android:src="@drawable/ic_flechaverde"
-                                android:scaleType="fitCenter"
-                                android:adjustViewBounds="true"
-
-                                app:layout_constraintTop_toTopOf="@+id/txtVariacionEuro"
-                                app:layout_constraintBottom_toBottomOf="@+id/txtVariacionEuro"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintEnd_toStartOf="@+id/txtVariacionEuro" />
+                        <!-- Columna Derecha (EURO) - AUMENTAMOS EL PESO -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.5"
+                            android:gravity="center"
+                            android:orientation="vertical">
 
                             <TextView
-                                android:id="@+id/txtVariacionEuro"
+                                android:id="@+id/txtPrecioParalelo"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="0.0"
-                                android:textSize="10sp"
-                                android:layout_marginStart="4dp"
+                                android:text="@string/tasa_euro"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <ToggleButton
+                                android:id="@+id/btnEuroP"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/toggle_background"
+                                android:button="@drawable/toggle_button"
+                                android:checked="false"
+                                android:drawableStart="@drawable/ic_bssvg"
+                                android:drawablePadding="4dp"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:textColor="@drawable/toggle_text_colors"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content">
+
+                                <ImageView
+                                    android:id="@+id/imgflechaEuro"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="0dp"
+                                    android:src="@drawable/ic_flechaverde"
+                                    android:scaleType="fitCenter"
+                                    android:adjustViewBounds="true"
+
+                                    app:layout_constraintTop_toTopOf="@+id/txtVariacionEuro"
+                                    app:layout_constraintBottom_toBottomOf="@+id/txtVariacionEuro"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintEnd_toStartOf="@+id/txtVariacionEuro" />
+
+                                <TextView
+                                    android:id="@+id/txtVariacionEuro"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0.0"
+                                    android:textSize="11sp"
+                                    android:layout_marginStart="4dp"
 
 
-                                app:layout_constraintStart_toEndOf="@+id/imgflechaEuro"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintStart_toEndOf="@+id/imgflechaEuro"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent" />
 
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-                </LinearLayout>
-            </LinearLayout>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+                        </LinearLayout>
+                    </LinearLayout>
 
                     <!-- Contenedor para los campos de texto y el botón de comparar -->
                     <LinearLayout
@@ -349,6 +363,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="4dp"
+                                    android:contentDescription="@string/copiat_monto_dolar"
                                     android:background="@drawable/button_shape"
                                     android:src="@drawable/ic_copy_24" />
                             </LinearLayout>
@@ -385,7 +400,8 @@
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="4dp"
                                     android:background="@drawable/button_shape"
-                                    android:src="@drawable/ic_copy_24" />
+                                    android:src="@drawable/ic_copy_24"
+                                    android:contentDescription="@string/copiar_monto_bol_vares" />
                             </LinearLayout>
                         </LinearLayout>
 
@@ -402,9 +418,12 @@
                                 android:id="@+id/imgVerDifBs"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:minWidth="48dp"
+                                 android:minHeight="48dp"
                                 android:background="@drawable/button_shape"
                                 android:src="@drawable/ic_comparar"
-                                android:tooltipText="@string/tool_diferencia" />
+                                android:tooltipText="@string/tool_diferencia"
+                                android:contentDescription="@string/tool_diferencia"/>
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
@@ -458,7 +477,7 @@
                         android:layout_height="match_parent"
                         android:layout_marginLeft="8dp"
 
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="4dp"
                         android:orientation="horizontal"
                         android:visibility="visible">
 
@@ -467,6 +486,7 @@
                             android:layout_height="wrap_content"
                             android:textSize="10sp"
                             android:layout_weight="0.5"
+                            android:textStyle="bold"
                             android:gravity="right"
                             android:text="@string/actualizacion" />
 
@@ -497,6 +517,7 @@
                             android:layout_height="wrap_content"
                             android:textSize="10sp"
                             android:layout_weight="0.5"
+                            android:textStyle="bold"
                             android:gravity="right"
                             android:text="@string/act_usdt" />
 
@@ -525,7 +546,7 @@
                         android:foregroundGravity="center"
                         android:gravity="center"
                         android:orientation="horizontal"
-                        android:visibility="visible">
+                        android:visibility="gone">
 
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -568,7 +589,7 @@
                             style="@style/Widget.Material3.FloatingActionButton.Primary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="8dp"
                             android:contentDescription="@string/actualizar_tasas"
                             app:elevation="2dp"
                             app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"

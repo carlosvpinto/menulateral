@@ -5,7 +5,6 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import com.carlosv.dolaraldia.utils.ShakeDetector
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -19,7 +18,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Rect
 
@@ -37,8 +35,6 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.view.animation.ScaleAnimation
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageButton
@@ -52,39 +48,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.ApiService
-
-import com.carlosv.dolaraldia.provider.ImagenProvider
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHomeBinding
-import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import org.jsoup.Jsoup
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.io.IOException
-import java.security.KeyManagementException
 import java.text.DecimalFormat
-import java.security.NoSuchAlgorithmException
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
 import java.util.Date
-import javax.net.ssl.*
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
@@ -93,63 +72,46 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 
 import com.carlosv.dolaraldia.AppPreferences
-
-import com.carlosv.dolaraldia.model.FCMBody
-import com.carlosv.dolaraldia.model.FCMResponse
 import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiOficialTipoCambio
-import com.carlosv.dolaraldia.model.apicontoken.ApiConTokenResponse
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseCripto
 import com.carlosv.dolaraldia.model.apicontoken2.ApiModelResponseBCV
 import com.carlosv.dolaraldia.model.clickAnuncios.ClickAnunicosModel
-import com.carlosv.dolaraldia.model.controlPublicidad.ConfigImagenModel
 import com.carlosv.dolaraldia.model.history.HistoryModelResponse
 import com.carlosv.dolaraldia.provider.ClickAnuncioProvider
-import com.carlosv.dolaraldia.provider.RegistroPubliProvider
-import com.carlosv.dolaraldia.services.NotificationProvider
 import com.carlosv.dolaraldia.utils.Constants
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnError
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnSuccess
 import com.carlosv.dolaraldia.utils.ads.RewardedAdManager
-import com.carlosv.dolaraldia.utils.premiun.PremiumDialogManager
-import com.denzcoskun.imageslider.ImageSlider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.ArrayList
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.Calendar
 import android.graphics.Typeface
-import androidx.core.view.ViewCompat
+import androidx.core.app.NotificationCompat.getColor
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.switchmaterial.SwitchMaterial
+
 
 
 class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
 
     private var _binding: FragmentHomeBinding? = null
 
-    private val isMobileAdsInitializeCalled = AtomicBoolean(false)
+
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null")
     private var isFragmentAttached: Boolean = false
-    private lateinit var shakeDetector: ShakeDetector
-    private var snackbar: Snackbar? = null
-    private var snackbarInfo: Snackbar? = null
 
+    private var snackbar: Snackbar? = null
 
     var url: String? = null
-    var nombreAnuncio: String? = null
     var pagina: String? = null
-    var linkAfiliado: String? = null
-    private val imagenConfProvider = ImagenProvider()
-    private val registroPublicidad = RegistroPubliProvider()
 
     private val clickAnuncioProvider = ClickAnuncioProvider()
-    private var imageConfigListener: ListenerRegistration? = null
-    private var configImageModels = ArrayList<ConfigImagenModel>()
 
     private var valorActualParalelo: Double? = 0.0
     private var valorActualEuro: Double? = 0.0
@@ -159,8 +121,6 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
     lateinit var mAdView: AdView
 
     private lateinit var layout: LinearLayout
-    private var diferenciaDolares = 0.0
-    private var diferenciaBs = 0.0
 
     private var repeatCount = 0
 
@@ -168,24 +128,12 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
 
     private var TAG = "HomeFragment"
 
-
-    private var interstitial: InterstitialAd? = null
-
-    private var imageSlider: ImageSlider? = null
-
     lateinit var navigation: BottomNavigationView
 
-    lateinit var ResponseDelBCv: ApiConTokenResponse
-    lateinit var resposeVerificar: ApiConTokenResponse
     private var visibleLayoutProxBcv = 0
 
     private var diaActual: Boolean= false
 
-    private val notificationProvider = NotificationProvider()
-
-    private val premiumDialogManager: PremiumDialogManager by lazy {
-        PremiumDialogManager(requireContext())
-    }
 
     // 1. Definimos cuántos toques son necesarios.
     private val SECRET_TAP_COUNT = 7
@@ -200,8 +148,6 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         Log.d("EasterEgg", "Contador de toques reseteado por tiempo.")
     }
 
-    //Boton Extendible para premium por recompensa
-    private lateinit var extendedFab: ExtendedFloatingActionButton
 
     // ¡NUEVO! Creamos una instancia del gestor de anuncios bonificados.
     private lateinit var rewardedAdManager: RewardedAdManager
@@ -323,12 +269,19 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         return root
     }
 
+    // VERSIÓN CORREGIDA Y SEGURA
     override fun onAdLoaded() {
-        // El anuncio está listo. Habilitamos el botón y levantamos nuestra bandera.
-        activity?.runOnUiThread {
-            binding.buttonRewardedAd.isEnabled = true
-            binding.buttonRewardedAd.extend()
-            isRewardedAdReady = true // ¡Importante!
+        // El anuncio está listo.
+
+        // Añadimos la misma comprobación de seguridad.
+        // El bloque 'let' solo se ejecutará si la vista todavía existe.
+        _binding?.let { safeBinding ->
+            activity?.runOnUiThread {
+                // Usamos 'safeBinding' para acceder a las vistas de forma segura.
+                safeBinding.buttonRewardedAd.isEnabled = true
+                safeBinding.buttonRewardedAd.extend()
+                isRewardedAdReady = true // ¡Importante!
+            }
         }
     }
 
@@ -720,7 +673,6 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
             llenarCampoBCVyUSDT(responseMostrar,diaActualTem)
             llenarDolarEuro(responseMostrar,diaActualTem)
             //llenarCampoPromedio(responseMostrar)
-            val valorDolar = valorBotonActivo()
             // Actualiza la multiplicación con el valor
 
 
@@ -731,54 +683,14 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
                 binding.btnBcv,                   // Otras vistas que solo giran
                 binding.btnEuroP                  // ...
             )
-//            animacionFlip( binding.btnBcv,
-//                binding.btnEuroP,
-//                binding.txtFechaActualizacionBcv)
-//            animacionCrecerBoton(
-//                binding.btnBcv,
-//                binding.btnEuroP,
-//                binding.txtFechaActualizacionBcv
-//            )
-          //  actualzarMultiplicacion(valorDolar)
         }
 
     }
-
-
-    //Devuelve el Valor del Boton Activo
-    private fun valorBotonActivo(): Double {
-        val btnBcv = binding.btnBcv
-        val btnParalelo = binding.btnEuroP
-
-
-        // Función para convertir el texto a Double si es posible, o devolver 0.0
-        fun parseToDouble(text: String): Double {
-            return try {
-                text.toDouble()
-            } catch (e: NumberFormatException) {
-                Log.e("HomeFragment", "El valor no es numérico: $text")
-
-                // Registrar el fallo en Firebase Crashlytics
-                FirebaseCrashlytics.getInstance().log("Error al convertir texto a Double: $text")
-                FirebaseCrashlytics.getInstance().recordException(e)
-
-                0.0 // Devolver un valor por defecto si no es numérico
-            }
-        }
-
-        return when {
-            btnBcv.isChecked -> parseToDouble(btnBcv.text.toString())
-            btnParalelo.isChecked -> parseToDouble(btnParalelo.text.toString())
-
-            else -> 0.0
-        }
-    }
-
 
     private fun guardarClickAnuncio() {
         try {
             val nombreAnuncio = "Compartor App Ios"
-            val uri = url
+
 
             val clickAnuncioModel = ClickAnunicosModel(
 
@@ -871,7 +783,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
     //INTERFACE PARA COMUNICAR CON EL ACTIVITY
     object ApiResponseHolder {
-        private var response: ApiConTokenResponse? = null
+
         private var responseApiNew: ApiOficialTipoCambio? = null
         private var responseApiEuroBcv: ApiOficialTipoCambio? = null
 
@@ -879,14 +791,12 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
         private var responseApiNew2: ApiModelResponseCripto? = null
         private var responseApiBancoNew2: ApiModelResponseBCV? = null
         private var responseHistoryBcv: HistoryModelResponse? = null
-        private var responseHistoryParalelo: HistoryModelResponse? = null
+
 
 
         private const val VALOR_EURO = "ValorEuro"
         private const val NUMERO_EURO = "euro"
         private const val FECHA_EURO = "fecha"
-        private const val VALOR_DOLAR = "ValorDolar"
-        private const val NUMERO_DOLAR = "ValorEuro"
 
         fun getTasaVentaBcv(): Double {
             // Usamos la misma fuente de datos que usa tu UI (llamarApiTipoCambio)
@@ -1001,7 +911,6 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
             val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
             var valorDolares = 0.0
-            var diferenciaDolares = 0.0
             val inputText = binding.inputBolivares.text.toString()
             if (inputText.isNotEmpty()) {
 
@@ -1101,7 +1010,6 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
 
     private fun visibilidadSwicheDiaManana(resposeApiTipoCambio: ApiOficialTipoCambio ) {
-        Log.d(TAG, "visibilidadSwicheDiaManana:resposeApiTipoCambio: $resposeApiTipoCambio ")
         if (!diaActual) {
             if (visibleLayoutProxBcv < 2) {
                 visibleLayoutProxBcv += 1
@@ -1135,7 +1043,6 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
 
         val savedResponseDolar = getResponseApiDolar(requireContext())
-        Log.d(TAG, "llamarApiTipoCambio: ENTRO AL LLAMADO DEL API")
         try {
             if (savedResponseDolar != null) {
 
@@ -1293,7 +1200,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
         switchCondicional: SwitchMaterial,
         texto1: TextView,
         colorOriginal1: Int,
-        texto2: TextView // Ya no necesitamos colorOriginal2
+        texto2: TextView
     ) {
         val colorNaranja = Color.parseColor("#FFA500")
 
@@ -1304,13 +1211,14 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
         texto1.setTextColor(colorFinalTexto1)
 
         // 2. Ejecuta la animación de pulso en texto1.
-        ViewCompat.animate(texto1)
+        //    CAMBIO: Se llama a .animate() directamente sobre la vista.
+        texto1.animate()
             .scaleX(1.5f)
             .scaleY(1.5f)
             .setDuration(300)
             .withEndAction {
                 // Al terminar de crecer, vuelve al tamaño original
-                ViewCompat.animate(texto1)
+                texto1.animate()
                     .scaleX(1f)
                     .scaleY(1f)
                     .setDuration(300)
@@ -1320,14 +1228,15 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
         // --- LÓGICA PARA TEXTO 2 (SOLO animación) ---
 
-        // 3. Ejecuta la misma animación de pulso en texto2, sin tocar su color.
-        ViewCompat.animate(texto2)
+        // 3. Ejecuta la misma animación de pulso en texto2.
+        //    CAMBIO: Se llama a .animate() directamente sobre la vista.
+        texto2.animate()
             .scaleX(1.5f)
             .scaleY(1.5f)
             .setDuration(300)
             .withEndAction {
                 // Al terminar de crecer, vuelve al tamaño original
-                ViewCompat.animate(texto2)
+                texto2.animate()
                     .scaleX(1f)
                     .scaleY(1f)
                     .setDuration(300)
@@ -1335,7 +1244,6 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
             }
             .start()
     }
-
 
 
 
@@ -1414,19 +1322,6 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
         return null // Retorna null si no se encontró la respuesta en SharedPreferences
     }
 
-
-
-    private fun guardarResponseCripto(context: Context, responseBCV: ApiModelResponseCripto) {
-        val gson = Gson()
-        val responseJson = gson.toJson(responseBCV)
-
-        val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("dolarCripto", responseJson)
-        editor.apply()
-
-    }
 
 
     //*********************************************************************************************
@@ -1667,7 +1562,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
                                         ""
                                     ) // Elimina puntos y comas
                                 val dolarLimpio = cleanedText.toDoubleOrNull() ?: 0.0
-                                valorDolares = dolarLimpio * dolarEuro!!.toDouble()
+                                valorDolares = dolarLimpio * dolarEuro.toDouble()
                             }
                         }
 
@@ -1698,7 +1593,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
 
                             if (dolarUsdt != null) {
-                                valorDolares = entradadolarBcvLimpio * dolarUsdt!!.toDouble()
+                                valorDolares = entradadolarBcvLimpio * dolarUsdt.toDouble()
                             }
 
                         }
@@ -1835,7 +1730,6 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
         // Crear un objeto ClipData para guardar el texto modificado
         val clipData = ClipData.newPlainText("text", modifiedText)
-        Log.d(TAG, "copyToClipboard: modifiedText $modifiedText ")
         // Copiar el objeto ClipData al portapapeles
         clipboardManager.setPrimaryClip(clipData)
         Toast.makeText(context, "Monto Copiado: $modifiedText $unidad", Toast.LENGTH_SHORT).show()
@@ -1896,32 +1790,6 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
         }
     }
 
-    private fun showPremiumExpirationDate() {
-
-
-        // Obtenemos el nombre del plan y la fecha de vencimiento.
-        val planName = AppPreferences.getPremiumPlan()
-        val expirationDateMillis = AppPreferences.getPremiumExpirationDate()
-
-        val message: String
-
-        if (expirationDateMillis == -1L) {
-            // Caso especial para el plan vitalicio.
-            message = "Tienes una suscripción '$planName' que no vence."
-        } else if (expirationDateMillis > 0L) {
-            // Formateamos la fecha para que sea legible.
-            val dateFormat = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("es", "ES"))
-            val formattedDate = dateFormat.format(Date(expirationDateMillis))
-            message = "Tu plan '$planName' vence el: $formattedDate"
-        } else {
-            // Caso de respaldo por si algo sale mal.
-            message = "No se pudo obtener la información de tu suscripción."
-        }
-
-        // Mostramos el mensaje en un Toast de larga duración.
-        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-    }
-
 
     override fun onResume() {
         super.onResume()
@@ -1970,6 +1838,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
     private fun loadDataFromCache() {
         // Cargamos los datos de la API principal desde el cache.
         val savedResponseDolar = getResponseApiDolar(requireContext())
+
         if (savedResponseDolar != null) {
             ApiResponseHolder.setResponse(savedResponseDolar)
             llenarDolarEuro(savedResponseDolar, diaActual) // Asume que 'diaActual' se guarda o recalcula
@@ -2006,112 +1875,97 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
        // shakeDetector.stop()
     }
 
-    private fun onShakeDetected() {
-        //showSnackbar("Cargando datos...")
-
-        fetchDataFromServer()
-    }
-
     private fun calcularDiferencia() {
-        var mensaje = ""
-        var diferenciaBs = 0.0
-        var diferenciaDolares = 0.0
-        var diferenciaPorcentual = 0.0
-        var dolarEuro = binding.btnEuroP.text?.toString()?.toDoubleOrNull() ?: 1.0
-        var dolarBcv = binding.btnBcv.text?.toString()?.toDoubleOrNull() ?: 1.0
-        var cantidadDolares = binding.inputDolares.text?.toString()?.toDoubleOrNull() ?: 1.0
-        var cantidadBs = binding.inputBolivares.text?.toString()?.toDoubleOrNull() ?: 1.0
+        val dolarEuro = binding.btnEuroP.text?.toString()?.toDoubleOrNull() ?: 0.0
+        val dolarBcv = binding.btnBcv.text?.toString()?.toDoubleOrNull() ?: 0.0
+        val dolarUSDT = binding.btnUsdt.text?.toString()?.toDoubleOrNull() ?: 0.0
 
-        val totalDolaresBcv = dolarBcv * cantidadDolares
-        val totalBsbcv = dolarBcv * cantidadDolares
-        val totalDolaresParalelo = dolarEuro * cantidadDolares
-        val totalBsParalelo = dolarEuro * cantidadBs
+        // 1. Capturamos lo que escribió el usuario
+        val inputUsuario = binding.inputDolares.text?.toString()?.toDoubleOrNull() ?: 0.0
 
+        // 2. LOGICA DE NEGOCIO: Si es 0 o vacío, usamos 1.0 para el cálculo y reporte
+        val cantidadBase = if (inputUsuario == 0.0) 1.0 else inputUsuario
 
+        if (dolarBcv == 0.0) return // Evitar errores si no hay tasa BCV
 
+        // Cálculos (usando cantidadBase que nunca será 0)
+        val totalBsBcv = dolarBcv * cantidadBase
+        val totalBsEuro = dolarEuro * cantidadBase
+        val totalBsUsdt = dolarUSDT * cantidadBase
 
-            mensaje = getString(R.string.mensaje_dolar)
-            diferenciaBs = totalDolaresParalelo - totalDolaresBcv
-            diferenciaDolares = (totalDolaresParalelo - totalDolaresBcv) / dolarBcv
-            val diferencia = Math.abs(dolarEuro - dolarBcv)
-            diferenciaPorcentual= (diferencia / dolarBcv) * 100
+        val difBsEuro = totalBsEuro - totalBsBcv
+        val difPorcEuro = ((dolarEuro - dolarBcv) / dolarBcv) * 100
 
+        val difBsUsdt = totalBsUsdt - totalBsBcv
+        val difPorcUsdt = ((dolarUSDT - dolarBcv) / dolarBcv) * 100
 
-        showCustomSnackbar(mensaje, diferenciaBs, diferenciaDolares, diferenciaPorcentual)
+        showResultadosSheetPro(cantidadBase, difBsEuro, difPorcEuro, difBsUsdt, difPorcUsdt)
     }
 
 
-    //Abre el mensaje Anacbar Personalizado
-    @SuppressLint("RestrictedApi")
-    private fun showCustomSnackbar(
-        mensaje: String,
-        diferenciaBolivares: Double,
-        difenciaDolares: Double,
-        diferenciaPorcentual: Double,
+    private fun showResultadosSheetPro(
+        cantidadBase: Double,
+        difBsEuro: Double,
+        difPorcEuro: Double,
+        difBsUsdt: Double,
+        difPorcUsdt: Double
     ) {
-        val decimalFormat = DecimalFormat("#,##0.00") // Declaración de DecimalFormat
-        val rootView = requireActivity().findViewById<View>(android.R.id.content)
-        snackbar = Snackbar.make(rootView, "", Snackbar.LENGTH_INDEFINITE)
+        // Usamos 'view.context' o 'requireContext()' para asegurar el contexto válido
+        val dialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_resultados, null)
 
-        // Inflar el diseño personalizado
-        val snackbarLayout = snackbar?.view as Snackbar.SnackbarLayout
-        val customView = LayoutInflater.from(requireContext()).inflate(R.layout.custom_toast, null)
+        val dfMoney = DecimalFormat("#,##0.00")
+        val dfPercent = DecimalFormat("0.00")
 
-        // Configurar el ícono y el texto
-        val snackbarTextView: TextView = customView.findViewById(R.id.toast_text)
-        snackbarTextView.text = "$mensaje:  ${decimalFormat.format(diferenciaPorcentual)}%"
-        snackbarTextView.textSize = 14f
-        val textViewDifBs: TextView = customView.findViewById(R.id.txtToastDifBs)
-        val textViewDifDolar: TextView = customView.findViewById(R.id.txtToastDifDolar)
-        val formattDiferenciaBS = decimalFormat.format(diferenciaBolivares)
-        val formattDiferenciaDolar = decimalFormat.format(difenciaDolares)
-        textViewDifBs.text = formattDiferenciaBS
-        textViewDifDolar.text = formattDiferenciaDolar
+        // Vincular vistas
+        val tvResumen = view.findViewById<TextView>(R.id.tvResumenBase)
+        val tvDifBsEuro = view.findViewById<TextView>(R.id.tvDifBsEuro)
+        val tvPorcEuro = view.findViewById<TextView>(R.id.tvPorcEuro)
+        val tvDifBsUsdt = view.findViewById<TextView>(R.id.tvDifBsUsdt)
+        val tvPorcUsdt = view.findViewById<TextView>(R.id.tvPorcUsdt)
+        val btnClose = view.findViewById<Button>(R.id.btnCloseSheet)
 
-        // Configurar el botón de cierre
-        val closeButton: ImageButton = customView.findViewById(R.id.close_button)
-        closeButton.setOnClickListener {
-            snackbar?.dismiss()
-        }
+        // Texto de Resumen
+       // tvResumen.text = "Análisis base: $${dfMoney.format(cantidadBase)} BCV"
+        tvResumen.text = getString(R.string.texto_analisis_base, dfMoney.format(cantidadBase))
 
-        // Agregar el diseño personalizado al Snackbar
-        snackbarLayout.setBackgroundResource(R.drawable.snackbar_background) // Configurar el fondo personalizado
-        snackbarLayout.addView(customView, 0)
+        // Datos Euro
+        // 1. EURO: Definir qué String usar dependiendo si es > 0
+        val stringIdEuro = if (difBsEuro > 0) R.string.diferencia_bs_positiva else R.string.diferencia_bs_estandar
+// Asignar texto pasando el número formateado
+        tvDifBsEuro.text = getString(stringIdEuro, dfMoney.format(difBsEuro))
 
-        // Mostrar el Snackbar centrado
-        snackbar?.show()
+// Porcentaje Euro
+        tvPorcEuro.text = getString(R.string.texto_porcentaje, dfPercent.format(difPorcEuro))
 
-        // Ajustar la posición del Snackbar al centro de la pantalla
-        val params = snackbar?.view?.layoutParams as FrameLayout.LayoutParams
-        params.gravity = Gravity.CENTER
-        snackbar?.view?.layoutParams = params
+
+// 2. USDT: Misma lógica
+        val stringIdUsdt = if (difBsUsdt > 0) R.string.diferencia_bs_positiva else R.string.diferencia_bs_estandar
+        tvDifBsUsdt.text = getString(stringIdUsdt, dfMoney.format(difBsUsdt))
+
+// Porcentaje USDT
+        tvPorcUsdt.text = getString(R.string.texto_porcentaje, dfPercent.format(difPorcUsdt))
+        // --- Lógica de Colores (Negritas y Semánticos) ---
+
+        // Obtenemos los colores de forma segura
+        // R.color.positive_green debe existir en tus colors.xml, o usa Color.GREEN
+        val colorPositivo = ContextCompat.getColor(requireContext(), R.color.green)
+        val colorNegativo = Color.RED // O un color definido en tu xml como R.color.negative_red
+
+        // Aplicar color a Euro
+        tvDifBsEuro.setTextColor(if (difBsEuro >= 0) colorPositivo else colorNegativo)
+
+        // Aplicar color a USDT
+        tvDifBsUsdt.setTextColor(if (difBsUsdt >= 0) colorPositivo else colorNegativo)
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+
+        dialog.setContentView(view)
+        dialog.show()
     }
 
-    // Abre el mensaje De aviso que puede actualizarcon sacudor
-    private fun verSnackVarInfo(mensaje: String) {
-        val rootView = requireActivity().findViewById<View>(android.R.id.content)
-        snackbarInfo = Snackbar.make(rootView, mensaje, Snackbar.LENGTH_INDEFINITE)
-        snackbarInfo?.show()
-        // Usar un Handler para ocultar el toast después de una duración personalizada
-        Handler(Looper.getMainLooper()).postDelayed({
-            snackbarInfo?.dismiss()
-        }, 3000.toLong())
 
-    }
 
-    // Cierra el mensaje personalizado
-    private fun hideSnackbar() {
-        snackbar?.dismiss()
-    }
-
-    //Simula el Tiempo de respuesta de un servidor
-    private fun fetchDataFromServer() {
-        // Simular una solicitud asíncrona
-        Handler(Looper.getMainLooper()).postDelayed({
-            // Solicitud completada
-            hideSnackbar()
-        }, 5000) // Simular 5 segundos de retraso
-    }
 
     private fun showServerErrorDialog() {
         // Aseguramos que el diálogo se muestre en el hilo principal de la UI.

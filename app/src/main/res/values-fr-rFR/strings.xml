@@ -154,6 +154,27 @@
     <string name="c_dula_de_identidad">Carte d\'Identité</string>
     <string name="fecha_de_la_transacci_n">Date de la Transaction</string>
     <string name="solo_uni_europea">Solo disponible para usuarios en la Unión Europea.</string>
-    <string name="tasa_usdt">Tasa Usdt</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="app_widget_description">This is an app widget description</string>
+    <string name="tasa_usdt">Tasa USDT</string>
     <string name="act_usdt">Act. USDT</string>
+    <string name="todo">TODO</string>
+    <string name="copiat_monto_dolar">Copiat Monto Dolar</string>
+    <string name="copiar_monto_bol_vares">Copiar Monto Bolívares</string>
+    <string name="premiun_activa">Premiun Activa</string>
+    <string name="vs_tasa_euro_bcv">VS TASA EURO (BCV)</string>
+    <string name="diferencia_en_bs">Diferencia en Bs:</string>
+    <string name="vs_tasa_usdt_crypto">VS TASA USDT (CRYPTO)</string>
+    <string name="dif_porcentual">Dif. Porcentual:</string>
+    <string name="an_lisis_de_cambio">Análisis de Diferencia</string>
+    <string name="texto_analisis_base">Análisis base: $%1$s BCV</string>
+    <!-- Caso Positivo: "+ Bs. 1,500.00" -->
+    <string name="diferencia_bs_positiva">+ Bs. %1$s</string>
+
+    <!-- Caso Estándar (Negativo o Cero): "Bs. -1,500.00" o "Bs. 0.00" -->
+    <string name="diferencia_bs_estandar">Bs. %1$s</string>
+
+    <!-- Porcentaje: "14.50%" (se usa doble % para escapar) -->
+    <string name="texto_porcentaje">%1$s%%</string>
 </resources>

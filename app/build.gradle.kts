@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 140
-        versionName = "Reparacion"
+        versionCode = 141
+        versionName = "Comparation1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -84,7 +84,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-analytics")
 
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
 
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
