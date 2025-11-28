@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+   > <!-- Asegúrate de tener este color o usa @android:color/white -->
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Contáctanos"
+        android:textSize="22sp"
+        android:textStyle="bold"
+
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="¿En qué podemos ayudarte hoy?"
+
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Opciones de motivo -->
+    <RadioGroup
+        android:id="@+id/radioGroupMotivo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <RadioButton
+            android:id="@+id/rbSugerencia"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sugerencia o Mejora"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/rbError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Reportar un error (Bug)"/>
+
+        <RadioButton
+            android:id="@+id/rbPublicidad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Publicidad / Negocios"/>
+
+        <RadioButton
+            android:id="@+id/rbOtro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Otro tema"/>
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/btnEnviarEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Redactar Correo"
+        />
+
+</LinearLayout>

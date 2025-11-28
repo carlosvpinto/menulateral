@@ -92,7 +92,9 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Calendar
 import android.graphics.Typeface
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.NotificationCompat.getColor
+
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.switchmaterial.SwitchMaterial
 
@@ -176,6 +178,10 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         visibleLayoutProxBcv += 1
 
         configurarBannerWhatsApp()
+
+        // 1. INICIALIZA META ANTES QUE ADMOB
+       // AudienceNetworkAds.initialize(requireContext())
+
         //cargarDisponibleIOs()
         MobileAds.initialize(requireContext()) {}
         // cargarImagendelConfig()
@@ -1197,7 +1203,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
     }
 
     private fun animacionPulsoCondicional(
-        switchCondicional: SwitchMaterial,
+        switchCondicional: SwitchCompat,
         texto1: TextView,
         colorOriginal1: Int,
         texto2: TextView
@@ -1249,7 +1255,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
     private fun animacionFlipCondicional(
         textView: TextView,
-        switchCondicional: SwitchMaterial,
+        switchCondicional: SwitchCompat,
         colorOriginal: Int,
         vararg otrasVistas: View
     ) {
@@ -1438,7 +1444,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
             binding.btnUsdt.text = "0.0"
             binding.btnUsdt.textOff = "0.0"
             binding.btnUsdt.textOn = "0.0"
-            binding.txtFechaActualizacionUsdt.text = "No disponible"
+            binding.txtFechaActualizacionUsdt.text = "No disposable"
             binding.imgflechaUsdt.setImageResource(R.drawable.ic_flecha_igual) // O la imagen que prefieras
             binding.txtVariacionUsdt.text = "0.0"
         }

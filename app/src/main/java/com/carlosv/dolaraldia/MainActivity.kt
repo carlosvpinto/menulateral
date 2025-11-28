@@ -276,7 +276,7 @@ class MainActivity : AppCompatActivity() {
 
 
         // --- El resto de tu lógica de onCreate ---
-        MobileAds.initialize(this) {}
+       // MobileAds.initialize(this) {}
         AppPreferences.init(this)
         versionUltima()
         movilidadPantalla()

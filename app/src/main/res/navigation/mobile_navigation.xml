@@ -94,6 +94,11 @@
         android:label="Configuracion"
         tools:layout="@layout/fragment_configuration" />
     <fragment
+        android:id="@+id/nav_contacto"
+        android:name="com.carlosv.dolaraldia.ui.contacto.ContactBottomSheetFragment"
+        android:label="Contacto"
+        tools:layout="@layout/layout_bottom_sheet_contacto" />
+    <fragment
         android:id="@+id/nav_pago"
         android:name="com.carlosv.dolaraldia.ui.pago.PagoFragment"
         android:label="@string/suscripcion"

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.carlosv.dolaraldia.utils.Constants.AD_UNIT_ID_RECOMPENSA
+
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -79,4 +80,12 @@ class RewardedAdManager(private val context: Context) {
             listener.onAdNotReady()
         }
     }
+
+    //Prueba de mediacion
+    /*
+    fun openMediationTestSuite() {
+        MediationTestSuite.launch(context)
+    }
+
+     */
 }

@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 141
-        versionName = "Comparation1.1"
+        versionCode = 142
+        versionName = "Comparation1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -201,6 +201,16 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.24")
 
     implementation ("com.google.android.gms:play-services-base:18.5.0")
+
+    // LÍNEAS A AÑADIR
+    // 1. Adaptador de mediación de Meta
+ //   implementation ("com.google.ads.mediation:facebook:6.21.0.0")
+
+    // 2. SDK de Meta (Audience Network)
+    //implementation ("com.facebook.android:audience-network-sdk:6.17.0")
+
+    // 👇 AÑADE ESTA LÍNEA SI NO LA TIENES
+    //implementation ("com.google.android.ads:mediation-test-suite:3.0.0")
 
 
 

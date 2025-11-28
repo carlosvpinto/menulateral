@@ -72,6 +72,11 @@ class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
             findNavController().navigate(R.id.nav_configuration)
             dismiss()
         }
+
+        binding.btnOpcionContacto.setOnClickListener {
+            findNavController().navigate(R.id.nav_contacto)
+            dismiss()
+        }
     }
 
     override fun onDestroyView() {

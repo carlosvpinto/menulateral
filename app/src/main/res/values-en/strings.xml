@@ -177,4 +177,5 @@
 
     <!-- Porcentaje: "14.50%" (se usa doble % para escapar) -->
     <string name="texto_porcentaje">%1$s%%</string>
+    <string name="contactar">Contactar</string>
 </resources>
