@@ -14,6 +14,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.carlosv.dolaraldia.ui.pago.PlanesPagoActivity
+import com.carlosv.dolaraldia.utils.Constants.AD_UNIT_ID
 import com.carlosv.dolaraldia.utils.premiun.PremiumDialogManager
 import com.carlosv.dolaraldia.utils.roomDB.NotificationEntity
 import com.carlosv.dolaraldia.utils.roomDB.AppDatabase
@@ -41,9 +42,9 @@ import java.util.Date
 
 
 private const val LOG_TAG: String = "AppOpenAdManager"
-//private const val AD_UNIT_ID: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+
 //private const val AD_UNIT_ID: String  = "ca-app-pub-5303101028880067/8981364608"
-private const val AD_UNIT_ID: String  = "ca-app-pub-3265312813580307/7449206999" // Admob Dolarmexico 2
+
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 

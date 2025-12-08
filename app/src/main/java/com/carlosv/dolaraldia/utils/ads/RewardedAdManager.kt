@@ -18,9 +18,6 @@ import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 class RewardedAdManager(private val context: Context) {
 
     private var mRewardedAd: RewardedAd? = null
-    // ¡IMPORTANTE! Reemplaza este ID de prueba con tu ID de bloque de anuncios real para producción.
-
-
 
     interface AdLoadListener {
         fun onAdLoaded()
@@ -62,7 +59,6 @@ class RewardedAdManager(private val context: Context) {
         if (mRewardedAd != null) {
             mRewardedAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
 
-                // --- ¡CORRECCIÓN 2! LLAMAMOS AL NUEVO MÉTODO CUANDO EL ANUNCIO SE CIERRA ---
                 override fun onAdDismissedFullScreenContent() {
                     mRewardedAd = null
                     listener.onAdDismissed() // ¡Llamada al nuevo método!
