@@ -91,20 +91,6 @@ object AppPreferences {
         preferences.edit().remove(VIO_NOVEDAD_PLATAFORMAS).apply()
     }
 
-
-
-    /**
-     * Guarda el estado premium, el plan y calcula las fechas de inicio y vencimiento.
-     * @param plan El nombre del plan ("Mensual", "Anual", "Vitalicio").
-     */
-
-
-
-    /**
-     * Verifica si el usuario tiene una suscripción premium ACTIVA.
-     * Comprueba si es premium y si la fecha de vencimiento no ha pasado.
-     * @return `true` si el usuario es premium y la suscripción es válida, `false` en caso contrario.
-     */
     fun isUserPremiumActive(): Boolean {
         val isPremium = preferences.getBoolean(IS_USER_PREMIUM, false)
         if (!isPremium) {

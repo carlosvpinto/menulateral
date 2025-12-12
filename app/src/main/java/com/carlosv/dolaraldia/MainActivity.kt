@@ -13,13 +13,11 @@ import android.view.MenuItem
 
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import com.google.android.material.navigation.NavigationView
-import androidx.navigation.findNavController
+
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.carlosv.menulateral.R
 
@@ -27,7 +25,6 @@ import com.carlosv.menulateral.databinding.ActivityMainBinding
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.*
 
@@ -36,7 +33,6 @@ import android.app.Activity
 
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
-import android.content.pm.ResolveInfo
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Typeface
@@ -66,7 +62,6 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.ToggleButton
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 
@@ -78,15 +73,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.carlosv.dolaraldia.model.datosPMovil.DatosPMovilModel
 import com.carlosv.dolaraldia.utils.Constants.URL_DESCARGA
 import com.carlosv.dolaraldia.utils.ReviewManager
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.material.badge.BadgeDrawable
 import com.google.android.material.badge.BadgeUtils
 import com.google.android.material.badge.ExperimentalBadgeUtils
@@ -106,29 +96,25 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import android.provider.Settings
 import androidx.core.net.toUri
-import com.google.firebase.messaging.FirebaseMessaging
 
-
-import java.text.NumberFormat
-import java.text.ParseException
+import android.content.ClipData
+import android.content.ClipboardManager
+import com.google.android.gms.ads.MobileAds
 
 
 class MainActivity : AppCompatActivity() {
 
 
    // private lateinit var navController2: NavController
-   // AÑADE ESTA LÍNEA (la haremos lazy para que se inicialice de forma segura)
+   //la haremos lazy para que se inicialice de forma segura)
    private val navController by lazy {
        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
        navHostFragment.navController
    }
 
 
-    private val isMobileAdsInitializeCalled = AtomicBoolean(false)
-    private val LOG_TAG: String = "AppOpenAdManager"
-    private val TAG: String = "MAINACTIVITY"
+    private val TAG: String = "COMPARTIR"
 
-    private val AD_UNIT_ID: String = "ca-app-pub-3940256099942544/9257395921"
 
 
     private var enviarImagenP: Boolean? = null
@@ -145,8 +131,6 @@ class MainActivity : AppCompatActivity() {
     //Propiedad para guardar una referencia al menú ---
     private var optionsMenu: Menu? = null
 
-    // ¡NUEVO! Bandera para controlar el ciclo de reintento.
-    private var isInitialAdFlowDone = false
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
@@ -205,30 +189,7 @@ class MainActivity : AppCompatActivity() {
 
         val application = application as? MyApplication ?: return
 
-        // Inicia el flujo del anuncio de apertura.
-        application.showAdIfAvailable(
-            this,
-            object : MyApplication.OnShowAdCompleteListener {
-                override fun onShowAdComplete() {
-                    // Marcamos que el flujo ha terminado, ya sea por éxito o por fallo.
-                    isInitialAdFlowDone = true
-                    Log.d("MainActivity", "Flujo de anuncio de inicio completado.")
-                }
 
-                override fun onAdLoaded() {
-                    // --- ¡AQUÍ ESTÁ LA LÓGICA ANTI-CICLOS! ---
-                    // Solo reintentamos mostrar el anuncio si el flujo inicial AÚN NO ha terminado.
-                    if (!isInitialAdFlowDone) {
-                        Log.d("MainActivity", "El anuncio se cargó, reintentando mostrar ahora.")
-                        // Marcamos que ya no necesitamos más reintentos.
-                        isInitialAdFlowDone = true
-                        application.showAdIfAvailable(this@MainActivity, this)
-                    } else {
-                        Log.d("MainActivity", "El anuncio se cargó, pero el flujo inicial ya terminó. No se mostrará ahora.")
-                    }
-                }
-            }
-        )
 
 
         // 1. Configurar la Toolbar
@@ -276,7 +237,12 @@ class MainActivity : AppCompatActivity() {
 
 
         // --- El resto de tu lógica de onCreate ---
-       // MobileAds.initialize(this) {}
+        MobileAds.initialize(this) { initializationStatus ->
+            Log.d(TAG, "MobileAds SDK Initialized: $initializationStatus")
+
+            // Opcional: Cargar el anuncio solo cuando el SDK esté listo
+            // appOpenAdManager.loadAd(this)
+        }
         AppPreferences.init(this)
         versionUltima()
         movilidadPantalla()
@@ -768,8 +734,6 @@ class MainActivity : AppCompatActivity() {
         // Establecer el tamaño del Drawable
         drawable.setBounds(0, 0, widthInPx, heightInPx)
 
-        // Crear un ImageSpan con el Drawable
-        val imageSpan = ImageSpan(drawable, ImageSpan.ALIGN_BASELINE)
 
         return SpannableString(spannableStringBuilder)
     }
@@ -1038,89 +1002,65 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-
-
-    // VERSIÓN REFACTORIZADA PARA PRIORIZAR WHATSAPP
     private fun shareImageWithText(imagePath: String?, shareText: String) {
         val imageFile = imagePath?.let { File(it) }
-        Log.d(TAG, "Intentando compartir: imageFile=$imageFile, texto=$shareText")
 
+        // Validación básica
         if (imageFile == null || !imageFile.exists()) {
-            // Si no hay imagen, comparte solo el texto para no fallar.
-            Log.d(TAG, "No se encontró archivo de imagen. Compartiendo solo texto.")
+            // Si no hay imagen, compartimos solo texto (que es mejor que nada)
             shareText(shareText)
             return
         }
 
         try {
-            // 1. Obtener la URI segura para nuestro archivo
+            // 1. Obtener la URI segura
             val uri = FileProvider.getUriForFile(
                 this,
                 "com.carlosv.menulateral.fileprovider",
                 imageFile
             )
 
-            // 2. Crear el Intent genérico para buscar TODAS las apps que pueden compartir
-            val genericShareIntent = Intent(Intent.ACTION_SEND).apply {
+            // -----------------------------------------------------------
+            // PASO 1: Copiar al Portapapeles (La red de seguridad)
+            // -----------------------------------------------------------
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Datos Pago Móvil", shareText)
+            clipboard.setPrimaryClip(clip)
+
+            // -----------------------------------------------------------
+            // PASO 2: Avisar al Usuario
+            // -----------------------------------------------------------
+            // Usamos un Toast largo para dar tiempo a leer
+//            Toast.makeText(
+//                this,
+//                "✅ Datos copiados. Si no aparecen en WhatsApp, presiona PEGAR.",
+//                Toast.LENGTH_LONG
+//            ).show()
+
+            // -----------------------------------------------------------
+            // PASO 3: Compartir (Método Estándar y Limpio)
+            // -----------------------------------------------------------
+            // Ya no intentamos trucos raros. Usamos el método nativo que
+            // garantiza que aparezcan TODAS las apps (Gmail, Telegram, Bluetooth, etc.)
+            val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/png"
-                putExtra(Intent.EXTRA_TEXT, shareText)
                 putExtra(Intent.EXTRA_STREAM, uri)
+                // Aún enviamos el texto en el Intent.
+                // Apps como Gmail y Telegram LO USARÁN automáticamente.
+                // WhatsApp lo ignorará, pero para eso tenemos el portapapeles.
+                putExtra(Intent.EXTRA_TEXT, shareText)
+                putExtra(Intent.EXTRA_SUBJECT, "Recibo de Pago Móvil")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
-            // 3. Buscar todas las actividades que pueden manejar nuestro intent genérico
-            val packageManager = packageManager
-            val resolvedInfoList: List<ResolveInfo> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                packageManager.queryIntentActivities(genericShareIntent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
-            } else {
-                packageManager.queryIntentActivities(genericShareIntent, PackageManager.MATCH_DEFAULT_ONLY)
-            }
-
-            if (resolvedInfoList.isEmpty()) {
-                Toast.makeText(this, "No se encontraron apps para compartir", Toast.LENGTH_SHORT).show()
-                return
-            }
-
-            // 4. Crear una lista para nuestros intents "fijados" (WhatsApp)
-            val targetedIntents = mutableListOf<Intent>()
-
-            for (resolveInfo in resolvedInfoList) {
-                val packageName = resolveInfo.activityInfo.packageName
-                // Buscamos WhatsApp y WhatsApp Business
-                if (packageName == "com.whatsapp" || packageName == "com.whatsapp.w4b") {
-                    val targetedShareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "image/png"
-                        putExtra(Intent.EXTRA_TEXT, shareText)
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        // La parte clave: especificamos el paquete y la clase de la actividad
-                        setClassName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name)
-                    }
-                    targetedIntents.add(targetedShareIntent)
-                }
-            }
-
-            // 5. Crear el Chooser (selector)
-            // Usamos el intent genérico como base, que mostrará TODAS las demás apps
-            val chooserIntent = Intent.createChooser(genericShareIntent, "Compartir vía...")
-
-            // 6. ¡LA MAGIA! Añadimos nuestra lista de intents de WhatsApp como "opciones iniciales".
-            // El sistema las pondrá en la parte superior de la lista.
-            if (targetedIntents.isNotEmpty()) {
-                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedIntents.toTypedArray())
-            }
-
-            // 7. Iniciar el Chooser
-            startActivity(chooserIntent)
+            startActivity(Intent.createChooser(intent, "Compartir recibo:"))
 
         } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e(TAG, "Error al crear el intent para compartir: ${e.message}")
-            Toast.makeText(this, "No se pudo compartir la imagen", Toast.LENGTH_SHORT).show()
+            Log.e("ShareError", "Error crítico: ${e.message}")
+            // Si falla la imagen por permisos raros, al menos enviamos el texto
+            shareText(shareText)
         }
     }
-
 
     fun Activity.capturarPantalla(): String? {
         return try {
@@ -1177,9 +1117,7 @@ class MainActivity : AppCompatActivity() {
         var inputTextoDolla = ""
         var inputTextoDollaFotmateado = ""
         var inputTextoBolivarFotmateado = ""
-        var bcv = ""
-        var paralelo = ""
-        var promedio = ""
+
         var tasa = ""
         val linkCorto = URL_DESCARGA
 
@@ -1544,8 +1482,8 @@ private fun generarReciboYObtenerPath(): String? {
                 val inputMontoDolares = fragment.view?.findViewById<EditText>(R.id.inputDolares)?.text.toString()
                 val inputMontoBolivares = fragment.view?.findViewById<EditText>(R.id.inputBolivares)?.text.toString()
 
-                var finalMontoDolares: String
-                var finalMontoBolivares: String
+                val finalMontoDolares: String
+                val finalMontoBolivares: String
 
                 if (inputMontoDolares.isBlank() || inputMontoBolivares.isBlank()) {
                     finalMontoDolares = formatNumberForReceipt("1.00")

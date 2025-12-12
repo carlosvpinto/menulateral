@@ -14,7 +14,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.carlosv.dolaraldia.ui.pago.PlanesPagoActivity
-import com.carlosv.dolaraldia.utils.Constants.AD_UNIT_ID
+import com.carlosv.dolaraldia.utils.Constants.AD_UNIT_ID_OPEN
 import com.carlosv.dolaraldia.utils.premiun.PremiumDialogManager
 import com.carlosv.dolaraldia.utils.roomDB.NotificationEntity
 import com.carlosv.dolaraldia.utils.roomDB.AppDatabase
@@ -88,7 +88,7 @@ class MyApplication :
     }
 
     private fun showPremiumDialog(activity: Activity) {
-        // --- ¡AQUÍ ESTÁ LA CORRECCIÓN CLAVE! ---
+
         // 1. Verificamos si la actividad está finalizando o ya ha sido destruida.
         //    'isFinishing' y 'isDestroyed' son las comprobaciones de seguridad más importantes.
         if (activity.isFinishing || activity.isDestroyed) {
@@ -398,18 +398,23 @@ class MyApplication :
         return claveId
     }
 
+
+
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
+
     fun onMoveToForeground() {
         isAppInForeground = true
 
-        // --- ¡LÓGICA DE TIEMPO ACTUALIZADA! ---
-        // Verificamos si ha pasado el tiempo suficiente desde que la app se fue a segundo plano.
         val timeInBackground = System.currentTimeMillis() - appBackgroundTime
+
+        // Convertimos a segundos para el Log
+        val seconds = timeInBackground / 1000
+
         if (appBackgroundTime > 0 && timeInBackground >= MIN_BACKGROUND_TIME_MS) {
-            Log.d(LOG_TAG, "App ha vuelto a primer plano después de ${timeInBackground / 60000} minutos. Intentando mostrar anuncio.")
+            Log.d(LOG_TAG, "ÉXITO: Pasaron $seconds segundos (Mínimo requerido: ${MIN_BACKGROUND_TIME_MS/1000}). Mostrando anuncio.")
             currentActivity?.let { appOpenAdManager.showAdIfAvailableOnResume(it) }
         } else {
-            Log.d(LOG_TAG, "App ha vuelto a primer plano, pero no ha pasado el tiempo mínimo. No se mostrará anuncio.")
+            Log.d(LOG_TAG, "IGNORADO: Solo pasaron $seconds segundos (Mínimo requerido: ${MIN_BACKGROUND_TIME_MS/1000}) o es el primer inicio.")
         }
     }
 
@@ -445,7 +450,10 @@ class MyApplication :
     }
 
 
-
+    // 1. Agrega este método público en el cuerpo de MyApplication para que la SplashActivity pueda consultar
+    fun isAdAvailable(): Boolean {
+        return appOpenAdManager.isAdAvailable()
+    }
 
     //123456789
     // --- CLASE INTERNA AppOpenAdManager (CON LÓGICA ANTI-CICLOS) ---
@@ -461,7 +469,7 @@ class MyApplication :
             Log.d(LOG_TAG, "Iniciando carga del anuncio...")
             val request = AdRequest.Builder().build()
             AppOpenAd.load(
-                context, AD_UNIT_ID, request,
+                context, AD_UNIT_ID_OPEN, request,
                 object : AppOpenAd.AppOpenAdLoadCallback() {
                     override fun onAdLoaded(ad: AppOpenAd) {
                         appOpenAd = ad
@@ -474,12 +482,23 @@ class MyApplication :
                     override fun onAdFailedToLoad(loadError: LoadAdError) {
                         isLoadingAd = false; appOpenAd = null
                         Log.e(LOG_TAG, "Fallo al cargar el anuncio: ${loadError.message}")
+                        isLoadingAd = false
+                        appOpenAd = null
+
+                        // --- AGREGA ESTOS LOGS DETALLADOS ---
+                        Log.e(LOG_TAG, "❌ ERROR CRÍTICO AL CARGAR ANUNCIO:")
+                        Log.e(LOG_TAG, "👉 Código de Error: ${loadError.code}")
+                        Log.e(LOG_TAG, "👉 Mensaje: ${loadError.message}")
+                        Log.e(LOG_TAG, "👉 Dominio: ${loadError.domain}")
+                        Log.e(LOG_TAG, "👉 Causa: ${loadError.cause}")
                     }
                 }
             )
         }
 
-        private fun isAdAvailable(): Boolean = appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
+        // private' a 'fun' (público dentro del paquete o clase)
+        fun isAdAvailable(): Boolean = appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
+
 
         private fun wasLoadTimeLessThanNHoursAgo(numHours: Long): Boolean {
             // Calcula la diferencia en milisegundos entre la hora actual y la hora de carga.
@@ -511,9 +530,13 @@ class MyApplication :
                 appOpenAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
                     override fun onAdDismissedFullScreenContent() {
                         appOpenAd = null; isShowingAd = false
+                        if (activity !is SplashActivity) {
+                            if (premiumDialogManager.shouldShowPremiumDialog()) {
+                                showPremiumDialog(activity)
+                            }
+                        }
 
-                        //llama a la funcion para mostrar el dialogo
-                        if (premiumDialogManager.shouldShowPremiumDialog()) { showPremiumDialog(activity) }
+
                         onShowAdCompleteListener.onShowAdComplete()
                         loadAd(activity)
                     }

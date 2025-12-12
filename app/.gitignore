@@ -1,1 +1,18 @@
 /build
+*.aab
+*.apk
+*.ap_
+*.dex
+*.class
+
+# Carpetas de release
+release/
+/release
+
+# Archivos de seguridad (CLAVES)
+*.jks
+*.keystore
+*.pem
+*.p12
+key.properties
+local.properties
