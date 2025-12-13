@@ -1790,9 +1790,11 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
         if (AppPreferences.isUserPremiumActive()) {
             // Si el usuario es premium activo, hacemos visible el ícono.
             binding.imgpremium.visibility = View.VISIBLE
+            binding.imglogo.setImageResource(R.drawable.logopremiun)
         } else {
             // Si no lo es, lo ocultamos.
             binding.imgpremium.visibility = View.GONE
+            binding.imglogo.setImageResource(R.drawable.logoredondo)
         }
     }
 

@@ -164,55 +164,47 @@ class MyApplication :
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         appOpenAdManager = AppOpenAdManager()
 
-        // La carga inicial y proactiva del anuncio
-        appOpenAdManager.loadAd(this)
-        // Forzamos la inicialización de la base de datos aquí para que el callback se ejecute al inicio.
-        // Esto es una buena práctica.
+        // ¡IMPORTANTE! Inicializar MobileAds antes de cargar
+        com.google.android.gms.ads.MobileAds.initialize(this) { initializationStatus ->
+            Log.d(LOG_TAG, "✅ MobileAds inicializado. Estado: $initializationStatus")
+            // Apenas el SDK responde, cargamos el anuncio.
+            appOpenAdManager.loadAd(this)
+        }
         database.openHelper.writableDatabase
         //countDeviceTokens()
-        try {
-            // Configura Firebase Crashlytics
-            if (BuildConfig.DEBUG) {
-                FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false)
-            } else {
-                FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Log.d(LOG_TAG, "⚡ Iniciando carga de recursos pesados en segundo plano...")
+
+                // A. BASE DE DATOS (ROOM)
+                // Forzamos la apertura aquí para que el callback de bienvenida se ejecute
+                // sin bloquear la interfaz de usuario.
+                database.openHelper.writableDatabase
+
+                // B. CRASHLYTICS
+                if (BuildConfig.DEBUG) {
+                    FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false)
+                } else {
+                    FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
+                }
+
+                // C. FIREBASE TOKENS Y NOTIFICACIONES
+                // Llamamos a tus funciones de token (que ya usan corrutinas internamente, pero es seguro llamarlas aquí)
+                getOrRequestToken()
+
+                // Verificamos el token actual (Solo para log)
+                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d("FCM_TOKEN", "Token actual: ${task.result}")
+                    }
+                }
+
+                Log.d(LOG_TAG, "✅ Carga de recursos pesados finalizada.")
+
+            } catch (e: Exception) {
+                Log.e(LOG_TAG, "❌ Error en inicialización en segundo plano", e)
+                FirebaseCrashlytics.getInstance().recordException(e)
             }
-        } catch (e: Exception) {
-            // Maneja el error, por ejemplo, registrándolo localmente o mostrando un mensaje al usuario
-            Log.e(
-                "Firestore",
-                " Crashlity Error initializing Firebase Crashlytics mandado por la app",
-                e
-            )
-            FirebaseCrashlytics.getInstance().recordException(e)
-            // Opcional: notificar al usuario o enviar el error a otra herramienta de monitoreo
-        }
-
-        try {
-            // crearTopicPrueba()
-            getOrRequestToken()
-            // borraTokenYcrear()  // Si este método es necesario, asegúrate de manejar posibles errores dentro de él también
-            // checkAndSubscribeToTopic()  // Asegúrate de manejar los errores en este método si es necesario
-        } catch (e: Exception) {
-            // Maneja el error de inicialización de token o suscripción
-            Log.e("firestore", "Error during initialization Mandado por la app", e)
-            FirebaseCrashlytics.getInstance().recordException(e)
-        }
-        //*****************************************************
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                Log.w("FCM_TOKEN", "Fetching FCM registration token failed", task.exception)
-                return@addOnCompleteListener
-            }
-
-            // Obtén el nuevo token de registro de FCM
-            val token = task.result
-
-            // ¡ESTA ES LA PARTE CLAVE PARA DEPURAR!
-            // Imprime el token en Logcat para que puedas copiarlo.
-            Log.d("FCM_TOKEN", "Este es el token del dispositivo: $token")
-
-
         }
 
         //*******************************************************
@@ -440,6 +432,7 @@ class MyApplication :
     // --- INTERFAZ Y FUNCIÓN PÚBLICA PARA EL ANUNCIO INICIAL ---
     interface OnShowAdCompleteListener {
         fun onShowAdComplete()
+
         fun onAdLoaded()
     }
 

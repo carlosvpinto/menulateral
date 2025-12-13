@@ -22,8 +22,6 @@ object Constants {
     const val URL_BASE = "https://api.dolaraldiavzla.com/api/v1/"
     const val ENDPOINT = "tipo-cambio"
 
-    const val URL_BASEOLD = "https://pydolarve.org/api/v1/"
-    const val END_POINT = "https://api.dolaraldiavzla.com/api/v1/dollar?page=alcambio"
     const val BEARER_TOKEN = "Bearer 2x9Qjpxl5F8CoKK6T395KA"
     const val TOKEN_AS21 = "ccNt36cjSi2uOxgIMJxvt7:APA91bHqmTKTBF1pNWVLoBMJcH6ll43eeUuhS74PXIHxk7GbQ4l5-BKKoEMDJxjdOKQWEQ50Wc2AVxD8f2RHr47ELqiuw7_k4VuvxYCgZkeD6wQUGZgkVt4"
     const val URL_DESCARGA = "https://www.dolaraldiavzla.com/descarga/"
@@ -50,8 +48,8 @@ object Constants {
     //const val AD_UNIT_ID_RECOMPENSA = "ca-app-pub-3940256099942544/5224354917" // PRUEBA DESARROLLO
     const val AD_UNIT_ID_RECOMPENSA = "ca-app-pub-3265312813580307/5061990761" //PRODUCCION
 
-    //const val AD_UNIT_ID_OPEN: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
-    const val AD_UNIT_ID_OPEN: String  = "ca-app-pub-3265312813580307/7449206999" // Admob Dolarmexico 2
+  //const val AD_UNIT_ID_OPEN: String ="ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+  const val AD_UNIT_ID_OPEN: String  = "ca-app-pub-3265312813580307/7449206999" // Admob Dolarmexico 2
 
 
 
