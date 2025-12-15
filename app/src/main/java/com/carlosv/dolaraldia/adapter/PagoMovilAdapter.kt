@@ -1,5 +1,10 @@
 package com.carlosv.dolaraldia.adapter
 
+import android.content.ClipData
+import android.content.ClipDescription
+import android.content.ClipboardManager
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -17,8 +22,15 @@ import java.util.Date
 // Importar Handler y Looper
 import android.os.Handler
 import android.os.Looper
+import android.widget.ImageButton
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
+import com.carlosv.dolaraldia.utils.Constants
 import java.io.File
+import java.util.Locale
 
 class PagoMovilAdapter(
     val context: Fragment,
@@ -63,12 +75,14 @@ class PagoMovilAdapter(
         private val textViewBanco: TextView = view.findViewById(R.id.txtNombreBancoPM)
         private val cardView: CardView = view.findViewById(R.id.cardViewPM)
         private val imgLogoBanco: ImageView = view.findViewById(R.id.imgBancosMP)
-        private val imgFotoPersona: ImageView = view.findViewById(R.id.imgFotoPersona) // Agrega este ImageView en tu layout
+        private val imgFotoPersona: ImageView =
+            view.findViewById(R.id.imgFotoPersona) // Agrega este ImageView en tu layout
         private val arrowImageView: ImageView = view.findViewById(R.id.arrowImageView)
         private val detailsLayout: View = view.findViewById(R.id.detailsLayout)
         private val checkBoxPredeterminado: CheckBox = view.findViewById(R.id.checActivo)
         private val editButton: ImageView = view.findViewById(R.id.editButton)
         private val deleteButton: ImageView = view.findViewById(R.id.deleteButton)
+        private val botonCopiarPagoMovil: ImageButton = view.findViewById(R.id.copiarPagoMovil)
 
         fun bind(pagoMovil: DatosPMovilModel, position: Int) {
             radioTipo.text = pagoMovil.tipo
@@ -125,6 +139,11 @@ class PagoMovilAdapter(
             deleteButton.setOnClickListener {
                 onDeleteClick(position)
             }
+
+            // CONEXIÓN DEL BOTÓN CON LA FUNCIÓN CORREGIDA
+            botonCopiarPagoMovil.setOnClickListener {
+                copiarPagoMovil(pagoMovil)
+            }
         }
 
         private fun activado(): DatosPMovilModel {
@@ -139,6 +158,52 @@ class PagoMovilAdapter(
                 fecha = Date().toString(),
                 imagen = imagenActual // Puedes adaptar esto si necesitas editar la imagen desde aquí
             )
+        }
+
+        private fun copiarPagoMovil(pagoMovil: DatosPMovilModel) {
+            val context = itemView.context
+
+            // 1. CONSTRUIR EL TEXTO LIMPIO
+            // Usamos StringBuilder para armar los datos línea por línea.
+            val sb = StringBuilder()
+
+            // Título opcional para que se sepa qué es
+            sb.append("Pago Móvil\n")
+
+            // Datos obligatorios
+            sb.append("Banco: ${pagoMovil.banco}\n")
+            sb.append("Cédula: ${pagoMovil.cedula}\n")
+            sb.append("Teléfono: ${pagoMovil.tlf}")
+
+            // El nombre solo se agrega si no está vacío
+//            if (!pagoMovil.nombre.isNullOrEmpty()) {
+//                sb.append("\nBeneficiario: ${pagoMovil.nombre}")
+//            }
+
+            val textoFinal = sb.toString()
+
+            // 2. OBTENER EL GESTOR DEL PORTAPAPELES
+            val clipboard = ContextCompat.getSystemService(context, ClipboardManager::class.java)
+
+            if (clipboard == null) {
+                Toast.makeText(context, "No se pudo acceder al portapapeles", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            try {
+                // 3. CREAR EL CLIP DE SOLO TEXTO
+                val clip = ClipData.newPlainText("Datos Pago Móvil", textoFinal)
+
+                // 4. GUARDARLO
+                clipboard.setPrimaryClip(clip)
+
+                // 5. CONFIRMACIÓN AL USUARIO
+                Toast.makeText(context, "Datos copiados al portapapeles", Toast.LENGTH_SHORT).show()
+
+            } catch (e: Exception) {
+                Log.e("CopiadoPM", "Error al copiar texto: ${e.message}")
+                Toast.makeText(context, "Error al copiar los datos", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

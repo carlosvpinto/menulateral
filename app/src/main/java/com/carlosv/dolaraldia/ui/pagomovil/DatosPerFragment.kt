@@ -1,4 +1,4 @@
-package com.carlosv.dolaraldia.ui.home
+package com.carlosv.dolaraldia.ui.pagomovil
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -33,7 +33,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
-import java.util.Locale
 
 class DatosPerFragment : Fragment() {
     private var _binding: FragmentDatosPerBinding? = null

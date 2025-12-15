@@ -79,7 +79,7 @@
 
     <fragment
         android:id="@+id/nav_Personal"
-        android:name="com.carlosv.dolaraldia.ui.home.DatosPerFragment"
+        android:name="com.carlosv.dolaraldia.ui.pagomovil.DatosPerFragment"
         android:label="@string/pago_movil"
         tools:layout="@layout/fragment_datos_per" />
     <fragment
