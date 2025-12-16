@@ -34,12 +34,12 @@ class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
             findNavController().navigate(R.id.nav_history)
             dismiss() // Cierra el BottomSheet después de la selección
         }
-
-        binding.optionPremium.setOnClickListener {
-            // En lugar de navegar, mostramos nuestro nuevo BottomSheet
-            PremiumOptionsBottomSheet.newInstance()
-                .show(parentFragmentManager, PremiumOptionsBottomSheet.TAG)
-        }
+// TEMPORALMENTE ELIMINADO POR POLITICAS DE GOOGLE
+//        binding.optionPremium.setOnClickListener {
+//            // En lugar de navegar, mostramos nuestro nuevo BottomSheet
+//            PremiumOptionsBottomSheet.newInstance()
+//                .show(parentFragmentManager, PremiumOptionsBottomSheet.TAG)
+//        }
 
 
 

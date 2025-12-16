@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 152
-        versionName = "Flash1.2"
+        versionCode = 154
+        versionName = "Flash1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

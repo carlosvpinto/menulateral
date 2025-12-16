@@ -86,36 +86,36 @@ class MyApplication :
     val repository by lazy {
         NotificationsRepository(database.notificationDao())
     }
-
-    private fun showPremiumDialog(activity: Activity) {
-
-        // 1. Verificamos si la actividad está finalizando o ya ha sido destruida.
-        //    'isFinishing' y 'isDestroyed' son las comprobaciones de seguridad más importantes.
-        if (activity.isFinishing || activity.isDestroyed) {
-            Log.e(LOG_TAG, "showPremiumDialog abortado: La actividad ya no es válida.")
-            return // Detenemos la función si la actividad no es válida.
-        }
-
-        // 2. Mantenemos el runOnUiThread para asegurar que se ejecute en el hilo principal.
-        activity.runOnUiThread {
-            // Re-verificamos por si acaso el estado cambió en el último instante.
-            if (!activity.isFinishing && !activity.isDestroyed) {
-                MaterialAlertDialogBuilder(activity)
-                    .setTitle(R.string.premium_dialog_title)
-                    .setMessage(R.string.premium_dialog_message_v3)
-                    .setPositiveButton(R.string.premium_dialog_positive_button) { dialog, _ ->
-                        val intent = Intent(activity, PlanesPagoActivity::class.java)
-                        activity.startActivity(intent)
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton(R.string.premium_dialog_negative_button) { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .setIcon(R.drawable.premiun)
-                    .show()
-            }
-        }
-    }
+// Eliminado por politicas de google**************************************************
+//    private fun showPremiumDialog(activity: Activity) {
+//
+//        // 1. Verificamos si la actividad está finalizando o ya ha sido destruida.
+//        //    'isFinishing' y 'isDestroyed' son las comprobaciones de seguridad más importantes.
+//        if (activity.isFinishing || activity.isDestroyed) {
+//            Log.e(LOG_TAG, "showPremiumDialog abortado: La actividad ya no es válida.")
+//            return // Detenemos la función si la actividad no es válida.
+//        }
+//
+//        // 2. Mantenemos el runOnUiThread para asegurar que se ejecute en el hilo principal.
+//        activity.runOnUiThread {
+//            // Re-verificamos por si acaso el estado cambió en el último instante.
+//            if (!activity.isFinishing && !activity.isDestroyed) {
+//                MaterialAlertDialogBuilder(activity)
+//                    .setTitle(R.string.premium_dialog_title)
+//                    .setMessage(R.string.premium_dialog_message_v3)
+//                    .setPositiveButton(R.string.premium_dialog_positive_button) { dialog, _ ->
+//                        val intent = Intent(activity, PlanesPagoActivity::class.java)
+//                        activity.startActivity(intent)
+//                        dialog.dismiss()
+//                    }
+//                    .setNegativeButton(R.string.premium_dialog_negative_button) { dialog, _ ->
+//                        dialog.dismiss()
+//                    }
+//                    .setIcon(R.drawable.premiun)
+//                    .show()
+//            }
+//        }
+//    }
 
     //Creamos el objeto Callback Para las Notificaciones
     private val databaseCallback = object : RoomDatabase.Callback() {
@@ -524,9 +524,10 @@ class MyApplication :
                     override fun onAdDismissedFullScreenContent() {
                         appOpenAd = null; isShowingAd = false
                         if (activity !is SplashActivity) {
-                            if (premiumDialogManager.shouldShowPremiumDialog()) {
-                                showPremiumDialog(activity)
-                            }
+                            //ELIMINADO POR POLITICAS DE GOOGLE
+//                            if (premiumDialogManager.shouldShowPremiumDialog()) {
+//                                showPremiumDialog(activity)
+//                            }
                         }
 
 

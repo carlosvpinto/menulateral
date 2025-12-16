@@ -64,15 +64,24 @@ class DatosPerFragment : Fragment() {
         sharedPref = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         binding.recyPagoMovil.layoutManager = LinearLayoutManager(requireContext())
 
-
-
+        // Cargar datos iniciales
         llamarPagoMovil()
+
+        // --- LÓGICA DEL BOTÓN "AGREGAR PRIMERA CUENTA" (DEL ESTADO VACÍO) ---
+        binding.btnAgregarDesdeVacio.setOnClickListener {
+            // Simulamos clic en el botón agregar principal
+            binding.btnGuardar.text = "Agregar" // Aseguramos estado
+            binding.btnGuardar.performClick()
+        }
 
         binding.btnCancelar.setOnClickListener {
             binding.btnGuardar.text = "Agregar"
             binding.btnCancelar.visibility = View.GONE
             binding.linearLayoutDatosInfo.visibility = View.GONE
-            binding.recyPagoMovil.visibility = View.VISIBLE
+
+            // Al cancelar, verificamos si mostramos la lista o el estado vacío
+            actualizarVisibilidadLista()
+
             rutaImagenSeleccionada = null
         }
 
@@ -87,7 +96,11 @@ class DatosPerFragment : Fragment() {
                     limpiarDatosLinearLayout()
                     binding.btnGuardar.text = "Guardar"
                     binding.btnCancelar.visibility = View.VISIBLE
+
+                    // Ocultamos tanto la lista como el mensaje de vacío porque estamos editando
                     binding.recyPagoMovil.visibility = View.GONE
+                    binding.emptyStateView.visibility = View.GONE
+
                     rutaImagenSeleccionada = null
                 }
                 "Guardar" -> {
@@ -135,15 +148,43 @@ class DatosPerFragment : Fragment() {
         if (!pagoMovilList.isNullOrEmpty()) {
             pagosMovils.addAll(pagoMovilList)
         }
+
+        // --- AQUÍ CONECTAMOS EL ADAPTER CON EL CALLBACK NUEVO ---
         adapterPM = PagoMovilAdapter(
             this@DatosPerFragment,
             pagosMovils,
             ::mostrarDatosaEditar,
             ::borrarPagoMovil,
-            ::actualizarPredeterminado
+            ::actualizarPredeterminado,
+            // Callback que recibe true si la lista está vacía
+            { estaVacio ->
+                // Solo actualizamos si NO estamos en modo edición (formulario oculto)
+                if (binding.linearLayoutDatosInfo.visibility == View.GONE) {
+                    toggleEmptyState(estaVacio)
+                }
+            }
         )
         binding.recyPagoMovil.adapter = adapterPM
         adapterPM?.updatePrecioBancos(pagoMovilList)
+
+        // Verificación inicial
+        actualizarVisibilidadLista()
+    }
+
+    // --- FUNCIÓN AUXILIAR PARA CONTROLAR VISIBILIDAD ---
+    private fun actualizarVisibilidadLista() {
+        val estaVacio = pagosMovils.isEmpty()
+        toggleEmptyState(estaVacio)
+    }
+
+    private fun toggleEmptyState(isEmpty: Boolean) {
+        if (isEmpty) {
+            binding.recyPagoMovil.visibility = View.GONE
+            binding.emptyStateView.visibility = View.VISIBLE
+        } else {
+            binding.recyPagoMovil.visibility = View.VISIBLE
+            binding.emptyStateView.visibility = View.GONE
+        }
     }
 
     private fun guardarPagoMovil(context: Context) {
@@ -181,10 +222,14 @@ class DatosPerFragment : Fragment() {
             val editor = sharedPreferences.edit()
             editor.putString("datosPMovilList", pagoMovilListJson)
             editor.apply()
+
             binding.btnGuardar.text = "Agregar"
             binding.linearLayoutDatosInfo.visibility = View.GONE
             binding.btnCancelar.visibility = View.GONE
+
+            // Actualizamos la vista (esto mostrará la lista porque acabamos de guardar)
             binding.recyPagoMovil.visibility = View.VISIBLE
+
             ocultarTeclado(binding.btnGuardar, requireContext())
             rutaImagenSeleccionada = null
         } else {
@@ -212,7 +257,7 @@ class DatosPerFragment : Fragment() {
                 cedula = binding.spinnerLetra.selectedItem.toString() + binding.txtCedula.text.toString(),
                 banco = binding.spinnerBanco.selectedItem.toString(),
                 fecha = Date().toString(),
-                imagen = rutaImagenSeleccionada // Si el usuario no cambia la imagen, conserva la anterior
+                imagen = rutaImagenSeleccionada
             )
             pagoMovilList[posicion!!] = pagoMovil
             val pagoMovilListJson = gson.toJson(pagoMovilList)
@@ -221,7 +266,10 @@ class DatosPerFragment : Fragment() {
             editor.apply()
             binding.btnGuardar.text = "Agregar"
             binding.linearLayoutDatosInfo.visibility = View.GONE
+
+            // Regresamos a la lista
             binding.recyPagoMovil.visibility = View.VISIBLE
+
             llamarPagoMovil()
             ocultarTeclado(binding.btnGuardar, requireContext())
             rutaImagenSeleccionada = null
@@ -274,6 +322,8 @@ class DatosPerFragment : Fragment() {
     private fun mostrarDatosaEditar(pagomovil: DatosPMovilModel, position: Int) {
         binding.linearLayoutDatosInfo.visibility = View.VISIBLE
         binding.recyPagoMovil.visibility = View.GONE
+        binding.emptyStateView.visibility = View.GONE // Aseguramos ocultar el empty state al editar
+
         binding.btnGuardar.text = "Actualizar"
         binding.txtNombre.setText(pagomovil.nombre)
         binding.txtTlf.setText(pagomovil.tlf)
@@ -324,8 +374,6 @@ class DatosPerFragment : Fragment() {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    // Conversión y guardado de la imagen seleccionada, corrigiendo orientación
-// --- FUNCIÓN TOTALMENTE ACTUALIZADA ---
     private fun convertToJpgAndStore(imageUri: Uri) {
         binding.apply {
             btnGuardar.isEnabled = false
@@ -334,31 +382,23 @@ class DatosPerFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // Realizamos la decodificación y corrección de orientación en un hilo de fondo
                 val bitmap = withContext(Dispatchers.IO) {
                     getCorrectlyOrientedBitmap(imageUri)
                 } ?: throw Exception("No se pudo decodificar la imagen.")
 
-                // --- ¡LA CORRECCIÓN CLAVE! ---
-                // Guardamos la imagen en el almacenamiento INTERNO y PERMANENTE de la app.
                 val permanentFile = withContext(Dispatchers.IO) {
-                    // Creamos un nombre de archivo único
                     val fileName = "pm_image_${System.currentTimeMillis()}.jpg"
-                    // Obtenemos el directorio de archivos internos (filesDir)
                     val directory = requireContext().filesDir
                     val file = File(directory, fileName)
 
-                    // Guardamos el bitmap en el nuevo archivo
                     FileOutputStream(file).use { outputStream ->
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
                     }
-                    file // Devolvemos el archivo permanente
+                    file
                 }
 
-                // Guardamos la ruta ABSOLUTA y PERMANENTE
                 rutaImagenSeleccionada = permanentFile.absolutePath
 
-                // Volvemos al hilo principal para actualizar la UI
                 withContext(Dispatchers.Main) {
                     binding.apply {
                         btnGuardar.isEnabled = true
@@ -421,12 +461,13 @@ class DatosPerFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
     private fun validarDatos(): Pair<Boolean, String> {
         val nombre = binding.txtNombre.text.toString().trim()
         val cedula = binding.txtCedula.text.toString().trim()
         val tlf = binding.txtTlf.text.toString().trim()
         val banco = binding.spinnerBanco.selectedItem.toString()
-       // Log.d(TAG, "validarDatos: obtenerLenguajeSistema ${chequeaLenguajeSistema()}")
+
         return when {
             nombre.isEmpty() -> {
                 binding.txtNombre.error = "El nombre no puede estar vacío"
@@ -441,17 +482,9 @@ class DatosPerFragment : Fragment() {
                 Pair(false, "El teléfono no puede estar vacío")
             }
             banco.isEmpty() -> {
-                // binding.spinnerBanco.error = "El teléfono no puede estar vacío"
                 Pair(false, "El Banco no puede estar vacío")
             }
-//            banco == chequeaLenguajeSistema() -> {
-//                Pair(false, chequeaLenguajeSistema())
-//            }
             else -> Pair(true, "")
         }
     }
 }
-
-
-
-
