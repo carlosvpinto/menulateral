@@ -15,6 +15,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.carlosv.dolaraldia.ui.pago.PlanesPagoActivity
 import com.carlosv.dolaraldia.utils.Constants.AD_UNIT_ID_OPEN
+import com.carlosv.dolaraldia.utils.Constants.MIN_BACKGROUND_TIME_MS
 import com.carlosv.dolaraldia.utils.premiun.PremiumDialogManager
 import com.carlosv.dolaraldia.utils.roomDB.NotificationEntity
 import com.carlosv.dolaraldia.utils.roomDB.AppDatabase
@@ -48,8 +49,7 @@ private const val LOG_TAG: String = "AppOpenAdManager"
 /** Variable para asegurar que el anuncio se muestra solo una vez */
 private var hasAdBeenShown = false
 
-// para que se muestre un anuncio al volver. 20 minutos = 20 * 60 * 1000 = 1,200,000 milisegundos.
-private const val MIN_BACKGROUND_TIME_MS = 1_200_000L
+
 
 
 /** Application class that initializes, loads and show ads when activities change states. */
@@ -170,6 +170,9 @@ class MyApplication :
             // Apenas el SDK responde, cargamos el anuncio.
             appOpenAdManager.loadAd(this)
         }
+
+
+
         database.openHelper.writableDatabase
         //countDeviceTokens()
         CoroutineScope(Dispatchers.IO).launch {
@@ -393,20 +396,38 @@ class MyApplication :
 
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
-
     fun onMoveToForeground() {
         isAppInForeground = true
 
-        val timeInBackground = System.currentTimeMillis() - appBackgroundTime
+        // 1. Si es Splash, no hacemos nada (Tu corrección anterior)
+        if (currentActivity is com.carlosv.dolaraldia.SplashActivity) {
+            return
+        }
 
-        // Convertimos a segundos para el Log
+        val timeInBackground = System.currentTimeMillis() - appBackgroundTime
         val seconds = timeInBackground / 1000
 
-        if (appBackgroundTime > 0 && timeInBackground >= MIN_BACKGROUND_TIME_MS) {
-            Log.d(LOG_TAG, "ÉXITO: Pasaron $seconds segundos (Mínimo requerido: ${MIN_BACKGROUND_TIME_MS/1000}). Mostrando anuncio.")
-            currentActivity?.let { appOpenAdManager.showAdIfAvailableOnResume(it) }
+        // 2. Verificamos las condiciones
+        if (appBackgroundTime > 0 && (timeInBackground >= MIN_BACKGROUND_TIME_MS || appOpenAdManager.shouldForceShow())) {
+
+            Log.d(LOG_TAG, "ÉXITO: Pasaron $seconds segundos. Preparando anuncio...")
+
+            // --- CORRECCIÓN AQUÍ: EL RETRASO DE SEGURIDAD ---
+            // Esperamos 0.5 segundos para asegurar que la Activity esté 100% visible
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+
+                // Verificamos de nuevo que seguimos en primer plano (por si cerró la app en ese 0.5s)
+                if (isAppInForeground && currentActivity != null) {
+                    Log.d(LOG_TAG, "Mostrando anuncio ahora (Activity lista).")
+
+                    appOpenAdManager.resetForceFlag() // Apagamos la bandera justo antes de mostrar
+                    appOpenAdManager.showAdIfAvailableOnResume(currentActivity!!)
+                }
+
+            }, 500) // 700 milisegundos de espera
+
         } else {
-            Log.d(LOG_TAG, "IGNORADO: Solo pasaron $seconds segundos (Mínimo requerido: ${MIN_BACKGROUND_TIME_MS/1000}) o es el primer inicio.")
+            Log.d(LOG_TAG, "IGNORADO: Solo pasaron $seconds segundos.")
         }
     }
 
@@ -448,19 +469,36 @@ class MyApplication :
         return appOpenAdManager.isAdAvailable()
     }
 
-    //123456789
-    // --- CLASE INTERNA AppOpenAdManager (CON LÓGICA ANTI-CICLOS) ---
+
+
+    // --- CLASE INTERNA AppOpenAdManager OPTIMIZADA (CON REINTENTOS) ---
     private inner class AppOpenAdManager {
         private var appOpenAd: AppOpenAd? = null
         private var isLoadingAd = false
         var isShowingAd = false
         private var loadTime: Long = 0
 
+        // Variable para forzar el anuncio si falló al mostrarse previamente
+        var forceShowNextResume = false
+
+        // Variable para contar intentos fallidos de carga (Internet)
+        private var retryAttempt = 0
+
+        fun shouldForceShow(): Boolean {
+            return forceShowNextResume
+        }
+
+        fun resetForceFlag() {
+            forceShowNextResume = false
+        }
+
         fun loadAd(context: Context) {
             if (isLoadingAd || isAdAvailable()) { return }
+
             isLoadingAd = true
-            Log.d(LOG_TAG, "Iniciando carga del anuncio...")
+            Log.d(LOG_TAG, "Iniciando PRE-CARGA del anuncio en background...")
             val request = AdRequest.Builder().build()
+
             AppOpenAd.load(
                 context, AD_UNIT_ID_OPEN, request,
                 object : AppOpenAd.AppOpenAdLoadCallback() {
@@ -468,43 +506,43 @@ class MyApplication :
                         appOpenAd = ad
                         isLoadingAd = false
                         loadTime = Date().time
-                        Log.d(LOG_TAG, "¡Anuncio cargado y listo!")
-                        // Notificamos al callback que el anuncio se cargó.
+
+                        // ÉXITO: Reseteamos el contador de reintentos
+                        retryAttempt = 0
+
+                        Log.d(LOG_TAG, "✅ Anuncio cargado y guardado en caché para la próxima apertura.")
                         adLoadCallback?.onAdLoaded()
                     }
+
                     override fun onAdFailedToLoad(loadError: LoadAdError) {
-                        isLoadingAd = false; appOpenAd = null
-                        Log.e(LOG_TAG, "Fallo al cargar el anuncio: ${loadError.message}")
                         isLoadingAd = false
                         appOpenAd = null
+                        Log.e(LOG_TAG, "❌ Fallo carga background: ${loadError.message} (Code: ${loadError.code})")
 
-                        // --- AGREGA ESTOS LOGS DETALLADOS ---
-                        Log.e(LOG_TAG, "❌ ERROR CRÍTICO AL CARGAR ANUNCIO:")
-                        Log.e(LOG_TAG, "👉 Código de Error: ${loadError.code}")
-                        Log.e(LOG_TAG, "👉 Mensaje: ${loadError.message}")
-                        Log.e(LOG_TAG, "👉 Dominio: ${loadError.domain}")
-                        Log.e(LOG_TAG, "👉 Causa: ${loadError.cause}")
+                        // --- LÓGICA DE REINTENTO (Vital para Venezuela) ---
+                        retryAttempt++
+                        // Calculamos espera exponencial: 2s, 4s, 8s, 16s... (Tope 64s)
+                        val delayMillis = (1000L * Math.pow(2.0, Math.min(6, retryAttempt).toDouble())).toLong()
+
+                        Log.d(LOG_TAG, "🔄 Reintentando carga en ${delayMillis/1000} segundos (Intento #$retryAttempt)...")
+
+                        // Usamos un Handler para esperar sin bloquear la app
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            loadAd(context)
+                        }, delayMillis)
                     }
                 }
             )
         }
 
-        // private' a 'fun' (público dentro del paquete o clase)
         fun isAdAvailable(): Boolean = appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
 
-
         private fun wasLoadTimeLessThanNHoursAgo(numHours: Long): Boolean {
-            // Calcula la diferencia en milisegundos entre la hora actual y la hora de carga.
             val dateDifference: Long = Date().time - loadTime
-
-            // Define cuántos milisegundos hay en una hora.
             val numMilliSecondsPerHour: Long = 3600000
-
-            // Devuelve 'true' si la diferencia es menor que el umbral de horas permitido.
             return dateDifference < (numMilliSecondsPerHour * numHours)
         }
 
-        // Función para mostrar el anuncio al VOLVER a la app.
         fun showAdIfAvailableOnResume(activity: Activity) {
             showAdIfAvailable(activity, object: OnShowAdCompleteListener {
                 override fun onShowAdComplete() {}
@@ -513,42 +551,76 @@ class MyApplication :
         }
 
         fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
-            if (AppPreferences.isUserPremiumActive() || isShowingAd) {
-                if (AppPreferences.isUserPremiumActive()) onShowAdCompleteListener.onShowAdComplete()
-                Log.d(LOG_TAG, "Anuncio PREMIUN NO SE MUESTRA.... ")
+            // 1. Verificación de Premium
+            if (AppPreferences.isUserPremiumActive()) {
+                Log.d(LOG_TAG, "Usuario Premium: Saltando anuncio.")
+                onShowAdCompleteListener.onShowAdComplete()
                 return
             }
+
+            // 2. Evitar mostrar si ya se está mostrando
+            if (isShowingAd) {
+                Log.d(LOG_TAG, "El anuncio ya se está mostrando.")
+                return
+            }
+
+            // 3. Lógica Principal
             if (isAdAvailable()) {
-                Log.d(LOG_TAG, "Anuncio disponible. Mostrando...")
+                Log.d(LOG_TAG, "✅ Anuncio en caché disponible. Mostrando...")
+
+                // ✅ Solo reseteamos si SÍ vamos a mostrar el anuncio
+                resetForceFlag()
+
                 appOpenAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
                     override fun onAdDismissedFullScreenContent() {
-                        appOpenAd = null; isShowingAd = false
-                        if (activity !is SplashActivity) {
-                            //ELIMINADO POR POLITICAS DE GOOGLE
-//                            if (premiumDialogManager.shouldShowPremiumDialog()) {
-//                                showPremiumDialog(activity)
-//                            }
-                        }
+                        appOpenAd = null
+                        isShowingAd = false
 
+                        // Lógica después de cerrar el anuncio
+//                        if (activity !is com.carlosv.dolaraldia.ui.splash.SplashActivity) {
+//                            // Si necesitas lógica post-anuncio
+//                        }
 
                         onShowAdCompleteListener.onShowAdComplete()
+
+                        // IMPORTANTE: Cargamos INMEDIATAMENTE el siguiente
                         loadAd(activity)
                     }
+
                     override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                        appOpenAd = null; isShowingAd = false
-                        Log.e(LOG_TAG, "Fallo al mostrar el anuncio: ${adError.message}")
+                        appOpenAd = null
+                        isShowingAd = false
+                        Log.e(LOG_TAG, "Fallo al renderizar anuncio: ${adError.message}")
+
+                        // Si falló (app en background), forzamos para la próxima vez
+                        forceShowNextResume = true
+                        Log.d(LOG_TAG, "⚠️ Se forzará el anuncio en el próximo retorno.")
+
                         onShowAdCompleteListener.onShowAdComplete()
                         loadAd(activity)
                     }
+
                     override fun onAdShowedFullScreenContent() {
                         isShowingAd = true
-                        Log.d(LOG_TAG, "Anuncio mostrado.")
+                        Log.d(LOG_TAG, "Anuncio en pantalla.")
                     }
                 }
                 appOpenAd?.show(activity)
+
             } else {
-                Log.d(LOG_TAG, "Anuncio no disponible. Esperando a que onAdLoaded lo dispare.")
+                Log.d(LOG_TAG, "⚠️ Anuncio NO listo en caché.")
+
+                // NUEVO: Como no pudimos mostrar el anuncio (ej. Splash timeout),
+                // activamos la bandera para que la próxima vez que entre,
+                // el anuncio salga SÍ O SÍ, ignorando los 2 minutos.
+                forceShowNextResume = true
+                Log.d(LOG_TAG, "⚠️ Bandera activada: Se forzará el anuncio en el próximo retorno por falta de carga inicial.")
+
+                // Intentamos cargar (esto activará el sistema de reintentos si falla)
                 loadAd(activity)
+
+                Log.d(LOG_TAG, "Dejando pasar al usuario sin anuncio.")
+                onShowAdCompleteListener.onShowAdComplete()
             }
         }
     }

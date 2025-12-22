@@ -12,11 +12,11 @@ import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+//import com.carlosv.dolaraldia.utils.AppPreferences // Asegúrate de importar esto
+import com.carlosv.dolaraldia.utils.Constants.MAX_WAIT_TIME
 import com.carlosv.menulateral.R
 import java.util.concurrent.atomic.AtomicBoolean
 
-// Reducimos el tiempo de espera a 2.5 segundos (Equilibrio entre cargar anuncio y UX)
-private const val MAX_WAIT_TIME = 6000L
 private val TAG: String = "AppOpenAdManager"
 
 class SplashActivity : AppCompatActivity() {
@@ -29,15 +29,27 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
+        //*************************
         startAnimations()
 
-        // 1. Optimización: ¿El anuncio ya está listo desde el inicio?
+        // --- 1. VERIFICACIÓN PREMIUM (PRIORIDAD MÁXIMA) ---
+        if (AppPreferences.isUserPremiumActive()) {
+            Log.d(TAG, "👑 Usuario Premium detectado. Iniciando modo rápido.")
+            // No buscamos anuncios. No iniciamos el timer largo.
+            // Iniciamos un timer cortito exclusivo para Premium (solo por estética).
+            startPremiumFastTrack()
+            return
+        }
+
+        // --- 2. LÓGICA ESTÁNDAR (USUARIOS GRATIS) ---
+
+        // Optimización: ¿El anuncio ya está listo desde el inicio?
         val googleApp = application as? MyApplication
         if (googleApp != null && googleApp.isAdAvailable()) {
             Log.d(TAG, "Anuncio listo en caché, mostrando de inmediato.")
             showAdAndStartApp()
         } else {
-            // 2. Si no, iniciamos el contador de seguridad
+            // Si no, iniciamos el contador de seguridad largo (ej. 6 segundos)
             createTimer(MAX_WAIT_TIME)
         }
     }
@@ -67,8 +79,25 @@ class SplashActivity : AppCompatActivity() {
             .start()
     }
 
+    // --- NUEVO MÉTODO PARA PREMIUM ---
+    private fun startPremiumFastTrack() {
+        // Solo esperamos 1.2 segundos para que la animación del logo se vea bonita.
+        // Esto se siente "instantáneo" pero profesional.
+        countDownTimer = object : CountDownTimer(1000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                // No hacemos nada, solo esperamos.
+            }
+
+            override fun onFinish() {
+                Log.d(TAG, "👑 Tiempo Premium completado. Bienvenido.")
+                showAdAndStartApp()
+            }
+        }
+        countDownTimer?.start()
+    }
+
     private fun createTimer(milliseconds: Long) {
-        // Intervalo de 500ms para revisar más frecuentemente, no cada segundo
+        // Intervalo de 500ms para revisar más frecuentemente
         countDownTimer = object : CountDownTimer(milliseconds, 500) {
             override fun onTick(millisUntilFinished: Long) {
                 val googleApp = application as? MyApplication
@@ -82,29 +111,24 @@ class SplashActivity : AppCompatActivity() {
             }
 
             override fun onFinish() {
-                // Se acabó el tiempo. Si el usuario sigue aquí, avanzamos sin anuncio.
                 Log.d(TAG, "Tiempo agotado. Pasando a MainActivity.")
-                startMainActivity()
+                showAdAndStartApp()
             }
         }
         countDownTimer?.start()
     }
 
     private fun showAdAndStartApp() {
-        // Si ya estamos navegando, no hacemos nada
         if (isNavigating.get()) return
 
         val googleApp = application as? MyApplication
 
         googleApp?.showAdIfAvailable(this, object : MyApplication.OnShowAdCompleteListener {
             override fun onShowAdComplete() {
-                // Ya sea que el anuncio se mostró y cerró, o falló al mostrarse:
                 startMainActivity()
             }
 
-            override fun onAdLoaded() {
-                // No requerido aquí
-            }
+            override fun onAdLoaded() {}
         })
     }
 
@@ -112,7 +136,7 @@ class SplashActivity : AppCompatActivity() {
         // Seteamos la bandera en true. Si ya era true, significa que ya nos fuimos.
         if (isNavigating.getAndSet(true)) return
 
-        // Cancelamos el timer por seguridad si llegamos aquí por otro medio
+        // Cancelamos cualquier timer activo (sea el Premium o el Normal)
         countDownTimer?.cancel()
 
         val intent = Intent(this, MainActivity::class.java)
@@ -133,7 +157,6 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Limpieza para evitar memory leaks
         countDownTimer?.cancel()
     }
 }

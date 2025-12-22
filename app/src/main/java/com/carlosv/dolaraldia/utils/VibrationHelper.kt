@@ -58,6 +58,27 @@ object VibrationHelper {
         }
     }
 
+
+    fun vibrateShake(context: Context) {
+        val vibrator = getVibrator(context) ?: return
+
+        vibrator.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Patrón: [espera, vibra, espera, vibra, espera, vibra]
+                // 15ms es muy corto (sentimiento "crujiente" o mecánico)
+                val timings = longArrayOf(0, 25, 40, 25, 40, 25)
+
+                // -1 significa que no se repite (lo hace una sola vez)
+                val effect = VibrationEffect.createWaveform(timings, -1)
+                it.vibrate(effect)
+            } else {
+                // Fallback para celulares viejos: una vibración cortita
+                @Suppress("DEPRECATION")
+                it.vibrate(100L)
+            }
+        }
+    }
+
     /**
      * Función privada para obtener el servicio de Vibrator de forma compatible
      * y comprobar si el dispositivo realmente puede vibrar.
@@ -78,4 +99,5 @@ object VibrationHelper {
         }
         return vibrator
     }
+
 }

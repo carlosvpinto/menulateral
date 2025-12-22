@@ -11,7 +11,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
+        android:gravity="center"
+        android:layout_gravity="center"
         android:orientation="horizontal">
 
         <ImageView
@@ -24,11 +25,11 @@
 
         <TextView
             android:id="@+id/text_view_title"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:text="Dólar al Día"
+            android:layout_marginStart="18dp"
+
+            android:text="@string/d_lar_al_d_a"
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -39,8 +40,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:background="#40FFFFFF" />
 
     <!-- 3. FILA PARA EL DÓLAR (LinearLayout horizontal) -->
@@ -63,7 +64,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             tools:text="Bs. 195,25" />
     </LinearLayout>
@@ -89,9 +90,35 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             tools:text="Bs. 226,04" />
+    </LinearLayout>
+
+    <!-- 4. FILA PARA EL EURO (LinearLayout horizontal) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/text_view_USDT_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/usdt"
+            android:textColor="#B0FFFFFF"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/text_view_USDT_rate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="Bs. 426,04" />
     </LinearLayout>
 
     <!-- 5. PIE DE PÁGINA (Fecha de actualización) -->
@@ -99,7 +126,7 @@
         android:id="@+id/txt_fechaactualizacion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:textColor="#90FFFFFF"
         android:textSize="12sp"

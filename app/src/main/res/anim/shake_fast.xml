@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/overshoot_interpolator">
+
+    <!-- 1. POP: Se infla rápido un 20% y regresa -->
+    <scale
+        android:duration="400"
+        android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:repeatCount="1"
+        android:repeatMode="reverse"
+        android:toXScale="1.2"
+        android:toYScale="1.2" />
+
+    <!-- 2. SHAKE: Rotación rápida tipo vibración -->
+    <!-- duration="50" es ULTRA rápido por cada sacudida -->
+    <rotate
+        android:duration="60"
+        android:fromDegrees="-15"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:repeatCount="5"
+        android:repeatMode="reverse"
+        android:toDegrees="15" />
+
+</set>

@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 154
-        versionName = "Flash1.4"
+        versionCode = 156
+        versionName = "FlashReload1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -201,6 +201,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.24")
 
     implementation ("com.google.android.gms:play-services-base:18.5.0")
+
+    //Animaciones Lottie
+    implementation("com.airbnb.android:lottie:6.4.0")
 
     // LÍNEAS A AÑADIR
     // 1. Adaptador de mediación de Meta

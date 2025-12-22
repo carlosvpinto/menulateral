@@ -14,6 +14,7 @@ import com.carlosv.dolaraldia.MainActivity
 import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiOficialTipoCambio
 import com.carlosv.dolaraldia.model.apiAlcambioEuro.Eur
 import com.carlosv.dolaraldia.model.apiAlcambioEuro.Usd
+import com.carlosv.dolaraldia.model.apiAlcambioEuro.Usdt
 import com.carlosv.dolaraldia.utils.Constants
 import com.google.gson.Gson
 import kotlinx.coroutines.*
@@ -64,7 +65,7 @@ class AppWidgetHome : AppWidgetProvider() {
                         // Guardamos la respuesta completa en caché usando TU función.
                         guardarResponse(context, apiResponse)
                         // Actualizamos la UI del widget con los datos de la API.
-                        updateWidgetViews(appWidgetManager, appWidgetId, views, apiResponse.monitors.usd, apiResponse.monitors.eur)
+                        updateWidgetViews(appWidgetManager, appWidgetId, views, apiResponse.monitors.usd, apiResponse.monitors.eur, apiResponse.monitors.usdt)
                     } else {
                         throw Exception("La llamada a la API falló o devolvió datos nulos.")
                     }
@@ -79,7 +80,7 @@ class AppWidgetHome : AppWidgetProvider() {
                     if (cachedResponse != null) {
                         Log.d(TAG, "Éxito al cargar desde caché. Actualizando widget con datos antiguos.")
                         // Usamos los datos del caché para actualizar el widget.
-                        updateWidgetViews(appWidgetManager, appWidgetId, views, cachedResponse.monitors.usd, cachedResponse.monitors.eur, isFromCache = true)
+                        updateWidgetViews(appWidgetManager, appWidgetId, views, cachedResponse.monitors.usd, cachedResponse.monitors.eur, cachedResponse.monitors.usdt, isFromCache = true)
                     } else {
                         // --- PASO 3: Si la API y el caché fallan ---
                         Log.e(TAG, "Fallo de API y sin datos en caché. Mostrando estado de error.")
@@ -136,6 +137,7 @@ class AppWidgetHome : AppWidgetProvider() {
             views: RemoteViews,
             usdData: Usd, // Recibimos el objeto Usd directamente
             eurData: Eur, // Recibimos el objeto Eur directamente
+            usdtData: Usdt,
             isFromCache: Boolean = false
         ) {
             withContext(Dispatchers.Main) {
@@ -149,6 +151,7 @@ class AppWidgetHome : AppWidgetProvider() {
 
                 views.setTextViewText(R.id.text_view_dolar_rate, "%.2f".format(usdData.price))
                 views.setTextViewText(R.id.text_view_euro_rate, "%.2f".format(eurData.price))
+                views.setTextViewText(R.id.text_view_USDT_rate, "%.2f".format(usdtData.price))
                 views.setTextViewText(R.id.text_view_updated, finalDateText)
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -163,6 +166,7 @@ class AppWidgetHome : AppWidgetProvider() {
             withContext(Dispatchers.Main) {
                 views.setTextViewText(R.id.text_view_dolar_rate, "Error")
                 views.setTextViewText(R.id.text_view_euro_rate, "N/A")
+                views.setTextViewText(R.id.text_view_USDT_rate, "N/A")
                 views.setTextViewText(R.id.text_view_updated, "Sin conexión")
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             }

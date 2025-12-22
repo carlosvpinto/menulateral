@@ -205,4 +205,6 @@
     <string name="icono_lista_vacia">Icono lista vacia</string>
     <string name="no_tienes_cuentas_guardadas">No tienes cuentas guardadas</string>
     <string name="agrega_tus_datos_de_pago_movil_rapidamente">Agrega tus datos de Pago Móvil para compartirlos rápidamente.</string>
+    <string name="d_lar_al_d_a">Dólar al Día</string>
+    <string name="usdt">Usdt</string>
 </resources>

@@ -627,7 +627,7 @@
                         android:layout_marginTop="10dp"
                         android:text="Eliminar Anuncios"
                         android:visibility="visible"
-                        app:icon="@drawable/eliminar_anun_svg"
+                        app:icon="@drawable/regalo"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />

@@ -94,6 +94,7 @@ import java.util.Calendar
 import android.graphics.Typeface
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.NotificationCompat.getColor
+import com.carlosv.dolaraldia.utils.VibrationHelper
 
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -287,6 +288,12 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
                 safeBinding.buttonRewardedAd.isEnabled = true
                 safeBinding.buttonRewardedAd.extend()
                 isRewardedAdReady = true // ¡Importante!
+                binding.buttonRewardedAd.shrink()
+
+                //Llama la animaicon si no es premium
+                if (!AppPreferences.isUserPremiumActive()) {
+                    animarShakeBinance(safeBinding.buttonRewardedAd)
+                }
             }
         }
     }
@@ -302,11 +309,34 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
             activity?.runOnUiThread {
                 // 3. Usa 'safeBinding' en lugar de 'binding' para acceder a las vistas.
                 safeBinding.buttonRewardedAd.isEnabled = false
+                safeBinding.buttonRewardedAd.clearAnimation() // Detener de golpe si falla
+
+
                 isRewardedAdReady = false // ¡Importante!
             }
         }
     }
 
+    private fun animarShakeBinance(view: View) {
+        // Mover 10 pixeles a la izquierda y derecha
+        val shake = android.view.animation.TranslateAnimation(0f, 10f, 0f, 0f)
+
+        // DURACIÓN: 1000ms (1 segundo)
+        shake.duration = 1000
+
+        // El número '9f' significa que vibrará 9 veces en ese segundo.
+        shake.interpolator = android.view.animation.CycleInterpolator(8f)
+
+        // --- AQUÍ CONECTAMOS LA VIBRACIÓN ---
+        // Usamos el contexto de la propia vista para llamar al helper
+        try {
+            VibrationHelper.vibrateOnError(view.context)
+        } catch (e: Exception) {
+            Log.e("Animacion", "Error al vibrar: ${e.message}")
+        }
+
+        view.startAnimation(shake)
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupClickListeners() {
