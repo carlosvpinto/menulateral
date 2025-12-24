@@ -5,7 +5,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-
+import androidx.lifecycle.lifecycleScope
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
@@ -99,7 +99,13 @@ import androidx.core.net.toUri
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import com.carlosv.dolaraldia.utils.Constants.BANCOS
+import com.carlosv.dolaraldia.utils.Constants.CALCULADORA
+import com.carlosv.dolaraldia.utils.Constants.GRAFICOS
+import com.carlosv.dolaraldia.utils.Constants.PAGOMOVIL
+import com.carlosv.dolaraldia.utils.Constants.PLATFORMAS
 import com.google.android.gms.ads.MobileAds
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -164,6 +170,9 @@ class MainActivity : AppCompatActivity() {
         // isAppearanceLightStatusBars = true significa iconos NEGROS
         windowInsetsController.isAppearanceLightStatusBars = false
 
+        // DIAGNÓSTICO: Ver qué trae el intent al nacer
+        Log.d("FCM_DEBUG", "onCreate disparado. Analizando Intent...")
+        imprimirTodosLosExtras(intent)
 
         //enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -172,6 +181,12 @@ class MainActivity : AppCompatActivity() {
 
         val appBar = binding.appBarLayout // O findViewById(R.id.app_bar_layout)
 
+        // SUSCRIPCIÓN SECRETA PARA PRUEBAS (Solo en tu versión de desarrollo o temporalmente)
+        // Esto asegura que tú eres el único que escucha este canal.
+       // com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("desarrollador_carlos")
+
+        // 1. Verificar si venimos de una notificación (App estaba cerrada)
+        procesarNavegacionNotificacion(intent)
         ViewCompat.setOnApplyWindowInsetsListener(appBar) { view, windowInsets ->
             // Obtiene los insets (espacios) de las barras del sistema (status bar, etc.)
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -231,12 +246,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         solicitarPermisoDeNotificaciones()
-        // ¡AQUÍ ESTÁ LA LÓGICA CLAVE!
-        // Comprueba si la actividad fue iniciada por un Intent que contiene datos.
-        handleDeepLink(intent)
 
 
-        // --- El resto de tu lógica de onCreate ---
+
+
         MobileAds.initialize(this) { initializationStatus ->
             Log.d(TAG, "MobileAds SDK Initialized: $initializationStatus")
 
@@ -248,24 +261,105 @@ class MainActivity : AppCompatActivity() {
         movilidadPantalla()
     }
 
-    // Esta función se llama si la actividad ya estaba abierta y recibe una nueva notificación.
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleDeepLink(intent)
+        setIntent(intent) // Actualizar el intent actual es VITAL
+
+        // DIAGNÓSTICO: Ver qué trae el intent al volver del background
+        Log.d("FCM_DEBUG", "onNewIntent disparado. Analizando Intent...")
+        imprimirTodosLosExtras(intent)
+
+        procesarNavegacionNotificacion(intent)
     }
 
-    private fun handleDeepLink(intent: Intent?) {
-        // Buscamos nuestra clave personalizada "deep_link" en los extras del Intent.
-        val deepLinkUriString = intent?.getStringExtra("deep_link")
-
-        if (deepLinkUriString != null) {
-            Log.d("DeepLink", "Recibido deep link: $deepLinkUriString")
-            // Usamos el NavController para navegar a la URI.
-            // El Navigation Component se encargará de encontrar el fragmento correcto
-            // y pasarle los argumentos.
-            navController.navigate(deepLinkUriString.toUri())
+    // --- FUNCIÓN DE DEPURACIÓN (Cópiala en tu clase) ---
+    private fun imprimirTodosLosExtras(intent: Intent?) {
+        if (intent?.extras != null) {
+            val bundle = intent.extras
+            if (bundle != null) {
+                for (key in bundle.keySet()) {
+                    val value = bundle.get(key)
+                    Log.d("FCM_DEBUG", "Llave encontrada: '$key' -> Valor: '$value'")
+                }
+            }
+        } else {
+            Log.d("FCM_DEBUG", "⚠️ El Intent vino SIN extras (Vacío).")
         }
     }
+
+    private fun procesarNavegacionNotificacion(intent: Intent?) {
+        // 1. Recuperar datos
+        var destino = intent?.getStringExtra("FRAGMENT_DESTINO")
+        if (destino.isNullOrEmpty()) {
+            destino = intent?.getStringExtra("ir_a")
+        }
+
+        // 2. GUARDAR EN BD (Corrección del problema 1)
+        // Intentamos guardar siempre que haya datos, por si el Service no corrió.
+        guardarNotificacionDesdeIntent(intent)
+
+        Log.d("FCM_DEBUG", "Destino final detectado: '$destino'")
+
+        if (!destino.isNullOrEmpty()) {
+            try {
+                // Limpieza de extras
+                intent?.removeExtra("FRAGMENT_DESTINO")
+                intent?.removeExtra("ir_a")
+                intent?.removeExtra("title") // Limpiamos para no duplicar guardado al rotar
+                intent?.removeExtra("body")
+
+                // 3. NAVEGACIÓN SEGURA (Corrección del problema 2)
+                // Usamos 'post' para darle unos milisegundos a la UI para inicializarse
+                binding.bottomNavView.post {
+                    Log.d("FCM_DEBUG", "Ejecutando navegación diferida a: $destino")
+
+                    when (destino) {
+                        PAGOMOVIL -> binding.bottomNavView.selectedItemId = R.id.nav_Personal
+                        PLATFORMAS -> binding.bottomNavView.selectedItemId = R.id.nav_platforms
+                        BANCOS -> binding.bottomNavView.selectedItemId = R.id.nav_bancos
+                        CALCULADORA -> binding.bottomNavView.selectedItemId = R.id.nav_home
+                        GRAFICOS -> {
+                            try {
+                                navController.navigate(R.id.nav_history)
+                            } catch (e: Exception) {
+                                // Fallback si falla el controller directo
+                                binding.bottomNavView.selectedItemId = R.id.nav_home
+                            }
+                        }
+                        else -> Log.d("FCM_DEBUG", "Destino desconocido")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("FCM_DEBUG", "Error navegando: ${e.message}")
+            }
+        }
+    }
+
+
+    private fun guardarNotificacionDesdeIntent(intent: Intent?) {
+        val title = intent?.getStringExtra("title")
+        val body = intent?.getStringExtra("body")
+
+        if (!title.isNullOrEmpty() && !body.isNullOrEmpty()) {
+            val repository = (application as MyApplication).repository
+
+            // Usamos lifecycleScope del Activity para lanzar la corrutina
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val notification = com.carlosv.dolaraldia.utils.roomDB.NotificationEntity(
+                        title = title,
+                        body = body,
+                        timestamp = System.currentTimeMillis()
+                    )
+                    repository.insert(notification)
+                    Log.d("FCM_DEBUG", "✅ Notificación guardada en BD desde MainActivity")
+                } catch (e: Exception) {
+                    Log.e("FCM_DEBUG", "Error guardando en BD: ${e.message}")
+                }
+            }
+        }
+    }
+
 
     //PERMISOS DE NOTIFICACION
     private fun solicitarPermisoDeNotificaciones() {

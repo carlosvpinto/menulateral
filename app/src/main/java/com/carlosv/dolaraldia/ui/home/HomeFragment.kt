@@ -164,135 +164,93 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
-
+        val homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+        return binding.root // ¡SOLO ESTO!
+    }
 
-        //Inicializamos el gestor.
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // 1. INICIALIZAR MANAGER (Lo primero)
         rewardedAdManager = RewardedAdManager(requireContext())
 
-        //Llama a la función para actualizar la visibilidad del ícono premium.
+        // 2. CAPTURAR EL COLOR ORIGINAL (Soluciona que la fecha se vea invisible)
+        colorOriginalFecha = binding.txtFechaActualizacionBcv.currentTextColor
+
+        // 3. CONFIGURAR LISTENERS (Clics)
+        setupClickListeners()
+
+        // 4. PREPARAR UI
         updatePremiumIconVisibility()
-
         visibleLayoutProxBcv += 1
-
         configurarBannerWhatsApp()
 
-        // 1. INICIALIZA META ANTES QUE ADMOB
-       // AudienceNetworkAds.initialize(requireContext())
-
-        //cargarDisponibleIOs()
-        MobileAds.initialize(requireContext()) {}
-        // cargarImagendelConfig()
-
-
-
-        // Inicia la precarga del anuncio.
-        binding.buttonRewardedAd.isExtended = false // Inicia contraído
-        binding.buttonRewardedAd.isEnabled = false   // Inicia deshabilitado
-        rewardedAdManager.loadAd(this)             // Inicia la carga del primer anuncio
-
-
-        //PARA CARGAR ADMOB
-        layout = binding.linearLayout3
-        mAdView = binding.adView
-        // mAdView = findViewById(R.id.adView)
-        try {
-            val adRequest = AdRequest.Builder().build()
-            mAdView?.loadAd(adRequest)
-
-        } catch (e: Exception) {
-            Log.e("AdMob", "Error al cargar el anuncio mandado por la app: ${e.localizedMessage}")
-            FirebaseCrashlytics.getInstance().recordException(e)
-        }
-
-
-        setupClickListeners() // Una nueva función para organizar los listeners.
-
-        // Obtén una referencia a SharedPreferences
-        val sharedPreferences =
-            requireContext().getSharedPreferences("MiPreferencia", AppCompatActivity.MODE_PRIVATE)
-        // Obtener referencia a SharedPreferences
-
-        // Recuperar el valor entero
-        numeroNoturno = sharedPreferences.getInt("numero_noturno", 0)
-
-        // Guarda el color original una sola vez
-        colorOriginalFecha = binding.txtFechaActualizacionBcv.currentTextColor
-        //VERIFICA SI QUE MEDO TIENE GUARDADO
-        // setDayNight(modoDark())
-        binding.swipeRefreshLayout.setOnRefreshListener {
-            comenzarCarga()
-            refreshAllApis()
-        }
-
-
-        //MODO DESRROLLLO BORRAR datos PREMIUN Y CONTADOR**********
+        // Reset del Easter Egg
+        resetHandler.removeCallbacks(resetRunnable)
         binding.imglogo.setOnClickListener {
+            manejarEasterEgg() // (He movido tu lógica de toques a una funcioncita para limpiar aqui)
+        }
 
-
-
-            // Devuelve 'true' para indicar que el evento ha sido manejado.
-            true
-
-            resetHandler.removeCallbacks(resetRunnable)
-
-            // Incrementamos el contador.
-            tapCounter++
-
-            Log.d("EasterEgg", "Toque número: $tapCounter")
-
-            // Comprobamos si se ha alcanzado el número secreto de toques.
-            if (tapCounter == SECRET_TAP_COUNT) {
-                // ¡Éxito!
-                Log.d("EasterEgg", "¡Secreto activado!")
-
-                // 1. Obtenemos el NavController del fragmento actual.
-                val navController = findNavController()
-
-                // 2. Le pedimos que navegue al ID del nuevo destino que definimos en el XML.
-                navController.navigate(R.id.nav_debug_premium)
-                // Lanzamos la actividad secreta.
-
-                tapCounter = 0
-
-            } else {
-                // Si aún no se alcanza el objetivo, programamos un reseteo del contador
-                // para dentro de 1.5 segundos. Si el usuario no vuelve a tocar en ese
-                // tiempo, la cuenta vuelve a cero.
-                resetHandler.postDelayed(resetRunnable, 1500) // 1.5 segundos
+        // 5. SOLUCIÓN AL CONGELAMIENTO (Botón BCV)
+        binding.btnBcv.post {
+            if (_binding != null) {
+                binding.btnBcv.isChecked = true
             }
         }
 
+        // 6. CARGA DE ANUNCIOS (Banner)
+        layout = binding.linearLayout3
+        mAdView = binding.adView
+        try {
+            val adRequest = AdRequest.Builder().build()
+            mAdView.loadAd(adRequest)
+        } catch (e: Exception) {
+            Log.e("AdMob", "Error Banner: ${e.localizedMessage}")
+        }
 
+        // 7. CARGA DE RECOMPENSADO
+        binding.buttonRewardedAd.isExtended = false
+        binding.buttonRewardedAd.isEnabled = false
+        rewardedAdManager.loadAd(this)
 
-        // Aplicar la animación
+        // 8. OTRAS PREFERENCIAS
+        val sharedPreferences = requireContext().getSharedPreferences("MiPreferencia", AppCompatActivity.MODE_PRIVATE)
+        numeroNoturno = sharedPreferences.getInt("numero_noturno", 0)
+
+        // Animación de entrada del fragmento (Opcional, si no causa lag)
         val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
-        root.startAnimation(animation)
-
-        //***********************
-        return root
+        binding.root.startAnimation(animation)
     }
 
-    // VERSIÓN CORREGIDA Y SEGURA
     override fun onAdLoaded() {
-        // El anuncio está listo.
-
-        // Añadimos la misma comprobación de seguridad.
-        // El bloque 'let' solo se ejecutará si la vista todavía existe.
         _binding?.let { safeBinding ->
             activity?.runOnUiThread {
-                // Usamos 'safeBinding' para acceder a las vistas de forma segura.
+                // Configuración visual
                 safeBinding.buttonRewardedAd.isEnabled = true
-                safeBinding.buttonRewardedAd.extend()
-                isRewardedAdReady = true // ¡Importante!
-                binding.buttonRewardedAd.shrink()
+                safeBinding.buttonRewardedAd.extend() // O shrink, según prefieras iniciar
+                isRewardedAdReady = true
+                safeBinding.buttonRewardedAd.shrink() // Asegurar estado shrink
 
-                //Llama la animaicon si no es premium
+                // ANIMACIÓN XML SEGURA (Evita el error SurfaceFlinger)
                 if (!AppPreferences.isUserPremiumActive()) {
-                    animarShakeBinance(safeBinding.buttonRewardedAd)
+                    safeBinding.buttonRewardedAd.post { // POST para seguridad extra
+                        try {
+                            if (context != null) {
+                                // Cargar binance_shake.xml (El que creamos antes)
+                                val shake = AnimationUtils.loadAnimation(
+                                    requireContext(),
+                                    R.anim.binance_shake
+                                )
+                                safeBinding.buttonRewardedAd.startAnimation(shake)
+
+                                // Vibración
+                                VibrationHelper.vibrateOnError(requireContext())
+                            }
+                        } catch (e: Exception) {
+                            Log.e("Animacion", "Error leve: ${e.message}")
+                        }
+                    }
                 }
             }
         }
@@ -314,6 +272,39 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
 
                 isRewardedAdReady = false // ¡Importante!
             }
+        }
+    }
+
+    private fun manejarEasterEgg() {
+        // 1. Incrementamos el contador
+        tapCounter++
+        Log.d("EasterEgg", "Toque número: $tapCounter")
+
+        // 2. Limpiamos cualquier reseteo pendiente (para reiniciar el cronómetro de 1.5s)
+        resetHandler.removeCallbacks(resetRunnable)
+
+        // 3. Verificamos si llegó a la meta
+        if (tapCounter == SECRET_TAP_COUNT) {
+            Log.d("EasterEgg", "¡Secreto activado!")
+
+            // Reiniciamos el contador inmediatamente
+            tapCounter = 0
+
+            try {
+                // Navegamos al menú secreto
+                findNavController().navigate(R.id.nav_debug_premium)
+
+                // Opcional: Feedback visual
+                Toast.makeText(requireContext(), "🛠️ Modo Developer", Toast.LENGTH_SHORT).show()
+
+            } catch (e: Exception) {
+                Log.e("EasterEgg", "Error al navegar: ${e.message}")
+            }
+
+        } else {
+            // 4. Si no ha llegado a 7, esperamos 1.5 segundos.
+            // Si no toca de nuevo en ese tiempo, se resetea a 0.
+            resetHandler.postDelayed(resetRunnable, 1500)
         }
     }
 

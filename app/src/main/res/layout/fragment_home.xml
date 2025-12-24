@@ -192,7 +192,7 @@
                                 android:layout_height="wrap_content"
                                 android:background="@drawable/toggle_background"
                                 android:button="@drawable/toggle_button"
-                                android:checked="true"
+
                                 android:drawableStart="@drawable/ic_bssvg"
                                 android:drawablePadding="2dp"
                                 android:paddingStart="8dp"

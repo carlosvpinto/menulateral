@@ -1,6 +1,7 @@
 package com.carlosv.dolaraldia.utils
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -56,7 +57,24 @@ class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
 //        }
         // --- FIN DE LA MODIFICACIÓN ---
 
+        try {
+            val pInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
+            val versionName = pInfo.versionName
+            // Mostramos algo como: "v1.55 (Código: 155)"
+            binding.txtVersionApp.text = "$versionName"
+        } catch (e: Exception) {
+            binding.txtVersionApp.text = "Versión desconocida"
+        }
 
+        // 2. BOTÓN DE VERSIÓN (Funciona como botón de "Actualizar")
+        binding.optionVersionContainer.setOnClickListener {
+            abrirPlayStore()
+        }
+
+        // 3. BOTÓN DE CALIFICAR
+        binding.optionRate.setOnClickListener {
+            abrirPlayStore()
+        }
 
         binding.optionAcerca.setOnClickListener {
             findNavController().navigate(R.id.nav_acerca)
@@ -79,6 +97,28 @@ class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
         }
     }
 
+    // --- FUNCIÓN PARA ABRIR LA PLAY STORE ---
+    private fun abrirPlayStore() {
+        val appPackageName =
+            requireContext().packageName // Obtiene tu paquete (com.carlosv.menulateral)
+        try {
+            // Intenta abrir la app de Play Store directamente
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("market://details?id=$appPackageName")
+                )
+            )
+        } catch (anfe: android.content.ActivityNotFoundException) {
+            // Si no tiene Play Store instalada, abre el navegador web
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName")
+                )
+            )
+        }
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

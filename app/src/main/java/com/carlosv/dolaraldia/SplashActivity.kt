@@ -24,6 +24,8 @@ class SplashActivity : AppCompatActivity() {
     // Bandera atómica para evitar que se abra el MainActivity dos veces
     private var isNavigating = AtomicBoolean(false)
     private var countDownTimer: CountDownTimer? = null
+    // 1. Declarar el animator como variable global de la clase
+    private var animatorLogo: ObjectAnimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,22 +63,15 @@ class SplashActivity : AppCompatActivity() {
         val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.15f)
         val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.15f)
 
-        val animatorLogo = ObjectAnimator.ofPropertyValuesHolder(logo, scaleX, scaleY).apply {
+        // 2. Asignarlo a la variable global
+        animatorLogo = ObjectAnimator.ofPropertyValuesHolder(logo, scaleX, scaleY).apply {
             duration = 1000
             repeatCount = ObjectAnimator.INFINITE
             repeatMode = ObjectAnimator.REVERSE
         }
-        animatorLogo.start()
+        animatorLogo?.start() // Usar el ?
 
-        title.translationY = 100f
-        title.alpha = 0f // Inicia invisible
-        title.animate()
-            .translationY(0f)
-            .alpha(1f)
-            .setDuration(1200)
-            .setStartDelay(300)
-            .setInterpolator(OvershootInterpolator())
-            .start()
+        // ... (La animación del título está bien, esa termina sola) ...
     }
 
     // --- NUEVO MÉTODO PARA PREMIUM ---
@@ -131,17 +126,25 @@ class SplashActivity : AppCompatActivity() {
             override fun onAdLoaded() {}
         })
     }
-
     private fun startMainActivity() {
         // Seteamos la bandera en true. Si ya era true, significa que ya nos fuimos.
         if (isNavigating.getAndSet(true)) return
 
-        // Cancelamos cualquier timer activo (sea el Premium o el Normal)
+        // Cancelamos el timer
         countDownTimer?.cancel()
 
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        startActivity(intent)
+        val intentMain = Intent(this, MainActivity::class.java)
+
+        // --- CÓDIGO NUEVO (EL PUENTE) ---
+        // Si el Splash recibió datos (de la notificación), se los pasamos al Main
+        if (intent.extras != null) {
+            intentMain.putExtras(intent.extras!!)
+            Log.d(TAG, "Pasando datos de notificación al MainActivity")
+        }
+        // --------------------------------
+
+        intentMain.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        startActivity(intentMain)
 
         // Transición suave
         if (Build.VERSION.SDK_INT >= 34) {
@@ -155,8 +158,14 @@ class SplashActivity : AppCompatActivity() {
         finish()
     }
 
+    // 3. AGREGAR ESTO ES VITAL:
     override fun onDestroy() {
         super.onDestroy()
+        // Detenemos la animación para liberar al procesador
+        animatorLogo?.cancel()
+        animatorLogo = null
+
+        // También cancelamos el timer (que ya lo tenías, bien hecho)
         countDownTimer?.cancel()
     }
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- TRUCO: En lugar de usar matemáticas complejas (interpolator),
+         usamos 'repeatCount' con una duración ultra corta (40ms).
+         Esto crea el efecto de vibración mecánica 'trrr-trrr'. -->
+    <translate
+        android:fromXDelta="-8"
+        android:toXDelta="8"
+        android:duration="40"
+        android:repeatCount="10"
+        android:repeatMode="reverse" />
+</set>
