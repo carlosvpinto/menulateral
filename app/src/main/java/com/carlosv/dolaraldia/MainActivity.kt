@@ -170,8 +170,7 @@ class MainActivity : AppCompatActivity() {
         // isAppearanceLightStatusBars = true significa iconos NEGROS
         windowInsetsController.isAppearanceLightStatusBars = false
 
-        // DIAGNÓSTICO: Ver qué trae el intent al nacer
-        Log.d("FCM_DEBUG", "onCreate disparado. Analizando Intent...")
+
         imprimirTodosLosExtras(intent)
 
         //enableEdgeToEdge()
@@ -248,14 +247,6 @@ class MainActivity : AppCompatActivity() {
         solicitarPermisoDeNotificaciones()
 
 
-
-
-        MobileAds.initialize(this) { initializationStatus ->
-            Log.d(TAG, "MobileAds SDK Initialized: $initializationStatus")
-
-            // Opcional: Cargar el anuncio solo cuando el SDK esté listo
-            // appOpenAdManager.loadAd(this)
-        }
         AppPreferences.init(this)
         versionUltima()
         movilidadPantalla()
@@ -265,8 +256,7 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent) // Actualizar el intent actual es VITAL
 
-        // DIAGNÓSTICO: Ver qué trae el intent al volver del background
-        Log.d("FCM_DEBUG", "onNewIntent disparado. Analizando Intent...")
+
         imprimirTodosLosExtras(intent)
 
         procesarNavegacionNotificacion(intent)
@@ -279,7 +269,7 @@ class MainActivity : AppCompatActivity() {
             if (bundle != null) {
                 for (key in bundle.keySet()) {
                     val value = bundle.get(key)
-                    Log.d("FCM_DEBUG", "Llave encontrada: '$key' -> Valor: '$value'")
+                   // Log.d("FCM_DEBUG", "Llave encontrada: '$key' -> Valor: '$value'")
                 }
             }
         } else {
@@ -298,7 +288,7 @@ class MainActivity : AppCompatActivity() {
         // Intentamos guardar siempre que haya datos, por si el Service no corrió.
         guardarNotificacionDesdeIntent(intent)
 
-        Log.d("FCM_DEBUG", "Destino final detectado: '$destino'")
+
 
         if (!destino.isNullOrEmpty()) {
             try {
@@ -308,10 +298,15 @@ class MainActivity : AppCompatActivity() {
                 intent?.removeExtra("title") // Limpiamos para no duplicar guardado al rotar
                 intent?.removeExtra("body")
 
+                // Así, si se recrea la actividad, ya no tendrá los extras.
+                if (intent != null) {
+                    setIntent(intent)
+                }
+
                 // 3. NAVEGACIÓN SEGURA (Corrección del problema 2)
                 // Usamos 'post' para darle unos milisegundos a la UI para inicializarse
                 binding.bottomNavView.post {
-                    Log.d("FCM_DEBUG", "Ejecutando navegación diferida a: $destino")
+
 
                     when (destino) {
                         PAGOMOVIL -> binding.bottomNavView.selectedItemId = R.id.nav_Personal

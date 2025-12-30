@@ -9,7 +9,6 @@ import android.content.SharedPreferences
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatActivity
-import com.carlosv.dolaraldia.AppPreferences.leerResponse
 import com.carlosv.dolaraldia.MainActivity
 import com.carlosv.dolaraldia.model.apiAlcambioEuro.ApiOficialTipoCambio
 import com.carlosv.dolaraldia.model.apiAlcambioEuro.Eur
@@ -19,157 +18,203 @@ import com.carlosv.dolaraldia.utils.Constants
 import com.google.gson.Gson
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
-import org.json.JSONObject
-import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.*
 import okhttp3.Request
+import java.util.concurrent.TimeUnit
+
 class AppWidgetHome : AppWidgetProvider() {
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    // Nota: Ya no usamos un scope global aquí para evitar fugas con el BroadcastReceiver.
+    // Usaremos un scope local dentro de onUpdate junto con goAsync.
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (widgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, widgetId, scope)
-        }
-    }
+            // 1. SOLUCIÓN CRÍTICA: Pedimos tiempo extra al sistema con goAsync
+            val pendingResult = goAsync()
 
-    override fun onDisabled(context: Context?) {
-        super.onDisabled(context)
-        scope.cancel()
+            // 2. Lanzamos la corrutina en el hilo IO
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // 3. PROTECCIÓN CONTRA CONGELAMIENTO (TIMEOUT)
+                    // Android mata el receiver a los ~30s. Nosotros cortamos a los 25s por seguridad.
+                    withTimeout(25000L) {
+                        updateAppWidgetLogic(context, appWidgetManager, widgetId)
+                    }
+                } catch (e: TimeoutCancellationException) {
+                    Log.e(TAG, "⚠️ Tiempo agotado en Widget (25s). Cancelando para evitar Crash.")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error general en Widget: ${e.message}")
+                } finally {
+                    // 4. VITAL: Avisamos al sistema que terminamos.
+                    // Si esto no se ejecuta, ocurre el error CannotDeliverBroadcastException.
+                    try {
+                        pendingResult.finish()
+                    } catch (e: Exception) {
+                        // Ignoramos si ya estaba cerrado
+                    }
+                }
+            }
+        }
     }
 
     companion object {
         private const val TAG = "AppWidgetHome"
 
-        fun updateAppWidget(
+        private suspend fun updateAppWidgetLogic(
             context: Context,
             appWidgetManager: AppWidgetManager,
-            appWidgetId: Int,
-            scope: CoroutineScope
+            appWidgetId: Int
         ) {
             Log.d(TAG, "Iniciando actualización para widget ID: $appWidgetId")
-            val views = RemoteViews(context.packageName, R.layout.app_widget_home)
 
+            // Preparamos las vistas
+            val views = RemoteViews(context.packageName, R.layout.app_widget_home)
             val intent = Intent(context, MainActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
             views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
 
-            scope.launch {
-                try {
-                    // --- PASO 1: Intentar obtener datos frescos de la API ---
-                    val apiResponse = fetchFromApi()
+            try {
+                // --- PASO 1: Intentar obtener datos frescos de la API ---
+                val apiResponse = fetchFromApi()
 
-                    if (apiResponse != null) {
-                        Log.d(TAG, "Éxito en la API. Guardando en caché y actualizando widget.")
-                        // Guardamos la respuesta completa en caché usando TU función.
-                        guardarResponse(context, apiResponse)
-                        // Actualizamos la UI del widget con los datos de la API.
-                        updateWidgetViews(appWidgetManager, appWidgetId, views, apiResponse.monitors.usd, apiResponse.monitors.eur, apiResponse.monitors.usdt)
-                    } else {
-                        throw Exception("La llamada a la API falló o devolvió datos nulos.")
-                    }
+                if (apiResponse != null) {
+                    Log.d(TAG, "Éxito en la API. Guardando en caché y actualizando widget.")
+                    guardarResponse(context, apiResponse)
 
-                } catch (e: Exception) {
-                    // --- PASO 2: Si la API falló, intentar cargar desde caché ---
-                    Log.e(TAG, "Error al contactar la API: ${e.message}. Intentando cargar desde caché.")
+                    updateWidgetViews(
+                        context,
+                        appWidgetManager,
+                        appWidgetId,
+                        views,
+                        apiResponse.monitors.usd,
+                        apiResponse.monitors.eur,
+                        apiResponse.monitors.usdt, // Agregado USDT
+                        isFromCache = false
+                    )
+                } else {
+                    throw Exception("La llamada a la API falló o devolvió null.")
+                }
 
-                    // Leemos la última respuesta guardada usando TU función.
-                    val cachedResponse = leerResponse(context)
+            } catch (e: Exception) {
+                // --- PASO 2: Si la API falló, intentar cargar desde caché ---
+                Log.e(TAG, "Error API: ${e.message}. Usando caché.")
 
-                    if (cachedResponse != null) {
-                        Log.d(TAG, "Éxito al cargar desde caché. Actualizando widget con datos antiguos.")
-                        // Usamos los datos del caché para actualizar el widget.
-                        updateWidgetViews(appWidgetManager, appWidgetId, views, cachedResponse.monitors.usd, cachedResponse.monitors.eur, cachedResponse.monitors.usdt, isFromCache = true)
-                    } else {
-                        // --- PASO 3: Si la API y el caché fallan ---
-                        Log.e(TAG, "Fallo de API y sin datos en caché. Mostrando estado de error.")
-                        showErrorInWidget(appWidgetManager, appWidgetId, views)
-                    }
+                val cachedResponse = leerResponseLocal(context)
+
+                if (cachedResponse != null) {
+                    Log.d(TAG, "Éxito al cargar desde caché.")
+                    updateWidgetViews(
+                        context,
+                        appWidgetManager,
+                        appWidgetId,
+                        views,
+                        cachedResponse.monitors.usd,
+                        cachedResponse.monitors.eur,
+                        cachedResponse.monitors.usdt, // Agregado USDT
+                        isFromCache = true
+                    )
+                } else {
+                    // --- PASO 3: Fallo total ---
+                    Log.e(TAG, "Sin datos en caché. Mostrando error.")
+                    showErrorInWidget(appWidgetManager, appWidgetId, views)
                 }
             }
         }
-        //Guarda en SharePreference los Respose de cada solicitud al API
-        private fun guardarResponse(context: Context, responseBCV: ApiOficialTipoCambio) {
-            val gson = Gson()
-            val responseJson = gson.toJson(responseBCV)
 
-            val sharedPreferences: SharedPreferences =
-                context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
-            val editor = sharedPreferences.edit()
-            editor.putString("dolarBCVResponse", responseJson)
-            editor.apply()
+        // --- FUNCIONES DE SOPORTE ---
+
+        private fun guardarResponse(context: Context, responseBCV: ApiOficialTipoCambio) {
+            try {
+                val gson = Gson()
+                val responseJson = gson.toJson(responseBCV)
+                val sharedPreferences = context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+                sharedPreferences.edit().putString("dolarBCVResponse", responseJson).apply()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error guardando caché: ${e.message}")
+            }
         }
 
-        /**
-         * Llama a la API y devuelve el objeto `ApiOficialTipoCambio` si tiene éxito.
-         */
-        private suspend fun fetchFromApi(): ApiOficialTipoCambio? {
-            return withContext(Dispatchers.IO) {
-                try {
-                    val client = OkHttpClient()
-                    val request = Request.Builder()
-                        .url(Constants.URL_BASE + Constants.ENDPOINT)
-                        .addHeader("Authorization", Constants.BEARER_TOKEN)
-                        .build()
-
-                    val response = client.newCall(request).execute()
-
-                    if (response.isSuccessful) {
-                        val responseBody = response.body?.string()
-                        // Usamos Gson para convertir el JSON directamente a tu modelo de datos.
-                        Gson().fromJson(responseBody, ApiOficialTipoCambio::class.java)
-                    } else {
-                        null
-                    }
-                } catch (e: Exception) {
+        // Función local para leer caché (Más segura que importarla de AppPreferences si hay cambios)
+        private fun leerResponseLocal(context: Context): ApiOficialTipoCambio? {
+            return try {
+                val sharedPreferences = context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
+                val json = sharedPreferences.getString("dolarBCVResponse", null)
+                if (json != null) {
+                    Gson().fromJson(json, ApiOficialTipoCambio::class.java)
+                } else {
                     null
                 }
+            } catch (e: Exception) {
+                null
             }
         }
 
-        /**
-         * Actualiza la UI del widget con los datos proporcionados.
-         */
-        private suspend fun updateWidgetViews(
+        private fun fetchFromApi(): ApiOficialTipoCambio? {
+            return try {
+                // Configuración de Timeouts para evitar cuelgues de red
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS) // Máximo 10s conectando
+                    .readTimeout(10, TimeUnit.SECONDS)    // Máximo 10s leyendo
+                    .build()
+
+                val request = Request.Builder()
+                    .url(Constants.URL_BASE + Constants.ENDPOINT)
+                    .addHeader("Authorization", Constants.BEARER_TOKEN)
+                    .build()
+
+                val response = client.newCall(request).execute()
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    Gson().fromJson(responseBody, ApiOficialTipoCambio::class.java)
+                } else {
+                    response.close()
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error de red: ${e.message}")
+                null
+            }
+        }
+
+        private fun updateWidgetViews(
+            context: Context, // Pasamos contexto por si acaso, aunque no se usa en este bloque
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
             views: RemoteViews,
-            usdData: Usd, // Recibimos el objeto Usd directamente
-            eurData: Eur, // Recibimos el objeto Eur directamente
+            usdData: Usd,
+            eurData: Eur,
             usdtData: Usdt,
-            isFromCache: Boolean = false
+            isFromCache: Boolean
         ) {
-            withContext(Dispatchers.Main) {
-                val dateOnly = usdData.last_update.split(",").firstOrNull()?.trim() ?: usdData.last_update
+            // No necesitamos withContext(Main) para RemoteViews, es seguro hacerlo aquí.
 
-                var finalDateText = " $dateOnly"
-                // Si los datos vienen del caché, añadimos un indicador visual.
-                if (isFromCache) {
-                    finalDateText = "⚠ $dateOnly"
-                }
+            val dateOnly = usdData.last_update.split(",").firstOrNull()?.trim() ?: usdData.last_update
+            var finalDateText = " $dateOnly"
 
-                views.setTextViewText(R.id.text_view_dolar_rate, "%.2f".format(usdData.price))
-                views.setTextViewText(R.id.text_view_euro_rate, "%.2f".format(eurData.price))
-                views.setTextViewText(R.id.text_view_USDT_rate, "%.2f".format(usdtData.price))
-                views.setTextViewText(R.id.text_view_updated, finalDateText)
-
-                appWidgetManager.updateAppWidget(appWidgetId, views)
+            if (isFromCache) {
+                finalDateText = "⚠ $dateOnly"
             }
+
+            views.setTextViewText(R.id.text_view_dolar_rate, "%.2f".format(usdData.price))
+            views.setTextViewText(R.id.text_view_euro_rate, "%.2f".format(eurData.price))
+            // Agregamos USDT
+            views.setTextViewText(R.id.text_view_USDT_rate, "%.2f".format(usdtData.price))
+
+            views.setTextViewText(R.id.text_view_updated, finalDateText)
+
+            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
-        private suspend fun showErrorInWidget(
+        private fun showErrorInWidget(
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
             views: RemoteViews
         ) {
-            withContext(Dispatchers.Main) {
-                views.setTextViewText(R.id.text_view_dolar_rate, "Error")
-                views.setTextViewText(R.id.text_view_euro_rate, "N/A")
-                views.setTextViewText(R.id.text_view_USDT_rate, "N/A")
-                views.setTextViewText(R.id.text_view_updated, "Sin conexión")
-                appWidgetManager.updateAppWidget(appWidgetId, views)
-            }
+            views.setTextViewText(R.id.text_view_dolar_rate, "Error")
+            views.setTextViewText(R.id.text_view_euro_rate, "N/A")
+            views.setTextViewText(R.id.text_view_USDT_rate, "N/A")
+            views.setTextViewText(R.id.text_view_updated, "Sin conexión")
+            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }
 }

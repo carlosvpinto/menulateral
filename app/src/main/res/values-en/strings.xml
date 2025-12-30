@@ -183,4 +183,7 @@
     <string name="agrega_tus_datos_de_pago_movil_rapidamente">Add your Mobile Payment details to share them quickly.</string>
     <string name="d_lar_al_d_a">Dólar al Día</string>
     <string name="usdt">Usdt</string>
+    <string name="no_tienes_notificaciones_guardadas">No tienes notificaciones guardadas</string>
+    <string name="mis_notificaciones">Mis Notificaciones</string>
+    <string name="borrar_todo">Borrar Todo</string>
 </resources>

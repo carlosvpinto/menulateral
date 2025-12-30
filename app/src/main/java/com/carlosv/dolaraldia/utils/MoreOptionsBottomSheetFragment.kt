@@ -3,15 +3,22 @@ package com.carlosv.dolaraldia.utils
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.navigation.fragment.findNavController
+import com.carlosv.dolaraldia.AppPreferences
 import com.carlosv.dolaraldia.ui.pago.PlanesPagoActivity
 import com.carlosv.dolaraldia.ui.pago.PremiumOptionsBottomSheet
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentMoreOptionsBinding // Importa el ViewBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
 
@@ -119,6 +126,10 @@ class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
             )
         }
     }
+
+
+
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

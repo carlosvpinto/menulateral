@@ -92,8 +92,11 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Calendar
 import android.graphics.Typeface
+import android.widget.EditText
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.NotificationCompat.getColor
+import androidx.core.view.ContentInfoCompat
+import androidx.core.view.OnReceiveContentListener
 import com.carlosv.dolaraldia.utils.VibrationHelper
 
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -126,6 +129,8 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
     private lateinit var layout: LinearLayout
 
     private var repeatCount = 0
+
+
 
     // Para Admob Reguard
 
@@ -186,16 +191,29 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         visibleLayoutProxBcv += 1
         configurarBannerWhatsApp()
 
+        // --- ACTIVAR PEGADO INTELIGENTE ---
+        configurarPegadoInteligente(binding.inputDolares)
+        configurarPegadoInteligente(binding.inputBolivares)
         // Reset del Easter Egg
         resetHandler.removeCallbacks(resetRunnable)
         binding.imglogo.setOnClickListener {
             manejarEasterEgg() // (He movido tu lógica de toques a una funcioncita para limpiar aqui)
         }
 
-        // 5. SOLUCIÓN AL CONGELAMIENTO (Botón BCV)
+        // --- SOLUCIÓN AL CONGELAMIENTO Y AL DOBLE BOTÓN ---
         binding.btnBcv.post {
             if (_binding != null) {
+                // 1. Activamos BCV
                 binding.btnBcv.isChecked = true
+
+                // 2. ¡IMPORTANTE! Apagamos los otros dos explícitamente
+                binding.btnUsdt.isChecked = false
+                binding.btnEuroP.isChecked = false
+
+                // 3. Reseteamos el SeekBar y Texto (Para que coincida visualmente)
+                binding.seekBar.progress = 0
+                binding.edtxtDolares.hint = "Dolares"
+                binding.edtxtDolares.setStartIconDrawable(R.drawable.ic_dolar)
             }
         }
 
@@ -275,6 +293,61 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         }
     }
 
+
+
+    // Configura el listener para interceptar el pegado (Paste)
+    private fun configurarPegadoInteligente(editText: android.widget.EditText) {
+        androidx.core.view.ViewCompat.setOnReceiveContentListener(
+            editText,
+            arrayOf("text/plain") // Solo nos interesa el texto plano
+        ) { view, payload ->
+
+            // --- CORRECCIÓN AQUÍ ---
+            // En lugar de usar val (a, b) =, lo hacemos manual para evitar el error de Pair
+            val split = payload.partition { item -> item.text != null }
+            val textContent = split.first
+            val remaining = split.second
+            // -----------------------
+
+            // Si hay contenido de texto para procesar
+            if (textContent != null) {
+                val sb = StringBuilder()
+                for (i in 0 until textContent.clip.itemCount) {
+                    val item = textContent.clip.getItemAt(i)
+                    if (item.text != null) {
+                        sb.append(item.text)
+                    }
+                }
+                val textoOriginal = sb.toString()
+
+                // Lógica de limpieza: 1.250,00 -> 1250.00
+                var textoLimpio = textoOriginal
+                if (textoOriginal.contains(",")) {
+                    textoLimpio = textoOriginal
+                        .replace(".", "")
+                        .replace(",", ".")
+                }
+
+                // Insertamos el texto
+                val myEditText = view as android.widget.EditText
+                val editable = myEditText.text ?: android.text.SpannableStringBuilder("") // Seguridad extra
+
+                val start = myEditText.selectionStart.coerceAtLeast(0)
+                val end = myEditText.selectionEnd.coerceAtLeast(0)
+                val min = minOf(start, end)
+                val max = maxOf(start, end)
+
+                editable.replace(min, max, textoLimpio)
+
+                // Retornamos lo que sobró (si había algo que no era texto)
+                return@setOnReceiveContentListener remaining
+            }
+
+            // Si no era texto, dejamos pasar todo
+            return@setOnReceiveContentListener payload
+        }
+    }
+
     private fun manejarEasterEgg() {
         // 1. Incrementamos el contador
         tapCounter++
@@ -308,26 +381,6 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         }
     }
 
-    private fun animarShakeBinance(view: View) {
-        // Mover 10 pixeles a la izquierda y derecha
-        val shake = android.view.animation.TranslateAnimation(0f, 10f, 0f, 0f)
-
-        // DURACIÓN: 1000ms (1 segundo)
-        shake.duration = 1000
-
-        // El número '9f' significa que vibrará 9 veces en ese segundo.
-        shake.interpolator = android.view.animation.CycleInterpolator(8f)
-
-        // --- AQUÍ CONECTAMOS LA VIBRACIÓN ---
-        // Usamos el contexto de la propia vista para llamar al helper
-        try {
-            VibrationHelper.vibrateOnError(view.context)
-        } catch (e: Exception) {
-            Log.e("Animacion", "Error al vibrar: ${e.message}")
-        }
-
-        view.startAnimation(shake)
-    }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupClickListeners() {

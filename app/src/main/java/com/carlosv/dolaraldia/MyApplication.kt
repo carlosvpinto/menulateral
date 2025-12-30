@@ -164,11 +164,15 @@ class MyApplication :
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         appOpenAdManager = AppOpenAdManager()
 
-        // ¡IMPORTANTE! Inicializar MobileAds antes de cargar
-        com.google.android.gms.ads.MobileAds.initialize(this) { initializationStatus ->
-            Log.d(LOG_TAG, "✅ MobileAds inicializado. Estado: $initializationStatus")
-            // Apenas el SDK responde, cargamos el anuncio.
-            appOpenAdManager.loadAd(this)
+        // ESTO LIBERA EL HILO PRINCIPAL
+        CoroutineScope(Dispatchers.IO).launch {
+            // Inicializamos AdMob en un hilo de fondo para no congelar la pantalla
+            com.google.android.gms.ads.MobileAds.initialize(this@MyApplication) { initializationStatus ->
+                Log.d(LOG_TAG, "✅ MobileAds inicializado en Background. Estado: $initializationStatus")
+
+                // Una vez listo, pedimos el anuncio (loadAd ya maneja sus propios hilos, es seguro)
+                appOpenAdManager.loadAd(this@MyApplication)
+            }
         }
 
 

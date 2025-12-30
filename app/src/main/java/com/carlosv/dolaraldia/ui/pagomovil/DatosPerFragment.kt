@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -139,8 +140,11 @@ class DatosPerFragment : Fragment() {
             }
         }
 
+        val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
+        binding.root.startAnimation(animation)
         return root
     }
+
 
     private fun llamarPagoMovil() {
         val pagoMovilList = obtenerPagoMovilList(requireContext())
@@ -158,12 +162,19 @@ class DatosPerFragment : Fragment() {
             ::actualizarPredeterminado,
             // Callback que recibe true si la lista está vacía
             { estaVacio ->
-                // Solo actualizamos si NO estamos en modo edición (formulario oculto)
-                if (binding.linearLayoutDatosInfo.visibility == View.GONE) {
-                    toggleEmptyState(estaVacio)
+                // --- CORRECCIÓN: BLINDAJE CONTRA CRASH ---
+                // Verificamos si la vista aún existe antes de tocar nada.
+                if (_binding != null) {
+
+                    // Ahora es seguro llamar a 'binding'
+                    if (binding.linearLayoutDatosInfo.visibility == View.GONE) {
+                        toggleEmptyState(estaVacio)
+                    }
                 }
             }
         )
+
+        // Asignamos el adapter
         binding.recyPagoMovil.adapter = adapterPM
         adapterPM?.updatePrecioBancos(pagoMovilList)
 

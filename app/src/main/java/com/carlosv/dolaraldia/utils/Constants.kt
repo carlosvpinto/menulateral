@@ -48,10 +48,10 @@ object Constants {
     const val UMBRAL_RECORDATORIO_PERMISO = 15 // Mostrar recordatorio cada 15 inicios
 
 
-    const val AD_UNIT_ID_RECOMPENSA = "ca-app-pub-3940256099942544/5224354917" // PRUEBA DESARROLLO
-    //const val AD_UNIT_ID_RECOMPENSA = "ca-app-pub-3265312813580307/5061990761" //PRODUCCION
-    const val AD_UNIT_ID_OPEN: String = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
-    //const val AD_UNIT_ID_OPEN: String  = "ca-app-pub-3265312813580307/7449206999" // Admob Dolarmexico 2
+    //const val AD_UNIT_ID_RECOMPENSA = "ca-app-pub-3940256099942544/5224354917" // PRUEBA DESARROLLO
+    const val AD_UNIT_ID_RECOMPENSA = "ca-app-pub-3265312813580307/5061990761" //PRODUCCION
+    //const val AD_UNIT_ID_OPEN: String = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
+    const val AD_UNIT_ID_OPEN: String  = "ca-app-pub-3265312813580307/7449206999" // Admob Dolarmexico 2
 
     // Reducimos el tiempo de espera a 2.5 segundos (Equilibrio entre cargar anuncio y UX)
     const val MAX_WAIT_TIME = 4000L

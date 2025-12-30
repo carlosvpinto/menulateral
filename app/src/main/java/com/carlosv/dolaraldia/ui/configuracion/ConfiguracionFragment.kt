@@ -3,14 +3,20 @@ package com.carlosv.dolaraldia.ui.configuracion
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.carlosv.dolaraldia.AppPreferences
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentConfigurationBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.UserMessagingPlatform
 import com.google.firebase.messaging.FirebaseMessaging
@@ -62,6 +68,10 @@ class ConfiguracionFragment : Fragment() {
         binding.privacySettingsButton.setOnClickListener {
             Log.d("ConsentDebug", "Botón de privacidad presionado!") // Log para verificar
             showPrivacyOptionsForm()
+        }
+
+        binding.promoButton.setOnClickListener {
+            mostrarDialogoInputCodigo()
         }
     }
 
@@ -119,11 +129,149 @@ class ConfiguracionFragment : Fragment() {
         }
     }
 
-    // Es una buena práctica limpiar el binding para evitar fugas de memoria
+
+    // Codigo para canjear cupones*********************************
+    // --- CONTROL DE UI (Carga / Espera) ---
+    private fun setLoadingState(isLoading: Boolean) {
+        if (isLoading) {
+            binding.progressBar.visibility = View.VISIBLE
+            binding.promoButton.isEnabled = false // Desactivamos para evitar doble clic
+            binding.promoButton.text = "Verificando..."
+        } else {
+            binding.progressBar.visibility = View.GONE
+            binding.promoButton.isEnabled = true
+            binding.promoButton.text = "Canjear Código Promocional"
+        }
+    }
+
+    // --- DIÁLOGO PARA PEDIR EL CÓDIGO ---
+    private fun mostrarDialogoInputCodigo() {
+        val input = EditText(requireContext())
+        input.hint = "Ingresa tu código (ej: PROMO2025)"
+        input.inputType = InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS // Teclado en mayúsculas
+
+        val container = FrameLayout(requireContext())
+        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        params.setMargins(50, 20, 50, 0)
+        input.layoutParams = params
+        container.addView(input)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Canjear Cupón 🎟️")
+            .setView(container)
+            .setCancelable(false) // El usuario debe cancelar o aceptar explícitamente
+            .setPositiveButton("Validar") { dialog, _ ->
+                val codigo = input.text.toString().trim().uppercase()
+                if (codigo.isNotEmpty()) {
+                    // AQUÍ EMPIEZA EL PROCESO
+                    validarYQuemarcodigo(codigo)
+                } else {
+                    Toast.makeText(requireContext(), "El código no puede estar vacío", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    // --- LÓGICA DE FIRESTORE ---
+    private fun validarYQuemarcodigo(codigo: String) {
+        // 1. Activamos la UI de carga
+        setLoadingState(true)
+
+        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        val docRef = db.collection("cupones_promo").document(codigo)
+
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(docRef)
+
+            // Validaciones dentro de la transacción (Seguridad)
+            if (!snapshot.exists()) {
+                throw com.google.firebase.firestore.FirebaseFirestoreException(
+                    "Código inválido",
+                    com.google.firebase.firestore.FirebaseFirestoreException.Code.ABORTED
+                )
+            }
+
+            val yaUsado = snapshot.getBoolean("usado") ?: true
+            if (yaUsado) {
+                throw com.google.firebase.firestore.FirebaseFirestoreException(
+                    "Código ya utilizado",
+                    com.google.firebase.firestore.FirebaseFirestoreException.Code.ABORTED
+                )
+            }
+
+            // Obtener datos
+            val diasRegalo = snapshot.getLong("dias") ?: 0
+
+            // Quemar el código
+            transaction.update(docRef, "usado", true)
+            transaction.update(docRef, "fecha_uso", java.util.Date())
+            // Opcional: transaction.update(docRef, "usuario_id", android_id)
+
+            diasRegalo // Retornamos los días
+        }.addOnSuccessListener { diasGanados ->
+
+            // --- ÉXITO ---
+            setLoadingState(false) // Apagamos carga
+
+            aplicarPremium(diasGanados.toInt()) // Tu función para guardar en SharedPreferences
+
+            // Mostrar mensaje de éxito y LUEGO navegar
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("¡Éxito! 🎉")
+                .setMessage("Código canjeado correctamente. Tienes $diasGanados días de Premium.")
+                .setPositiveButton("Ir al Inicio") { dialog, _ ->
+                    dialog.dismiss()
+                    navegarAlHome() // <--- NAVEGACIÓN AQUÍ
+                }
+                .setCancelable(false)
+                .show()
+
+        }.addOnFailureListener { e ->
+
+            // --- FALLO ---
+            setLoadingState(false) // Apagamos carga, el botón vuelve a estar disponible
+
+            val mensaje = when (e.message) {
+                "Código inválido" -> "El código ingresado no existe."
+                "Código ya utilizado" -> "Este cupón ya fue canjeado."
+                else -> "Error de conexión. Intenta de nuevo."
+            }
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Error")
+                .setMessage(mensaje)
+                .setPositiveButton("Reintentar", null)
+                .show()
+
+            // NO NAVEGAMOS, nos quedamos aquí para que intente de nuevo.
+        }
+    }
+
+    private fun navegarAlHome() {
+        try {
+            // Asegúrate de usar el ID correcto de tu Home en el navigation graph
+            // Normalmente es R.id.nav_home o puedes usar popBackStack si vienes de ahí
+            findNavController().navigate(R.id.nav_home)
+
+            // O si quieres limpiar todo y reiniciar el home:
+            // findNavController().popBackStack(R.id.nav_home, false)
+        } catch (e: Exception) {
+            Log.e("Promo", "Error navegando: ${e.message}")
+        }
+    }
+
+    private fun aplicarPremium(dias: Int) {
+        val horas = dias * 24
+        AppPreferences.setUserAsPremium("Cupón Promocional", horas)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
-    // ELIMINAMOS POR COMPLETO LA CLASE ANIDADA SettingsFragment
 }
