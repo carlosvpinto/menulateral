@@ -102,6 +102,11 @@ class MoreOptionsBottomSheetFragment : BottomSheetDialogFragment() {
             findNavController().navigate(R.id.nav_contacto)
             dismiss()
         }
+
+        binding.optionPromoCupon.setOnClickListener {
+            findNavController().navigate(R.id.nav_premiumStatusFragment)
+            dismiss()
+        }
     }
 
     // --- FUNCIÓN PARA ABRIR LA PLAY STORE ---

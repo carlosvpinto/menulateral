@@ -43,27 +43,33 @@
     </style>
 
     <!-- Estilo para los ítems del menú -->
-    <style name="OptionItemStyle">
+    <!-- Agrega esto a tu styles.xml -->
+    <style name="BottomSheetItemStyle">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:drawablePadding">16dp</item>
-        <item name="android:padding">16dp</item>
+        <item name="android:drawablePadding">24dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:textAppearance">?attr/textAppearanceBody1</item>
-        <item name="drawableTint">?attr/colorPrimary</item>
+        <item name="drawableTint">?attr/colorPrimary</item> <!-- Tu color principal -->
     </style>
 
-    <!-- Estilo para la línea divisoria -->
-    <style name="DividerStyle">
+    <style name="BottomSheetDivider">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1dp</item>
+        <item name="android:background">?android:attr/listDivider</item>
         <item name="android:layout_marginTop">8dp</item>
         <item name="android:layout_marginBottom">8dp</item>
-        <item name="android:background">?android:attr/listDivider</item>
+        <item name="android:alpha">0.5</item>
     </style>
+
+
 
 
 </resources>

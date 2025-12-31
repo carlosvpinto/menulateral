@@ -1,173 +1,162 @@
-<!-- res/layout/fragment_more_options.xml -->
-<LinearLayout
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp">
+    android:fillViewport="true">
 
-    <!-- Opción 1: Info de Cuentas -->
-    <TextView
-        android:id="@+id/option_hitoria"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/historia_del_dolar"
-        android:drawablePadding="16dp"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:textAppearance="?attr/textAppearanceBody1"
-        app:drawableStartCompat="@drawable/ic_graph_24"
-        app:drawableTint="?attr/colorPrimary" /> <!-- CAMBIO: Añadido para colorear el ícono -->
-
-    <!-- Opción 2: Suscripción Premium -->
-    <!-- ///OPCION PREMIUN TEMPORAL MENTE ELIMINADO POR POLITICA DE GOOGLE
-   <TextView
-       android:id="@+id/option_premium"
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content"
-       android:text="@string/frgm_payment_title"
-       android:drawablePadding="16dp"
-       android:padding="16dp"
-       android:gravity="center_vertical"
-       android:background="?attr/selectableItemBackground"
-       android:clickable="true"
-       android:focusable="true"
-       android:textAppearance="?attr/textAppearanceBody1"
-       app:drawableStartCompat="@drawable/premiun"
-       app:drawableTint="?attr/colorPrimary" />
-       -->
-       <!-- CAMBIO: Añadido para colorear el ícono -->
-
-    <!-- Opción 3: Notificaciones -->
-    <TextView
-        android:id="@+id/option_notificaciones"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/menu_notificaciones"
-        android:drawablePadding="16dp"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:textAppearance="?attr/textAppearanceBody1"
-        app:drawableStartCompat="@drawable/ic_notificacion"
-        app:drawableTint="?attr/colorPrimary" />
-    <TextView
-        android:id="@+id/option_Configuration"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/configuracion"
-        android:drawablePadding="16dp"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:textAppearance="?attr/textAppearanceBody1"
-        app:drawableStartCompat="@drawable/ic_menu_24"
-        app:drawableTint="?attr/colorPrimary" />
-    <!-- Opción 4: Acerca de -->
-
-    <TextView
-        android:id="@+id/btnOpcionContacto"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/contactar"
-        android:drawablePadding="16dp"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:textAppearance="?attr/textAppearanceBody1"
-        app:drawableStartCompat="@drawable/ic_email_24"
-        app:drawableTint="?attr/colorPrimary" />
-
-    <TextView
-        android:id="@+id/option_rate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Calificar App"
-        android:drawablePadding="16dp"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:textAppearance="?attr/textAppearanceBody1"
-        app:drawableStartCompat="@drawable/ic_star_24"
-        app:drawableTint="?attr/colorPrimary" />
-    <!-- Nota: Crea el icono 'ic_star_rate' en Vector Assets -->
-
-    <!-- Separador sutil (Opcional) -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:background="?android:attr/listDivider" />
-
-    <!-- Opción 6: Versión y Actualizar -->
     <LinearLayout
-        android:id="@+id/option_version_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:padding="16dp">
+        android:paddingBottom="24dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Versión Actual"
-            android:textStyle="bold"
-            android:textAppearance="?attr/textAppearanceBody1"
-            android:drawablePadding="16dp"
-            android:gravity="center_vertical"
-            app:drawableStartCompat="@drawable/ic_info"
-            app:drawableTint="?attr/colorPrimary" />
-        <!-- Nota: Crea el icono 'ic_system_update' o 'ic_smartphone' -->
+        <!-- HANDLE: Indicador visual para deslizar (Estándar Material Design) -->
+        <View
+            android:id="@+id/bottom_sheet_handle"
+            android:layout_width="48dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/shape_handle_grey"
+            android:backgroundTint="?android:attr/textColorSecondaryInverse"
+            android:alpha="0.3"/>
+        <!-- Nota: Si no tienes el drawable, puedes usar un color gris directo o crear un shape redondeado -->
 
+        <!-- GRUPO 1: PRINCIPAL / HERRAMIENTAS -->
         <TextView
-            android:id="@+id/txtVersionApp"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Cargando..."
+            android:text="General"
+            android:textAllCaps="true"
             android:textSize="12sp"
-            android:layout_marginStart="40dp"
-            android:textColor="?android:attr/textColorSecondary"/>
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorSecondary"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp"/>
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/option_hitoria"
+            style="@style/BottomSheetItemStyle"
+            android:text="@string/historia_del_dolar"
+            app:drawableStartCompat="@drawable/ic_graph_24" />
+
+        <TextView
+            android:id="@+id/option_promo_cupon"
+            style="@style/BottomSheetItemStyle"
+            android:text="@string/promo_cupon"
+            app:drawableStartCompat="@drawable/ic_rocket_launch_24" />
+
+        <View style="@style/BottomSheetDivider" />
+
+        <!-- GRUPO 2: CONFIGURACIÓN -->
+        <TextView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Toca para buscar actualizaciones"
-            android:textSize="10sp"
-            android:textStyle="italic"
-            android:layout_marginStart="40dp"
-            android:textColor="?attr/colorPrimary"/>
+            android:text="Ajustes"
+            android:textAllCaps="true"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorSecondary"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="4dp"/>
+
+        <TextView
+            android:id="@+id/option_notificaciones"
+            style="@style/BottomSheetItemStyle"
+            android:text="@string/menu_notificaciones"
+            app:drawableStartCompat="@drawable/ic_notificacion" />
+
+        <TextView
+            android:id="@+id/option_Configuration"
+            style="@style/BottomSheetItemStyle"
+            android:text="@string/configuracion"
+            app:drawableStartCompat="@drawable/ic_menu_24" />
+
+        <View style="@style/BottomSheetDivider" />
+
+        <!-- GRUPO 3: COMUNIDAD Y SOPORTE -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Soporte"
+            android:textAllCaps="true"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorSecondary"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="4dp"/>
+
+        <TextView
+            android:id="@+id/option_rate"
+            style="@style/BottomSheetItemStyle"
+            android:text="Calificar App"
+            app:drawableStartCompat="@drawable/ic_star_24" />
+
+        <TextView
+            android:id="@+id/btnOpcionContacto"
+            style="@style/BottomSheetItemStyle"
+            android:text="@string/contactar"
+            app:drawableStartCompat="@drawable/ic_email_24" />
+
+        <TextView
+            android:id="@+id/option_acerca"
+            style="@style/BottomSheetItemStyle"
+            android:text="@string/acerca_de"
+            app:drawableStartCompat="@drawable/ic_info_24" />
+
+        <View style="@style/BottomSheetDivider" />
+
+        <!-- SECCIÓN DE VERSIÓN -->
+        <LinearLayout
+            android:id="@+id/option_version_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                app:srcCompat="@drawable/ic_info"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="Icono versión"
+                android:layout_marginEnd="16dp"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txtVersionApp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Versión..."
+                    android:textAppearance="?attr/textAppearanceBody1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Toca para buscar actualizaciones"
+                    android:textSize="12sp"
+                    android:textColor="?android:attr/textColorSecondary"/>
+            </LinearLayout>
+        </LinearLayout>
+
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/option_acerca"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/acerca_de"
-        android:drawablePadding="16dp"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:textAppearance="?attr/textAppearanceBody1"
-        app:drawableStartCompat="@drawable/ic_info_24"
-        app:drawableTint="?attr/colorPrimary" /> <!-- CAMBIO: Añadido para colorear el ícono -->
-
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>
