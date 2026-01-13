@@ -181,10 +181,11 @@
     <string name="icono_lista_vacia">Empty list icon</string>
     <string name="no_tienes_cuentas_guardadas">You have no saved accounts</string>
     <string name="agrega_tus_datos_de_pago_movil_rapidamente">Add your Mobile Payment details to share them quickly.</string>
-    <string name="d_lar_al_d_a">Dólar al Día</string>
-    <string name="usdt">Usdt</string>
-    <string name="no_tienes_notificaciones_guardadas">No tienes notificaciones guardadas</string>
-    <string name="mis_notificaciones">Mis Notificaciones</string>
-    <string name="borrar_todo">Borrar Todo</string>
-    <string name="promo_cupon">Promo Cupon</string>
+    <string name="d_lar_al_d_a">Daily Dollar</string>
+    <string name="usdt">USDT</string>
+    <string name="no_tienes_notificaciones_guardadas">No saved notifications</string>
+    <string name="mis_notificaciones">My Notifications</string>
+    <string name="borrar_todo">Clear All</string>
+    <string name="promo_cupon">Promo Coupon</string>
+    <string name="mensaje_toca_punto">Toca a point to see details</string>
 </resources>

@@ -248,6 +248,11 @@ class MainActivity : AppCompatActivity() {
 
 
         AppPreferences.init(this)
+
+
+        // --- Notificacion de bienvenida ---
+        crearNotificacionBienvenida()
+        // -------------------------------
         versionUltima()
         movilidadPantalla()
     }
@@ -600,6 +605,41 @@ class MainActivity : AppCompatActivity() {
         // 4. (Opcional pero recomendado) Invalida el menú para asegurar que se redibuje
         // A veces, cambiar 'isVisible' no es suficiente y es bueno forzar un redibujado.
        // invalidateOptionsMenu()
+    }
+
+    // --- FUNCIÓN PARA CREAR NOTIFICACIÓN DE BIENVENIDA ---
+    private fun crearNotificacionBienvenida() {
+        // Usamos SharedPreferences para verificar si ya se mostró antes
+        val prefs = getSharedPreferences("AppConfig", Context.MODE_PRIVATE)
+        val keyBienvenida = "welcome_notification_created"
+        val yaFueCreada = prefs.getBoolean(keyBienvenida, false)
+
+        if (!yaFueCreada) {
+            val repository = (application as MyApplication).repository
+
+            // Lanzamos una corrutina en segundo plano (IO)
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val titulo = "¡Bienvenido a Dólar al Día! 🇻🇪"
+                    val cuerpo = "Gracias por instalar la App. Aquí recibirás las actualizaciones de las tasas y alertas importantes. ¡No olvides configurar tu Pago Móvil!"
+
+                    val notificacion = com.carlosv.dolaraldia.utils.roomDB.NotificationEntity(
+                        title = titulo,
+                        body = cuerpo,
+                        timestamp = System.currentTimeMillis()
+                    )
+
+                    repository.insert(notificacion)
+
+                    // Marcar como creada para que no se repita
+                    prefs.edit().putBoolean(keyBienvenida, true).apply()
+                    Log.d("WelcomeNotif", "✅ Notificación de bienvenida insertada.")
+
+                } catch (e: Exception) {
+                    Log.e("WelcomeNotif", "Error creando bienvenida: ${e.message}")
+                }
+            }
+        }
     }
 
 
@@ -1317,19 +1357,6 @@ class MainActivity : AppCompatActivity() {
                     " $linkCorto"
         }
 
-        if (nombreFragmentAct == "Precio del Euro") {
-            val btnTextInFragmentEuro = fragment?.view?.findViewById<Button>(R.id.btnEuro)
-            val textBsFragmentEuro =
-                fragment?.view?.findViewById<TextInputEditText>(R.id.inputBolivares)
-            val textEurosFragmentEuro =
-                fragment?.view?.findViewById<TextInputEditText>(R.id.inputEuros)
-            val euro = btnTextInFragmentEuro?.text
-            val totalBs = textBsFragmentEuro?.text
-            val totalEuro = textEurosFragmentEuro?.text
-
-            textoCapture =
-                "Precio del Euro: $euro total en Bs:$totalBs Total en Euro: $totalEuro \n -Descarga la App \n $linkCorto"
-        }
 
         if (nombreFragmentAct == "Pago Movil") {
             //Verifica se el Usuario quiere enviar Datos

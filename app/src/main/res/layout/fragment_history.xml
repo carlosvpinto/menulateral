@@ -36,32 +36,63 @@
         android:id="@+id/spinnerHistory"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
         android:background="@drawable/spinner_background" />
+
+    <!-- NUEVO: Contenedor para los CheckBoxes -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="5dp">
+
+        <CheckBox
+            android:id="@+id/cbBcv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BCV"
+            android:checked="true"
+            android:textStyle="bold"
+            android:buttonTint="#2E7D32"
+            android:textColor="#2E7D32"/>
+        <!-- Nota: buttonTint verde para identificar BCV -->
+
+        <CheckBox
+            android:id="@+id/cbUsdt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="USDT"
+            android:layout_marginStart="24dp"
+            android:textStyle="bold"
+            android:buttonTint="#1565C0"
+            android:textColor="#1565C0"/>
+        <!-- Nota: buttonTint azul para identificar USDT (o el color que uses) -->
+
+    </LinearLayout>
 
     <!-- FrameLayout para superponer el gráfico y la barra de progreso -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="300dp"
-       android:layout_marginRight="15dp"
+        android:layout_marginRight="15dp"
         android:layout_marginLeft="15dp"
-        android:layout_marginTop="10dp">
+        android:layout_marginTop="5dp"> <!-- Reduje un poco el margen top aquí -->
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChart"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/borde"
-            />
+            android:background="@drawable/borde" />
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_gravity="center"
-            android:visibility="visible" /> <!-- Inicialmente invisible -->
+            android:visibility="visible" />
 
     </FrameLayout>
 

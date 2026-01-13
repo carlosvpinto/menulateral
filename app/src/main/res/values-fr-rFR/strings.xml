@@ -181,10 +181,11 @@
     <string name="icono_lista_vacia">icône de liste vide</string>
     <string name="no_tienes_cuentas_guardadas">Vous n avez aucun compte enregistré</string>
     <string name="agrega_tus_datos_de_pago_movil_rapidamente">Ajoutez vos informations de paiement mobile pour les partager rapidement.</string>
-    <string name="d_lar_al_d_a">Dólar al Día</string>
-    <string name="usdt">Usdt</string>
-    <string name="no_tienes_notificaciones_guardadas">No tienes notificaciones guardadas</string>
-    <string name="mis_notificaciones">Mis Notificaciones</string>
-    <string name="borrar_todo">Borrar Todo</string>
-    <string name="promo_cupon">Promo Cupon</string>
+    <string name="d_lar_al_d_a">Dollar au jour le jour</string>
+    <string name="usdt">USDT</string>
+    <string name="no_tienes_notificaciones_guardadas">Aucune notification enregistrée</string>
+    <string name="mis_notificaciones">Mes notifications</string>
+    <string name="borrar_todo">Tout effacer</string>
+    <string name="promo_cupon">Coupon promo</string>
+    <string name="mensaje_toca_punto">Touchez un point pour voir les détails</string>
 </resources>

@@ -24,8 +24,8 @@ android {
         applicationId = "com.carlosv.menulateral"
         minSdk = 26
         targetSdk = 36
-        versionCode = 159
-        versionName = "FlashReload1.5"
+        versionCode = 163
+        versionName = "Cupon1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -131,7 +131,7 @@ dependencies {
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     // AdMob
-    implementation("com.google.android.gms:play-services-ads:23.6.0")
+    implementation("com.google.android.gms:play-services-ads:24.9.0")
     //implementation("com.google.android.gms:play-services-ads:24.4.0")
     implementation("com.google.android.play:review-ktx:2.0.2")
 
@@ -153,7 +153,7 @@ dependencies {
     val arch_version = "2.2.0"
 
     // Room
-    val room_version = "2.6.1" // Reemplaza con la última versión
+    val room_version = "2.8.4" // Reemplaza con la última versión
 
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
@@ -207,13 +207,13 @@ dependencies {
 
     // LÍNEAS A AÑADIR
     // 1. Adaptador de mediación de Meta
- //   implementation ("com.google.ads.mediation:facebook:6.21.0.0")
+    implementation ("com.google.ads.mediation:facebook:6.21.0.0")
 
     // 2. SDK de Meta (Audience Network)
-    //implementation ("com.facebook.android:audience-network-sdk:6.17.0")
+    implementation ("com.facebook.android:audience-network-sdk:6.17.0")
 
     // 👇 AÑADE ESTA LÍNEA SI NO LA TIENES
-    //implementation ("com.google.android.ads:mediation-test-suite:3.0.0")
+    implementation ("com.google.android.ads:mediation-test-suite:3.0.0")
 
 
 

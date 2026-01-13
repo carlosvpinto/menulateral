@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.view.animation.ScaleAnimation
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -25,7 +26,6 @@ import com.carlosv.dolaraldia.ui.home.HomeFragment
 import com.carlosv.dolaraldia.utils.Constants.URL_BASE
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentHistoryBinding
-import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -53,6 +53,9 @@ class HistoryFragment : Fragment() {
     private var fechaSeleccionada = ""
     private val TAG = "HISTORYFRAGMENT"
 
+    // Variable local para guardar la respuesta de USDT temporalmente
+    private var responseUsdtCache: HistoryModelResponse? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
@@ -60,9 +63,16 @@ class HistoryFragment : Fragment() {
         _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        llamarApiHistory(diasMenos)
+        // Configuración inicial de UI
         configurarCarga()
 
+        // Listener para los CheckBox (para ocultar/mostrar sin recargar API)
+        setupCheckBoxListeners()
+
+        // Cargar datos iniciales
+        llamarApiHistory(diasMenos)
+        val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
+        binding.root.startAnimation(animation)
         return root
     }
 
@@ -77,14 +87,37 @@ class HistoryFragment : Fragment() {
         binding.spinnerHistory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 diasMenos = if (position == 0) 7 else 30
-                llamarApiHistory(diasMenos)
                 binding.progressBar.visibility = View.VISIBLE
                 fechaSeleccionada = parent.getItemAtPosition(position).toString()
-                Log.d(TAG, "onItemSelected: fechaSeleccionada $fechaSeleccionada")
+
+                // Recargamos datos de API al cambiar fecha
+                llamarApiHistory(diasMenos)
             }
 
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-                Toast.makeText(requireContext(), "Debe seleccionar un período", Toast.LENGTH_SHORT).show()
+            override fun onNothingSelected(p0: AdapterView<*>?) { }
+        }
+    }
+
+    private fun setupCheckBoxListeners() {
+        // Listener para BCV
+        binding.cbBcv.setOnCheckedChangeListener { _, isChecked ->
+            val data = binding.lineChart.data
+            if (data != null && data.dataSetCount > 0) {
+                // Asumimos que el primer conjunto (index 0) es BCV
+                val setBcv = data.getDataSetByLabel("Dólar BCV", true)
+                setBcv?.isVisible = isChecked
+                binding.lineChart.invalidate()
+            }
+        }
+
+        // Listener para USDT
+        binding.cbUsdt.setOnCheckedChangeListener { _, isChecked ->
+            val data = binding.lineChart.data
+            if (data != null && data.dataSetCount > 0) {
+                // Buscamos el set por su etiqueta
+                val setUsdt = data.getDataSetByLabel("USDT (Binance)", true)
+                setUsdt?.isVisible = isChecked
+                binding.lineChart.invalidate()
             }
         }
     }
@@ -94,104 +127,186 @@ class HistoryFragment : Fragment() {
         val primaryTextColor = if (isDarkTheme) Color.WHITE else Color.BLACK
 
         val responseHistoryBcv = HomeFragment.ApiResponseHolder.getResponseHistoryBcv()
-        if (responseHistoryBcv == null) {
-            Log.e(TAG, "cargarGrafico: La respuesta de la API del BCV es nula.")
-            Toast.makeText(requireContext(), "No se pudieron cargar los datos", Toast.LENGTH_SHORT).show()
+        val responseHistoryUsdt = responseUsdtCache
+
+        if (responseHistoryBcv == null && responseHistoryUsdt == null) {
+            Toast.makeText(requireContext(), "No hay datos para mostrar", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val (dates, dolarBcvValues) = convertirResponseApiHistory(responseHistoryBcv)
-        Log.d(TAG, "cargarGrafico: dates $dates, dolarBcvValues: $dolarBcvValues")
+        // 1. Obtener mapas de Fecha -> Precio
+        val mapBcv = if (responseHistoryBcv != null) convertirAMapa(responseHistoryBcv) else emptyMap()
+        val mapUsdt = if (responseHistoryUsdt != null) convertirAMapa(responseHistoryUsdt) else emptyMap()
 
-        val entriesBcv = dolarBcvValues.mapIndexed { index, value ->
-            Entry(index.toFloat(), value)
+        // 2. Crear la LISTA MAESTRA DE FECHAS (Uniendo ambas y ordenando)
+        // Usamos un Set para evitar duplicados y luego ordenamos por fecha real
+        val allDatesSet = mutableSetOf<String>()
+        allDatesSet.addAll(mapBcv.keys)
+        allDatesSet.addAll(mapUsdt.keys)
+
+        // Ordenar las fechas cronológicamente (Importante para que el gráfico tenga sentido)
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val masterDateList = allDatesSet.sortedBy {
+            try { dateFormat.parse(it) } catch (e: Exception) { null }
         }
 
-        val dataSetBcv = LineDataSet(entriesBcv, "Dólar BCV").apply {
-            color = ContextCompat.getColor(requireContext(), R.color.md_theme_light_primary) // Un color más agradable
-            valueTextColor = primaryTextColor
-            valueTextSize = 14f
-            lineWidth = 3f
-            setCircleColor(Color.BLUE)
-            circleRadius = 4f
-            setDrawCircleHole(false)
+        // 3. Crear las Entries alineadas al eje X maestro
+        val entriesBcv = ArrayList<Entry>()
+        val entriesUsdt = ArrayList<Entry>()
+
+        masterDateList.forEachIndexed { index, date ->
+            // Si existe precio BCV para esta fecha, agregamos punto
+            if (mapBcv.containsKey(date)) {
+                entriesBcv.add(Entry(index.toFloat(), mapBcv[date]!!))
+            }
+            // Si existe precio USDT para esta fecha, agregamos punto
+            if (mapUsdt.containsKey(date)) {
+                entriesUsdt.add(Entry(index.toFloat(), mapUsdt[date]!!))
+            }
         }
 
-        val lineData = LineData(dataSetBcv)
-        binding.lineChart.fitScreen()
+        // 4. Configurar DataSets
+        val lineData = LineData()
+
+        if (entriesBcv.isNotEmpty()) {
+            val dataSetBcv = LineDataSet(entriesBcv, "Dólar BCV").apply {
+                color = Color.parseColor("#2E7D32") // Verde
+                valueTextColor = primaryTextColor
+                valueTextSize = 10f
+                lineWidth = 3f
+                setCircleColor(Color.parseColor("#1B5E20"))
+                circleRadius = 4f
+                setDrawCircleHole(false)
+                isVisible = binding.cbBcv.isChecked
+                setDrawValues(false) // Opcional: Ocultar valores en la línea para limpieza
+            }
+            lineData.addDataSet(dataSetBcv)
+        }
+
+        if (entriesUsdt.isNotEmpty()) {
+            val dataSetUsdt = LineDataSet(entriesUsdt, "USDT (Binance)").apply {
+                color = Color.parseColor("#1565C0") // Azul
+                valueTextColor = primaryTextColor
+                valueTextSize = 10f
+                lineWidth = 3f
+                setCircleColor(Color.parseColor("#0D47A1"))
+                circleRadius = 4f
+                setDrawCircleHole(false)
+                isVisible = binding.cbUsdt.isChecked
+                setDrawValues(false)
+            }
+            lineData.addDataSet(dataSetUsdt)
+        }
+
+        // 5. Asignar al Gráfico
         binding.lineChart.data = lineData
+        binding.lineChart.description.isEnabled = false
+        binding.lineChart.axisRight.isEnabled = false
 
-        val xAxis = binding.lineChart.xAxis.apply {
-            valueFormatter = IndexAxisValueFormatter(dates)
+        // Configurar Eje X con la LISTA MAESTRA
+        binding.lineChart.xAxis.apply {
+            valueFormatter = IndexAxisValueFormatter(masterDateList)
             position = XAxis.XAxisPosition.BOTTOM
             textColor = primaryTextColor
-            granularity = 1f
-            labelRotationAngle = -45f
+
+            // --- CORRECCIÓN CRÍTICA ---
+            granularity = 1f // Obliga a que los pasos sean de 1 en 1 (0, 1, 2...)
+            isGranularityEnabled = true
+
+            // Asegura que empiece y termine exacto
+            axisMinimum = 0f
+            axisMaximum = (masterDateList.size - 1).toFloat() // Si hay 7 fechas, el max es índice 6
+
+            // Estética
+            setDrawGridLines(false) // Quita las líneas verticales para limpiar
+            labelRotationAngle = -45f // Rotar para que quepan
+
+            // Calcular cantidad de etiquetas
+            // Si son pocos días (ej. 7), forzamos mostrar todos. Si son 30, dejamos que la librería decida.
+            if (masterDateList.size < 10) {
+                setLabelCount(masterDateList.size, true) // true = forzar cantidad exacta
+            } else {
+                setLabelCount(5, false) // Mostrar aprox 5 fechas para no saturar
+            }
         }
 
-        binding.lineChart.description.isEnabled = false
-        binding.lineChart.axisRight.isEnabled = false // Ocultar el eje Y derecho
-
-        val legend = binding.lineChart.legend.apply {
-            textSize = 16f
-            textColor = primaryTextColor
-            formSize = 14f
-            xEntrySpace = 20f
-        }
-
+        // 6. Listener de Clic Corregido
         binding.lineChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
             override fun onValueSelected(e: Entry?, h: Highlight?) {
-                e?.let {
-                    val index = it.x.toInt()
-                    val valores = mutableListOf<String>()
+                e?.let { entry ->
+                    val index = entry.x.toInt()
+                    val sb = StringBuilder()
 
-                    if (index in dates.indices) {
-                        val fecha = dates[index]
-                        valores.add("Fecha: $fecha")
-                    }
-                    if (index in dolarBcvValues.indices) {
-                        val dolarBcv = dolarBcvValues[index]
-                        valores.add("Dólar BCV: $dolarBcv")
+                    // Obtener la fecha real de la lista maestra usando el índice X
+                    if (index in masterDateList.indices) {
+                        val fechaReal = masterDateList[index]
+                        sb.append("📅 Fecha: $fechaReal\n")
+
+                        // Buscar valores de esa fecha específica en los mapas
+                        // Esto arregla el problema: muestra el valor aunque el punto no esté exacto en el clic
+                        val valorBcv = mapBcv[fechaReal]
+                        val valorUsdt = mapUsdt[fechaReal]
+
+                        if (binding.cbBcv.isChecked && valorBcv != null) {
+                            sb.append("🟢 BCV: $valorBcv\n")
+                        }
+                        if (binding.cbUsdt.isChecked && valorUsdt != null) {
+                            sb.append("🔵 USDT: $valorUsdt\n")
+                        }
                     }
 
-                    binding.txtValores.text = if (valores.isNotEmpty()) valores.joinToString("\n") else "Valores no disponibles"
+                    binding.txtValores.text = sb.toString()
                     binding.txtValores.setTextColor(primaryTextColor)
                     animacionCrecerTexto(binding.txtValores)
-                } ?: run {
-                    binding.txtValores.text = "No se seleccionó ningún valor"
-                    binding.txtValores.setTextColor(primaryTextColor)
                 }
             }
 
             override fun onNothingSelected() {
-                binding.txtValores.text = ""
+                binding.txtValores.text = getString(R.string.mensaje_toca_punto)
             }
         })
 
-        binding.lineChart.invalidate() // Refrescar el gráfico
+        binding.lineChart.fitScreen()
+        binding.lineChart.invalidate()
+    }
+
+    // --- Función Auxiliar Nueva ---
+    // Convierte la respuesta API a un Mapa simple: "05/01/2026" -> 604.94
+    private fun convertirAMapa(response: HistoryModelResponse): Map<String, Float> {
+        val mapa = mutableMapOf<String, Float>()
+        response.history.forEach { item ->
+            try {
+                // Extraer solo la fecha: "05/01/2026, 01:59 AM" -> "05/01/2026"
+                val fechaLimpia = item.last_update.split(",")[0].trim()
+                mapa[fechaLimpia] = item.price.toFloat()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parseando fecha: ${item.last_update}")
+            }
+        }
+        return mapa
     }
 
     private fun convertirResponseApiHistory(
-        responseApiHistoryBcv: HistoryModelResponse
+        responseApiHistory: HistoryModelResponse
     ): Pair<List<String>, List<Float>> {
         val dates = mutableListOf<String>()
-        val pricesBcv = mutableListOf<Float>()
+        val prices = mutableListOf<Float>()
 
-        // Procesar los datos de BCV
-        responseApiHistoryBcv.history.forEach { history ->
+        // Procesar los datos
+        responseApiHistory.history.forEach { history ->
             val dateOnly = history.last_update.split(",")[0].trim()
             dates.add(dateOnly)
-            pricesBcv.add(history.price.toFloat())
+            prices.add(history.price.toFloat())
         }
 
-        // Invertir el orden para mostrar del más antiguo al más reciente
-        return Pair(dates.reversed(), pricesBcv.reversed())
+        // Invertir orden (Antiguo -> Nuevo)
+        return Pair(dates.reversed(), prices.reversed())
     }
 
     private fun llamarApiHistory(diasMenos: Int) {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            Log.d(TAG, "llamarApiHistory: Iniciando llamada a la API")
-            val baseUrl = URL_BASE
+
+            // Configurar Retrofit
             val client = OkHttpClient.Builder()
                 .addInterceptor { chain ->
                     val request = chain.request().newBuilder()
@@ -202,7 +317,7 @@ class HistoryFragment : Fragment() {
                 .build()
 
             val retrofit = Retrofit.Builder()
-                .baseUrl(baseUrl)
+                .baseUrl(URL_BASE)
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build()
@@ -216,9 +331,8 @@ class HistoryFragment : Fragment() {
 
                 calendar.add(Calendar.DAY_OF_YEAR, -diasMenos)
                 val fechaInicial = dateFormat.format(calendar.time)
-                Log.d(TAG, "llamarApiHistory: Fecha Inicial: $fechaInicial, Fecha Final: $diaDeHoy")
 
-                // Realizar solo la solicitud para el BCV
+                // 1. LLAMADA BCV
                 val responseBcv = apiService.getDollarHistory(
                     page = "bcv",
                     monitor = "usd",
@@ -226,23 +340,46 @@ class HistoryFragment : Fragment() {
                     endDate = diaDeHoy
                 )
 
-                if (responseBcv != null) {
-                    withContext(Dispatchers.Main) {
+                // 2. LLAMADA USDT (Binance)
+                val responseUsdt = try {
+                    apiService.getDollarHistory(
+                        page = "binance", // O "criptodolar" según tu API
+                        monitor = "binance",
+                        startDate = fechaInicial,
+                        endDate = diaDeHoy
+                    )
+
+
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error fetching USDT: ${e.message}")
+                    null
+                }
+                withContext(Dispatchers.Main) {
+                    // Guardar respuesta BCV en Singleton (Legacy)
+                    if (responseBcv != null) {
                         HomeFragment.ApiResponseHolder.setResponseHistoryBcv(responseBcv)
                         guardarResponseHistoryBcv(requireContext(), responseBcv)
-                        binding.progressBar.visibility = View.GONE
+                    }
+
+                    // Guardar respuesta USDT en variable local
+                    if (responseUsdt != null) {
+                        responseUsdtCache = responseUsdt
+                    }
+
+                    binding.progressBar.visibility = View.GONE
+
+                    // Si ambos fallaron
+                    if (responseBcv == null && responseUsdt == null) {
+                        Toast.makeText(requireContext(), "Error de conexión", Toast.LENGTH_SHORT).show()
+                    } else {
                         cargarGrafico()
                     }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "No se recibió respuesta del BCV", Toast.LENGTH_SHORT).show()
-                        binding.progressBar.visibility = View.GONE
-                    }
                 }
+
             } catch (e: Exception) {
-                Log.e(TAG, "Error en llamarApiHistory: ${e.message}", e)
+                Log.e(TAG, "Error General API: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Problemas de Conexión", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error de conexión", Toast.LENGTH_SHORT).show()
                     binding.progressBar.visibility = View.GONE
                 }
             }
@@ -255,7 +392,7 @@ class HistoryFragment : Fragment() {
         val sharedPreferences: SharedPreferences =
             context.getSharedPreferences("MyPreferences", AppCompatActivity.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-        editor.putString("ResponseHistoryBcv", responseJson) // Clave específica para BCV
+        editor.putString("ResponseHistoryBcv", responseJson)
         editor.apply()
     }
 
@@ -264,31 +401,24 @@ class HistoryFragment : Fragment() {
             1f, 1.2f, 1f, 1.2f,
             Animation.RELATIVE_TO_SELF, 0.5f,
             Animation.RELATIVE_TO_SELF, 0.5f
-        ).apply {
-            duration = 300
-        }
+        ).apply { duration = 300 }
 
         val scaleDownAnimation = ScaleAnimation(
             1.2f, 1f, 1.2f, 1f,
             Animation.RELATIVE_TO_SELF, 0.5f,
             Animation.RELATIVE_TO_SELF, 0.5f
-        ).apply {
-            duration = 300
-        }
+        ).apply { duration = 300 }
 
         scaleUpAnimation.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation) {}
-            override fun onAnimationEnd(animation: Animation) {
-                texto.startAnimation(scaleDownAnimation)
-            }
+            override fun onAnimationEnd(animation: Animation) { texto.startAnimation(scaleDownAnimation) }
             override fun onAnimationRepeat(animation: Animation) {}
         })
-
         texto.startAnimation(scaleUpAnimation)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Prevenir fugas de memoria
+        _binding = null
     }
 }

@@ -562,11 +562,16 @@ class MyApplication :
                 return
             }
 
-            // 2. Evitar mostrar si ya se está mostrando
+            // 2. Evitar mostrar si ya se está mostrando (CORREGIDO)
             if (isShowingAd) {
-                Log.d(LOG_TAG, "El anuncio ya se está mostrando.")
+                Log.d(LOG_TAG, "El anuncio ya se está mostrando. Liberando a la Activity.")
+                // ⚠️ CORRECCIÓN CRÍTICA AQUÍ:
+                // Antes solo hacías return, dejando al Splash esperando eternamente.
+                // Ahora avisamos que continúe.
+                onShowAdCompleteListener.onShowAdComplete()
                 return
             }
+
 
             // 3. Lógica Principal
             if (isAdAvailable()) {

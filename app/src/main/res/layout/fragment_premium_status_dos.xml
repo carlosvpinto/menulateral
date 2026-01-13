@@ -151,6 +151,18 @@
                         android:elevation="10dp"/>
                 </FrameLayout>
 
+                <Button
+                    android:id="@+id/btn_debug_generar_cupones"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="[DEV] GENERAR 20 CUPONES"
+                    android:backgroundTint="#D32F2F"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    android:layout_marginTop="24dp"
+                    app:icon="@drawable/ic_lock" />
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

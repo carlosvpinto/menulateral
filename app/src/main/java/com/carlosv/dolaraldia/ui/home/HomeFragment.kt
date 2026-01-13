@@ -119,7 +119,7 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
 
     private val clickAnuncioProvider = ClickAnuncioProvider()
 
-    private var valorActualParalelo: Double? = 0.0
+    private var valorActualDolar: Double? = 0.0
     private var valorActualEuro: Double? = 0.0
     private var valorActualUsdt: Double? = 0.0
     private var ultimoTecleado: Int? = 0
@@ -217,27 +217,52 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
             }
         }
 
-        // 6. CARGA DE ANUNCIOS (Banner)
+        // 6. CARGA DE ANUNCIOS (Banner) - CON RETRASO
         layout = binding.linearLayout3
         mAdView = binding.adView
-        try {
-            val adRequest = AdRequest.Builder().build()
-            mAdView.loadAd(adRequest)
-        } catch (e: Exception) {
-            Log.e("AdMob", "Error Banner: ${e.localizedMessage}")
-        }
 
-        // 7. CARGA DE RECOMPENSADO
+        // Usamos postDelayed para esperar 2 segundos antes de cargar el banner
+        // Esto elimina el conflicto de recursos (WaitHoldingLocks) al arrancar
+
+        //TEMPORALMENTE ELIMINADA HASTA QUE FUNCIONE EL BANNER INFERIOR*********************
+//        mAdView.postDelayed({
+//            // Verificamos 'isAdded' para evitar crashes si el usuario sale rápido del fragmento
+//            if (isAdded && context != null) {
+//                try {
+//                    val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
+//                    mAdView.loadAd(adRequest)
+//                    Log.d("AdMob", "Banner solicitado con retraso exitosamente")
+//                } catch (e: Exception) {
+//                    Log.e("AdMob", "Error Banner: ${e.localizedMessage}")
+//                }
+//            }
+//        }, 2000) // 2000ms = 2 segundos de espera
+
+        //***********************************************************************************
+
+
+        // 7. CARGA DE RECOMPENSADO - TAMBIÉN CON RETRASO
         binding.buttonRewardedAd.isExtended = false
         binding.buttonRewardedAd.isEnabled = false
-        rewardedAdManager.loadAd(this)
+
+        // Le damos un poco más de tiempo al recompensado para no saturar la red junto con el banner
+        binding.root.postDelayed({
+            if (isAdded && context != null) {
+                rewardedAdManager.loadAd(this)
+            }
+        }, 1000) // 3 segundos (1 seg después del banner)
 
         // 8. OTRAS PREFERENCIAS
-        val sharedPreferences = requireContext().getSharedPreferences("MiPreferencia", AppCompatActivity.MODE_PRIVATE)
+        val sharedPreferences =
+            requireContext().getSharedPreferences("MiPreferencia", AppCompatActivity.MODE_PRIVATE)
         numeroNoturno = sharedPreferences.getInt("numero_noturno", 0)
 
-        // Animación de entrada del fragmento (Opcional, si no causa lag)
-        val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
+        // Animación de entrada del fragmento
+        // Ahora la animación correrá fluidamente porque no hay carga de anuncios compitiendo
+        val animation = android.view.animation.AnimationUtils.loadAnimation(
+            requireContext(),
+            R.anim.appear_from_top
+        )
         binding.root.startAnimation(animation)
     }
 
@@ -1129,6 +1154,9 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
                 ApiResponseHolder.setResponse(savedResponseDolar)
                 diaActual = verificafechaActBcv(savedResponseDolar)
                 valorActualEuro = savedResponseDolar.monitors.eur.price
+                valorActualDolar = savedResponseDolar.monitors.usd.price
+                valorActualUsdt = savedResponseDolar.monitors.usdt.price
+
 
                 llenarDolarEuro(savedResponseDolar, diaActual)
 
@@ -1186,7 +1214,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
 
                         visibilidadSwicheDiaManana(apiResponseTipoCambio)
 
-                        valorActualParalelo = apiResponseTipoCambio.monitors.eur.price
+                        valorActualDolar = apiResponseTipoCambio.monitors.usd.price
                         valorActualEuro = apiResponseTipoCambio.monitors.eur.price
                         valorActualUsdt = apiResponseTipoCambio.monitors.usdt.price
                         guardarResponse(requireContext(), apiResponseTipoCambio)
@@ -1635,7 +1663,7 @@ private fun tomarValorBotonActivo(vararg buttons: ToggleButton): Double? {
                     if (entradaDolares.isNotEmpty()) {
                         if (binding.btnEuroP.isChecked) {
 
-                            if (valorActualParalelo != null) {
+                            if (valorActualDolar != null) {
                                 val cleanedText =
                                     entradaDolares.replace(
                                         "[,]".toRegex(),

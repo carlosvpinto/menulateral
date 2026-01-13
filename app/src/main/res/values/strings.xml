@@ -211,4 +211,5 @@
     <string name="mis_notificaciones">Mis Notificaciones</string>
     <string name="borrar_todo">Borrar Todo</string>
     <string name="promo_cupon">Promo Cupon</string>
+    <string name="mensaje_toca_punto">Toca un punto para ver detalles</string>
 </resources>

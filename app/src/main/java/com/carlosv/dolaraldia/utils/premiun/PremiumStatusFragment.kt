@@ -11,10 +11,12 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.carlosv.dolaraldia.AppPreferences
+import com.carlosv.menulateral.BuildConfig
 import com.carlosv.menulateral.R
 import com.carlosv.menulateral.databinding.FragmentPremiumStatusDosBinding
 import com.google.android.gms.tasks.Tasks
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging
@@ -52,6 +54,53 @@ class PremiumStatusFragment : Fragment() {
                 validarYQuemarcodigo(codigo)
             }
         }
+
+        if (BuildConfig.DEBUG) {
+            binding.btnDebugGenerarCupones.visibility = View.VISIBLE
+            binding.btnDebugGenerarCupones.setOnClickListener {
+                generarCuponesMasivosDev()
+            }
+        }
+
+    }
+
+    // --- FUNCIÓN DEVS: Generar 20 Cupones ---
+    private fun generarCuponesMasivosDev() {
+        binding.btnDebugGenerarCupones.isEnabled = false
+        binding.btnDebugGenerarCupones.text = "Generando..."
+
+        val db = FirebaseFirestore.getInstance()
+        val batch = db.batch() // Usamos Batch para eficiencia (una sola subida)
+
+        // Bucle del 1 al 20
+        for (i in 1..20) {
+            val nombreCupon = "PROMO$i"
+
+            // Lógica de días: 1-10 (5 días), 11-20 (15 días)
+            val dias = if (i <= 10) 5L else 15L
+
+            val datosCupon = hashMapOf(
+                "dias" to dias,
+                "usado" to false,
+                "creado_fecha" to Date(), // Fecha de creación para referencia
+                "usado_por_device" to null,
+                "usado_por_id" to null,
+                "usado_por_token" to null
+            )
+
+            val docRef = db.collection("cupones_promo").document(nombreCupon)
+            batch.set(docRef, datosCupon)
+        }
+
+        // Ejecutar el lote
+        batch.commit().addOnSuccessListener {
+            Toast.makeText(context, "✅ 20 Cupones generados (PROMO1 a PROMO20)", Toast.LENGTH_LONG).show()
+            binding.btnDebugGenerarCupones.isEnabled = true
+            binding.btnDebugGenerarCupones.text = "[DEV] GENERAR 20 CUPONES"
+        }.addOnFailureListener { e ->
+            Toast.makeText(context, "❌ Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            binding.btnDebugGenerarCupones.isEnabled = true
+        }
     }
 
     // --- ACTUALIZAR UI SEGÚN ESTADO ---
@@ -62,7 +111,7 @@ class PremiumStatusFragment : Fragment() {
             // DISEÑO PREMIUM (Dorado/Verde)
             binding.cardStatus.setCardBackgroundColor(Color.parseColor("#E8F5E9")) // Verde muy claro
             binding.imgStatusIcon.setImageResource(R.drawable.premiun) // Tu icono de diamante
-            binding.imgStatusIcon.setColorFilter(Color.parseColor("#2E7D32")) // Verde oscuro
+            binding.imgStatusIcon.setColorFilter(Color.parseColor("#F9B233")) // Verde oscuro
 
             binding.txtStatusTitle.text = "¡Eres Premium!"
             binding.txtStatusTitle.setTextColor(Color.parseColor("#1B5E20"))
