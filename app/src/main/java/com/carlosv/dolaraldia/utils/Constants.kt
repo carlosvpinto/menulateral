@@ -53,6 +53,9 @@ object Constants {
     //const val AD_UNIT_ID_OPEN: String = "ca-app-pub-3940256099942544/9257395921" //Para desarrollo y Pruebas
     const val AD_UNIT_ID_OPEN: String  = "ca-app-pub-3265312813580307/7449206999" // Admob Dolarmexico 2
 
+    // Tu ID Desarrollo Interticial Pltaformas
+    const val AD_UNIT_ID_INTER_PLATAFOR = "ca-app-pub-3265312813580307/4286959204"
+
     // Reducimos el tiempo de espera a 2.5 segundos (Equilibrio entre cargar anuncio y UX)
     const val MAX_WAIT_TIME = 4000L
 

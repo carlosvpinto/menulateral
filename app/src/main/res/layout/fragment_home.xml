@@ -616,21 +616,7 @@
                         android:visibility="gone"
 
                         />
-                    <!-- Dentro del layout de tu HomeFragment -->
-                    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-                        android:id="@+id/button_rewarded_ad"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|end"
-                        android:layout_marginBottom="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginTop="10dp"
-                        android:text="Eliminar Anuncios"
-                        android:visibility="visible"
-                        app:icon="@drawable/regalo"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+
 
                 </LinearLayout>
 
@@ -655,7 +641,7 @@
             android:gravity="right"
             android:orientation="vertical"
             android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/adView"
+            app:layout_constraintBottom_toTopOf="@+id/banner_container"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent">
@@ -666,27 +652,40 @@
                 android:layout_width="match_parent"
                 android:layout_height="70dp"
                 android:scaleType="fitCenter"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
 
 
 
         </LinearLayout>
+        <!-- PEGAR ESTO JUSTO ANTES DEL FRAME LAYOUT DEL BANNER -->
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/button_rewarded_ad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="10dp"
+            android:backgroundTint="?attr/colorPrimary"
+            android:text="Eliminar Anuncios"
+            android:textColor="@android:color/white"
+            android:visibility="visible"
 
-        <com.google.android.gms.ads.AdView
-            android:id="@+id/adView"
+            app:icon="@drawable/regalo"
+            app:iconTint="@android:color/white"
+
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/banner_container"
+            app:layout_constraintEnd_toEndOf="parent" />
+        <FrameLayout
+            android:id="@+id/banner_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            app:adSize="BANNER"
-            app:adUnitId="@string/banner_ad_prueba"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            android:visibility="gone"
-            android:descendantFocusability="blocksDescendants">
-        </com.google.android.gms.ads.AdView>
+            android:visibility="visible" />
         <ImageView
             android:id="@+id/imageSwipe"
             android:layout_width="wrap_content"

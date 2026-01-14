@@ -98,6 +98,7 @@ import androidx.core.app.NotificationCompat.getColor
 import androidx.core.view.ContentInfoCompat
 import androidx.core.view.OnReceiveContentListener
 import com.carlosv.dolaraldia.utils.VibrationHelper
+import com.carlosv.dolaraldia.utils.ads.BannerAdManager
 
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -157,8 +158,11 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
     }
 
 
-    // ¡NUEVO! Creamos una instancia del gestor de anuncios bonificados.
+    //Creamos una instancia del gestor de anuncios bonificados.
     private lateinit var rewardedAdManager: RewardedAdManager
+
+    // Creamos una instancia para el Banner Manager
+    private lateinit var bannerAdManager: BannerAdManager
 
     private var isRewardedAdReady = false
 
@@ -180,6 +184,10 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         // 1. INICIALIZAR MANAGER (Lo primero)
         rewardedAdManager = RewardedAdManager(requireContext())
 
+        // 2. Inicializar Banner
+        bannerAdManager = BannerAdManager(requireContext())
+
+
         // 2. CAPTURAR EL COLOR ORIGINAL (Soluciona que la fecha se vea invisible)
         colorOriginalFecha = binding.txtFechaActualizacionBcv.currentTextColor
 
@@ -197,7 +205,7 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
         // Reset del Easter Egg
         resetHandler.removeCallbacks(resetRunnable)
         binding.imglogo.setOnClickListener {
-            manejarEasterEgg() // (He movido tu lógica de toques a una funcioncita para limpiar aqui)
+            manejarEasterEgg() // lógica de toques a una funcioncita
         }
 
         // --- SOLUCIÓN AL CONGELAMIENTO Y AL DOBLE BOTÓN ---
@@ -219,38 +227,40 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
 
         // 6. CARGA DE ANUNCIOS (Banner) - CON RETRASO
         layout = binding.linearLayout3
-        mAdView = binding.adView
 
-        // Usamos postDelayed para esperar 2 segundos antes de cargar el banner
-        // Esto elimina el conflicto de recursos (WaitHoldingLocks) al arrancar
 
-        //TEMPORALMENTE ELIMINADA HASTA QUE FUNCIONE EL BANNER INFERIOR*********************
-//        mAdView.postDelayed({
-//            // Verificamos 'isAdded' para evitar crashes si el usuario sale rápido del fragmento
-//            if (isAdded && context != null) {
-//                try {
-//                    val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
-//                    mAdView.loadAd(adRequest)
-//                    Log.d("AdMob", "Banner solicitado con retraso exitosamente")
-//                } catch (e: Exception) {
-//                    Log.e("AdMob", "Error Banner: ${e.localizedMessage}")
-//                }
-//            }
-//        }, 2000) // 2000ms = 2 segundos de espera
-
-        //***********************************************************************************
+        // ----------------------------------------------------------------
+        // 3. CARGA DE ANUNCIOS (Banner) - USANDO EL NUEVO MANAGER
+        // ----------------------------------------------------------------
+        /// Verificar si es Premium antes de cargar el banner
+        if (!AppPreferences.isUserPremiumActive()) {
+            // Si NO es premium, cargamos el banner
+            bannerAdManager.showBanner(binding.bannerContainer, 2000)
+        } else {
+            // Si ES premium, ocultamos el contenedor para ganar espacio
+            binding.bannerContainer.visibility = View.GONE
+        }
 
 
         // 7. CARGA DE RECOMPENSADO - TAMBIÉN CON RETRASO
-        binding.buttonRewardedAd.isExtended = false
+        // 7. CARGA DE RECOMPENSADO - CON RETRASO
+
+        // Estado inicial: Contraído (solo icono) y Deshabilitado (gris)
+        binding.buttonRewardedAd.shrink()
         binding.buttonRewardedAd.isEnabled = false
 
         // Le damos un poco más de tiempo al recompensado para no saturar la red junto con el banner
         binding.root.postDelayed({
             if (isAdded && context != null) {
-                rewardedAdManager.loadAd(this)
+                // Verificar si es premium antes de cargar para ahorrar datos
+                if (!AppPreferences.isUserPremiumActive()) {
+                    rewardedAdManager.loadAd(this)
+                } else {
+                    // Si ya es premium, ocultamos el botón de una vez
+                    binding.buttonRewardedAd.visibility = View.GONE
+                }
             }
-        }, 1000) // 3 segundos (1 seg después del banner)
+        }, 1000)
 
         // 8. OTRAS PREFERENCIAS
         val sharedPreferences =
@@ -269,31 +279,37 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
     override fun onAdLoaded() {
         _binding?.let { safeBinding ->
             activity?.runOnUiThread {
-                // Configuración visual
-                safeBinding.buttonRewardedAd.isEnabled = true
-                safeBinding.buttonRewardedAd.extend() // O shrink, según prefieras iniciar
-                isRewardedAdReady = true
-                safeBinding.buttonRewardedAd.shrink() // Asegurar estado shrink
 
-                // ANIMACIÓN XML SEGURA (Evita el error SurfaceFlinger)
+                // 1. Habilitar el botón y marcar flag
+                safeBinding.buttonRewardedAd.isEnabled = true
+                isRewardedAdReady = true
+
+                // 2. EXPANDIR INMEDIATAMENTE (Mostrar texto "Eliminar Anuncios")
+                safeBinding.buttonRewardedAd.extend()
+
+                // Solo si el usuario NO es premium, hacemos el show
                 if (!AppPreferences.isUserPremiumActive()) {
-                    safeBinding.buttonRewardedAd.post { // POST para seguridad extra
-                        try {
-                            if (context != null) {
-                                // Cargar binance_shake.xml (El que creamos antes)
-                                val shake = AnimationUtils.loadAnimation(
-                                    requireContext(),
-                                    R.anim.binance_shake
-                                )
+
+                    // 3. ESPERAR 2.5 SEGUNDOS Y LUEGO CONTRAER + ANIMAR
+                    safeBinding.buttonRewardedAd.postDelayed({
+                        // Verificación de seguridad: ¿Sigue el fragmento vivo?
+                        if (_binding != null && context != null && isAdded) {
+
+                            // A. Contraer suavemente (vuelve a solo ícono)
+                            safeBinding.buttonRewardedAd.shrink()
+
+                            // B. Ejecutar la animación de sacudida
+                            try {
+                                val shake = AnimationUtils.loadAnimation(requireContext(), R.anim.binance_shake)
                                 safeBinding.buttonRewardedAd.startAnimation(shake)
 
-                                // Vibración
+                                // C. Vibración sutil
                                 VibrationHelper.vibrateOnError(requireContext())
+                            } catch (e: Exception) {
+                                Log.e("Animacion", "Error al animar: ${e.message}")
                             }
-                        } catch (e: Exception) {
-                            Log.e("Animacion", "Error leve: ${e.message}")
                         }
-                    }
+                    }, 2500) // 2500ms = 2.5 segundos de espera
                 }
             }
         }
@@ -433,16 +449,13 @@ class HomeFragment : Fragment(), RewardedAdManager.AdLoadListener {
 
 
 
-        //Hacer clic al Botoen de recompensas de 4 horas
+        // Hacer clic al Botón de recompensas
         binding.buttonRewardedAd.setOnClickListener {
-
-            if (binding.buttonRewardedAd.isExtended) {
+            // Lógica inteligente:
+            // Si el anuncio está listo, muéstralo sin importar si está extendido o no.
+            if (isRewardedAdReady) {
                 verPrimerDialogoRecompensa()
-            } else {
-                // SI ESTÁ CONTRAÍDO -> Solo lo expande
-                (binding.buttonRewardedAd.extend())
             }
-
         }
 
 

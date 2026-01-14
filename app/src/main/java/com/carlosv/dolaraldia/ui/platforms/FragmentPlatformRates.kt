@@ -16,9 +16,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.carlosv.dolaraldia.ApiService
+import com.carlosv.dolaraldia.AppPreferences
 import com.carlosv.dolaraldia.model.apiPlatforms.PlatformDetail
 import com.carlosv.dolaraldia.model.apiPlatforms.PlatformResponse
 import com.carlosv.dolaraldia.utils.Constants
+import com.carlosv.dolaraldia.utils.Constants.AD_UNIT_ID_INTER_PLATAFOR
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnError
 import com.carlosv.dolaraldia.utils.VibrationHelper.vibrateOnSuccess
 import com.carlosv.menulateral.R
@@ -32,13 +34,25 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+// --- IMPORTACIONES DE ADMOB ---
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.AdError
+
 class PlatformRatesFragment : Fragment() {
 
     private var _binding: FragmentPlatformRatesBinding? = null
     private val binding get() = _binding!!
     private val TAG = "PlatformRatesFragment"
 
-    private var isOffline = false // Para llevar el registro del estado de conexión
+    private var isOffline = false
+
+    // --- VARIABLES PARA EL ANUNCIO INTERSTICIAL ---
+    private var mInterstitialAd: InterstitialAd? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,7 +60,6 @@ class PlatformRatesFragment : Fragment() {
     ): View {
         _binding = FragmentPlatformRatesBinding.inflate(inflater, container, false)
 
-        // Aplicar la animación
         val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.appear_from_top)
         binding.root.startAnimation(animation)
         return binding.root
@@ -55,24 +68,85 @@ class PlatformRatesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Cargamos los datos del caché al iniciar para una carga instantánea
+        // 1. Cargamos datos
         loadDataFromCache()
 
-        // 2. Llamamos a la API para obtener los datos más recientes
+        // 2. Llamada API
         fetchPlatformRates()
 
-        // 3. Configuramos el listener para el botón de refrescar
+        // 3. Listener refresh
         binding.btnRefresh.setOnClickListener {
             fetchPlatformRates()
         }
+
+        // 4. --- CARGAR Y MOSTRAR EL ANUNCIO ---
+        loadInterstitialAd()
     }
 
-    // --- LÓGICA PRINCIPAL ---
+    // --- FUNCIÓN PARA CARGAR EL INTERSTICIAL ---
+    // --- FUNCIÓN PARA CARGAR EL INTERSTICIAL ---
+    private fun loadInterstitialAd() {
+
+        // 1. CHEQUEO PREMIUM: Si paga, no hacemos nada.
+        if (AppPreferences.isUserPremiumActive()) {
+           // Log.d(TAG, "Usuario Premium: Anuncio Intersticial cancelado.")
+            return // <--- ¡AQUÍ SE SALE DE LA FUNCIÓN!
+        }
+
+        // 2. Si no es premium, continúa la carga normal...
+        val adRequest = AdRequest.Builder().build()
+
+        InterstitialAd.load(requireContext(), AD_UNIT_ID_INTER_PLATAFOR, adRequest, object : InterstitialAdLoadCallback() {
+            override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                mInterstitialAd = interstitialAd
+                Log.d(TAG, "onAdLoaded: Intersticial cargado.")
+
+                if (isAdded && activity != null) {
+                    showInterstitial()
+                }
+            }
+
+            override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                Log.d(TAG, "onAdFailedToLoad: ${loadAdError.message}")
+                mInterstitialAd = null
+            }
+        })
+    }
+
+    // --- FUNCIÓN PARA MOSTRAR EL INTERSTICIAL ---
+    private fun showInterstitial() {
+        if (mInterstitialAd != null) {
+            mInterstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+                override fun onAdDismissedFullScreenContent() {
+                    // Se llamó cuando se cerró el anuncio.
+                    Log.d(TAG, "El anuncio fue cerrado.")
+                    mInterstitialAd = null
+                }
+
+                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                    // Se llamó cuando el anuncio falló al mostrarse.
+                    Log.d(TAG, "El anuncio falló al mostrarse.")
+                    mInterstitialAd = null
+                }
+
+                override fun onAdShowedFullScreenContent() {
+                    // Se llamó cuando se mostró el anuncio.
+                    mInterstitialAd = null
+                }
+            }
+            // Mostrar el anuncio
+            activity?.let { mInterstitialAd?.show(it) }
+        } else {
+            Log.d(TAG, "El anuncio intersticial no estaba listo aún.")
+        }
+    }
+
+
+    // --- LÓGICA PRINCIPAL (TU CÓDIGO ORIGINAL SIN CAMBIOS) ---
 
     private fun fetchPlatformRates() {
         showLoading(true)
 
-        // Creación del cliente Retrofit (reutilizada de tu HomeFragment)
         val client = OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
@@ -90,7 +164,6 @@ class PlatformRatesFragment : Fragment() {
 
         val apiService = retrofit.create(ApiService::class.java)
 
-        // Lanzamos la corrutina para la llamada de red
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val response = apiService.getPlatformRates()
@@ -99,7 +172,6 @@ class PlatformRatesFragment : Fragment() {
                         handleSuccessfulResponse(response)
                         Log.d(TAG, "fetchPlatformRates: response: $response")
                     } else {
-                        // El response fue nulo, lo tratamos como un error
                         handleApiError()
                     }
                 }
@@ -112,15 +184,12 @@ class PlatformRatesFragment : Fragment() {
         }
     }
 
-    // --- FUNCIÓN handleSuccessfulResponse MODIFICADA ---
     private fun handleSuccessfulResponse(response: PlatformResponse) {
-        // Si estábamos en modo offline antes de esta llamada exitosa,
-        // significa que la conexión se ha restablecido.
         if (isOffline) {
             binding.imgSinConexion.visibility = View.GONE
             vibrateOnSuccess(requireContext())
             showStatusSnackbar("¡Conexión restablecida!")
-            isOffline = false // Volvemos al estado online
+            isOffline = false
         }
 
         updateUI(response.platforms)
@@ -129,24 +198,19 @@ class PlatformRatesFragment : Fragment() {
         animateUpdateDates()
     }
 
-    // --- FUNCIÓN handleApiError MODIFICADA ---
     private fun handleApiError() {
-        // Mostramos el ícono de sin conexión y vibramos
         binding.imgSinConexion.visibility = View.VISIBLE
         vibrateOnError(requireContext())
         showLoading(false)
         showStatusSnackbar("No se pudo actualizar. Verifique su conexión.")
-        isOffline = true // Marcamos que estamos en modo offline
+        isOffline = true
     }
 
-    // --- NUEVA FUNCIÓN PARA MOSTRAR MENSAJES (Snackbar) ---
     private fun showStatusSnackbar(message: String) {
-        // Usamos la vista raíz del fragmento como ancla para el Snackbar
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 
     private fun updateUI(platforms: Map<String, PlatformDetail>) {
-        // Usamos 'let' para manejar de forma segura los posibles valores nulos
         platforms["binance"]?.let { platform ->
             binding.binanceRow.tvPlatformName.text = platform.title
             binding.binanceRow.tvPrice.text = "Bs ${"%.2f".format(platform.price)}"
@@ -175,7 +239,6 @@ class PlatformRatesFragment : Fragment() {
         }
     }
 
-    // --- FUNCIÓN showLoading() MODIFICADA ---
     private fun showLoading(isLoading: Boolean) {
         if (isLoading) {
             binding.btnRefresh.visibility = View.GONE
@@ -186,7 +249,6 @@ class PlatformRatesFragment : Fragment() {
         }
     }
 
-    // --- NUEVA FUNCIÓN PARA LA ANIMACIÓN DE "PULSO" ---
     private fun animateUpdateDates() {
         val textViewsToAnimate = listOf(
             binding.binanceRow.tvLastUpdate,
@@ -201,22 +263,22 @@ class PlatformRatesFragment : Fragment() {
 
     private fun animatePulse(textView: TextView) {
         val scaleUp = ScaleAnimation(
-            1f, 1.2f, // Escala de 100% a 120%
+            1f, 1.2f,
             1f, 1.2f,
             Animation.RELATIVE_TO_SELF, 0.5f,
             Animation.RELATIVE_TO_SELF, 0.5f
         ).apply {
-            duration = 300 // ms
+            duration = 300
             fillAfter = false
         }
 
         val scaleDown = ScaleAnimation(
-            1.2f, 1f, // Escala de 120% de vuelta a 100%
+            1.2f, 1f,
             1f, 1f,
             Animation.RELATIVE_TO_SELF, 0.5f,
             Animation.RELATIVE_TO_SELF, 0.5f
         ).apply {
-            duration = 300 // ms
+            duration = 300
             fillAfter = false
         }
 
@@ -231,13 +293,9 @@ class PlatformRatesFragment : Fragment() {
         textView.startAnimation(scaleUp)
     }
 
-    // --- LÓGICA DE CACHÉ (REUTILIZADA DE TU HOMEFRAGMENT) ---
-
     private fun saveResponseToCache(context: Context, response: PlatformResponse) {
         val gson = Gson()
         val responseJson = gson.toJson(response)
-
-        // Usamos un nombre de archivo de preferencias diferente para no sobreescribir el del Home
         val sharedPreferences: SharedPreferences =
             context.getSharedPreferences("PlatformRatesPreferences", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
@@ -256,7 +314,7 @@ class PlatformRatesFragment : Fragment() {
                 gson.fromJson(responseJson, PlatformResponse::class.java)
             } catch (e: Exception) {
                 Log.e(TAG, "Error al decodificar el caché de plataformas: ${e.message}")
-                null // Retorna nulo si el JSON guardado está corrupto
+                null
             }
         } else {
             null

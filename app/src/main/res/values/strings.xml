@@ -61,8 +61,7 @@
     <string name="ver_un_video_para_colaborar">Apoyame viendo un vídeo</string>
 
     <string name="banner_ad_prueba">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="banner_ad_ejecucion"> ca-app-pub-5303101028880067/3567978792</string>
-    ca-app-pub-5303101028880067/3567978792
+    <string name="banner_ad_ejecucion">ca-app-pub-3265312813580307/4313636092</string>
     <string name="interstitial_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
     <string name="default_notification_channel_id">fcm_default_channel</string>
     <string name="splash_activity_image_text">Dolar Al Dia</string>

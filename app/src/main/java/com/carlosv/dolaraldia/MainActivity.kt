@@ -104,6 +104,7 @@ import com.carlosv.dolaraldia.utils.Constants.CALCULADORA
 import com.carlosv.dolaraldia.utils.Constants.GRAFICOS
 import com.carlosv.dolaraldia.utils.Constants.PAGOMOVIL
 import com.carlosv.dolaraldia.utils.Constants.PLATFORMAS
+import com.google.android.ads.mediationtestsuite.MediationTestSuite
 import com.google.android.gms.ads.MobileAds
 import kotlinx.coroutines.launch
 
@@ -170,6 +171,9 @@ class MainActivity : AppCompatActivity() {
         // isAppearanceLightStatusBars = true significa iconos NEGROS
         windowInsetsController.isAppearanceLightStatusBars = false
 
+
+        // meditor de publicidad*******************
+        //MediationTestSuite.launch(this)
 
         imprimirTodosLosExtras(intent)
 

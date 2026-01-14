@@ -77,11 +77,4 @@ class RewardedAdManager(private val context: Context) {
         }
     }
 
-    //Prueba de mediacion
-    /*
-    fun openMediationTestSuite() {
-        MediationTestSuite.launch(context)
-    }
-
-     */
 }
